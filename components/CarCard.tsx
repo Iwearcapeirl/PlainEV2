@@ -1,0 +1,178 @@
+import CarImage from "@/components/CarImage";
+import CarLink from "@/components/CarLink";
+import RangeBar from "@/components/RangeBar";
+import { carHref, type Car } from "@/lib/cars";
+import { formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
+import type { FilterKey } from "@/lib/quiz";
+
+type Metric = "range" | "efficiency" | "value";
+
+/**
+ * One ranked car. `featured` (used for number 1) stacks a large photo above the details;
+ * otherwise the card is horizontal from 640px up, with the photo on the left.
+ * The whole card opens the car's page: the model name is the link, stretched over the card,
+ * and the photo-credit links sit above it so they stay clickable.
+ */
+export default function CarCard({
+  car,
+  rank,
+  matched = [],
+  metric = "range",
+  headingLevel = 2,
+  priority = rank === 1,
+  featured = false,
+  returnLabel,
+}: {
+  car: Car;
+  rank: number;
+  /** Quiz filters this car meets; shown as highlighted "matches" chips. */
+  matched?: { key: FilterKey; chip: string }[];
+  /** The metric this list is ranked by; highlighted alongside real range. */
+  metric?: Metric;
+  headingLevel?: 2 | 3;
+  /** Load the photo immediately instead of lazily (defaults to the number 1 car only). */
+  priority?: boolean;
+  /** Large layout for the top car. */
+  featured?: boolean;
+  /** How the car page's "Back to …" link describes this list, e.g. "your results". */
+  returnLabel: string;
+}) {
+  // Plain spec chips, minus anything already shown as a match.
+  const matchedKeys = new Set(matched.map((m) => m.key));
+  const specs = (
+    [
+      { key: "body", label: car.body === "Station" ? "Estate" : car.body },
+      { key: "drive", label: car.drive },
+      { key: "seats", label: `${car.seats} seats` },
+      car.heatPump && { key: "heatPump", label: "Heat pump" },
+      car.v2l && { key: "v2l", label: "V2L" },
+      car.chemistry && { key: "chemistry", label: `${car.chemistry} battery` },
+    ].filter(Boolean) as { key: FilterKey; label: string }[]
+  ).filter((s) => !matchedKeys.has(s.key));
+  const Heading = headingLevel === 3 ? "h3" : "h2";
+
+  const stats: StatProps[] = [
+    {
+      label: "Efficiency",
+      value: formatMiPerKwh(car.whPerKm),
+      sub: `(${formatWhPerKm(car.whPerKm)})`,
+      strong: metric === "efficiency",
+    },
+    { label: "1-stop range", value: formatMi(car.oneStopKm), sub: `(${formatKm(car.oneStopKm)})` },
+  ];
+  if (metric === "value") {
+    stats.push({
+      label: "Price per mile",
+      value: formatGbpPerMile(car.priceGbp, car.rangeKm),
+      sub: `(${formatGbpPerKm(car.priceGbp, car.rangeKm)}/km)`,
+      strong: true,
+    });
+  }
+
+  return (
+    <article
+      className={`group relative overflow-hidden rounded-2xl bg-card shadow-[0_1px_0_var(--line),0_0_0_1px_var(--line)] transition-shadow hover:shadow-[0_0_0_1.5px_var(--foreground),0_18px_36px_-24px_rgb(14_26_43/0.45)] has-[a:focus-visible]:shadow-[0_0_0_2px_var(--foreground)] ${
+        featured ? "" : "sm:grid sm:grid-cols-[18.5rem_minmax(0,1fr)] sm:items-start"
+      }`}
+    >
+      <CarImage
+        src={car.image}
+        credit={car.imageCredit}
+        make={car.make}
+        model={car.model}
+        priority={priority}
+        frameClass={featured ? "aspect-[16/9]" : "aspect-[16/9] sm:m-3 sm:mr-0 sm:aspect-[4/3] sm:rounded-xl"}
+        sizes={featured ? "(min-width: 768px) 720px, 100vw" : "(min-width: 640px) 284px, 100vw"}
+      />
+
+      <div className={featured ? "p-5 sm:p-7" : "p-4 sm:p-5 sm:pl-6"}>
+        <div className="flex items-start gap-3">
+          <span
+            aria-label={`Rank ${rank}`}
+            className={`font-wide grid shrink-0 place-items-center rounded-md bg-ink font-semibold tabular-nums text-signal ${
+              featured ? "size-10 text-lg" : "size-8 text-sm"
+            }`}
+          >
+            {rank}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-muted">{car.make}</p>
+            <Heading className={`font-semibold leading-snug text-pretty ${featured ? "text-xl sm:text-2xl" : "text-[17px]"}`}>
+              <CarLink
+                href={carHref(car)}
+                returnLabel={returnLabel}
+                className="outline-none after:absolute after:inset-0 after:content-[''] group-hover:underline group-hover:decoration-signal group-hover:decoration-2 group-hover:underline-offset-4"
+              >
+                <span className="sr-only">{car.make} </span>
+                {car.model}
+              </CarLink>
+            </Heading>
+          </div>
+          <p className="shrink-0 text-right">
+            <span className={`font-wide block font-semibold tabular-nums ${featured ? "text-xl sm:text-2xl" : "text-[17px]"}`}>
+              {formatGbp(car.priceGbp)}
+            </span>
+            <span className="block text-xs text-muted">from, UK</span>
+          </p>
+        </div>
+
+        <div className={featured ? "mt-6" : "mt-4"}>
+          <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size={featured ? "lg" : "md"} />
+        </div>
+
+        <dl className={`mt-4 grid gap-px overflow-hidden rounded-xl bg-line ${stats.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+          {stats.map((s) => (
+            <Stat key={s.label} {...s} />
+          ))}
+        </dl>
+
+        {matched.length > 0 && (
+          <div className="mt-4">
+            <p id={`matches-${car.id}`} className="text-xs text-muted">
+              Matches your answers
+            </p>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-labelledby={`matches-${car.id}`}>
+              {matched.map((m) => (
+                <li key={m.key} className="rounded-full bg-ink px-2.5 py-1 text-xs font-medium text-on-ink">
+                  <span aria-hidden className="mr-1 text-signal">✓</span>
+                  {m.chip}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          <ul className="flex flex-wrap gap-1.5" aria-label="Specs">
+            {specs.map((t) => (
+              <li key={t.key} className="rounded-full bg-accent-soft px-2.5 py-1 text-xs text-foreground/80">
+                {t.label}
+              </li>
+            ))}
+          </ul>
+          <span aria-hidden className="inline-flex items-center gap-1 text-sm font-semibold">
+            Specs, photos &amp; summary
+            <span className="transition-transform group-hover:translate-x-0.5">→</span>
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+interface StatProps {
+  label: string;
+  value: string;
+  sub?: string;
+  strong?: boolean;
+}
+
+function Stat({ label, value, sub, strong = false }: StatProps) {
+  return (
+    <div className={`px-3 py-2.5 ${strong ? "bg-signal text-signal-ink" : "bg-card"}`}>
+      <dt className={`text-xs ${strong ? "text-signal-ink/75" : "text-muted"}`}>{label}</dt>
+      <dd className="mt-0.5 text-[15px] font-semibold tabular-nums">{value}</dd>
+      {sub && <dd className={`text-[11px] tabular-nums ${strong ? "text-signal-ink/70" : "text-muted"}`}>{sub}</dd>}
+    </div>
+  );
+}

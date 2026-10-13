@@ -1,0 +1,202 @@
+@import "tailwindcss";
+
+/*
+ * Palette: daylight road signs on a plain page. Bright, but nothing glares.
+ *   paper   #F7F9FC  plain cool white, no texture
+ *   ink     #1A56C4  cobalt sign blue: header, hero, radar
+ *   route   #0C7D56  fresh A-road green: the rankings
+ *   sky     #E5EEFC  soft blue band for calm sections
+ *   signal  #FFD02E  sunny route-number yellow: fills, rank numerals, the main CTA; never text on paper
+ *   text    #14233F  navy body text
+ */
+:root {
+  --background: #f7f9fc;
+  --foreground: #14233f;
+  --muted: #56657c;
+  --card: #ffffff;
+  --line: #dce3ee;
+  --accent: #14233f;
+  --accent-soft: #e5eefc;
+  --accent-contrast: #ffffff;
+  --signal: #ffd02e;
+  --signal-ink: #14233f;
+  --ink: #1a56c4;
+  --on-ink: #ffffff;
+  --route: #0c7d56;
+  --deep: #14233f;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* Elevation: every shadow has an offset and a soft blur, tinted blue rather than grey. */
+  --sc-shadow-color: 218 60% 25%;
+  --sc-e1: 0 1px 2px hsl(var(--sc-shadow-color) / 0.12), 0 2px 6px -1px hsl(var(--sc-shadow-color) / 0.1);
+  --sc-e2: 0 2px 4px hsl(var(--sc-shadow-color) / 0.1), 0 8px 18px -4px hsl(var(--sc-shadow-color) / 0.16);
+  --sc-e3: 0 4px 8px hsl(var(--sc-shadow-color) / 0.1), 0 18px 40px -8px hsl(var(--sc-shadow-color) / 0.2),
+    0 48px 90px -24px hsl(var(--sc-shadow-color) / 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0d1828;
+    --foreground: #ecf1f8;
+    --muted: #a3b2c7;
+    --card: #15233a;
+    --line: #263a57;
+    --accent: #ecf1f8;
+    --accent-soft: #172a47;
+    --accent-contrast: #14233f;
+    --ink: #1c4fb0;
+    --route: #0b7350;
+    --deep: #08111e;
+    --sc-shadow-color: 220 70% 4%;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-signal: var(--signal);
+  --color-signal-ink: var(--signal-ink);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-route: var(--route);
+  --color-deep: var(--deep);
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  accent-color: var(--signal);
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "tnum" 0;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Range-map rings draw outwards once on load (see RangeRings). */
+.ring-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ring-draw 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+@keyframes ring-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Expanded width for headings and big figures (Archivo's wdth axis). */
+.font-wide {
+  font-stretch: 125%;
+  letter-spacing: -0.015em;
+}
+
+/* Hatched fill for the "extra miles with one charging stop" part of the range bar. */
+.hatch-signal {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--signal) 70%, transparent) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Sign grounds: re-point the tokens so shared components (RangeBar, chips, cards) read on colour. */
+.on-ink,
+.on-route,
+.on-deep {
+  --foreground: var(--on-ink);
+  --muted: #dfe8f8;
+  --line: color-mix(in srgb, #ffffff 24%, transparent);
+  --card: color-mix(in srgb, #ffffff 9%, transparent);
+  --accent-soft: color-mix(in srgb, #ffffff 13%, transparent);
+  background-color: var(--ink);
+  color: var(--on-ink);
+}
+.on-route {
+  --muted: #d6efe3;
+  background-color: var(--route);
+}
+.on-deep {
+  --muted: #a9b6c8;
+  background-color: var(--deep);
+}
+
+/* The white keyline inset from the edge of a road sign. Sits inside the element's own colour. */
+.sign {
+  box-shadow:
+    inset 0 0 0 5px var(--sign-ground, var(--ink)),
+    inset 0 0 0 7px #ffffff;
+}
+
+/* Full-bleed band inside the site's centred <main>. */
+.bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* ---------- Range radar ---------- */
+.rr {
+  color: var(--on-ink);
+  overflow: visible;
+}
+.rr-label {
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  fill-opacity: 0.62;
+}
+.rr-dot {
+  opacity: 0.88;
+  transition: opacity 420ms var(--ease-out) calc(var(--a) * 380ms);
+}
+.rr-dot.is-off {
+  opacity: 0.09;
+}
+.rr-focus-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rr-ping 2.6s var(--ease-out) infinite;
+}
+@keyframes rr-ping {
+  0% { transform: scale(0.6); opacity: 1; }
+  70%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ---------- Quiz ---------- */
+.quiz-step {
+  animation: step-in 320ms var(--ease-out) both;
+}
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rr-focus-ring { animation: none; }
+}

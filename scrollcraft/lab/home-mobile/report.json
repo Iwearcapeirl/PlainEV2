@@ -1,0 +1,623 @@
+{
+  "doc": {
+    "height": 10421,
+    "vh": 844,
+    "acts": [
+      "pin",
+      "pin",
+      "pan"
+    ],
+    "world": null
+  },
+  "report": [
+    {
+      "i": 0,
+      "y": 78,
+      "pct": 1,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "How far will an electric car really go?A",
+          "dir": "light-on-dark",
+          "worst": 14.53,
+          "mean": 15.99
+        }
+      ],
+      "cues": [
+        {
+          "t": "How far will an electric car really go?All 471",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        0,
+        2281,
+        5752
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 1,
+      "y": 207,
+      "pct": 2,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "How far will an electric car really go?A",
+          "dir": "light-on-dark",
+          "worst": 13.86,
+          "mean": 15.97
+        }
+      ],
+      "cues": [
+        {
+          "t": "How far will an electric car really go?All 471",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        0,
+        2152,
+        5623
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 2,
+      "y": 337,
+      "pct": 4,
+      "settled": true,
+      "contrast": [],
+      "cues": [
+        {
+          "t": "How far will an electric car really go?All 471",
+          "o": 0.7
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        0,
+        2022,
+        5493
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 3,
+      "y": 466,
+      "pct": 5,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Measured on the road. Not in a lab.",
+          "dir": "light-on-dark",
+          "worst": 7.76,
+          "mean": 15.82
+        }
+      ],
+      "cues": [
+        {
+          "t": "Measured on the road. Not in a lab.",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        0,
+        1893,
+        5364
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 4,
+      "y": 596,
+      "pct": 6,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Measured on the road. Not in a lab.",
+          "dir": "light-on-dark",
+          "worst": 8.42,
+          "mean": 15.76
+        }
+      ],
+      "cues": [
+        {
+          "t": "Measured on the road. Not in a lab.",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        0,
+        1763,
+        5234
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 5,
+      "y": 726,
+      "pct": 8,
+      "settled": true,
+      "contrast": [],
+      "cues": [
+        {
+          "t": "Measured on the road. Not in a lab.",
+          "o": 0.3
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        0,
+        1633,
+        5104
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 6,
+      "y": 2396,
+      "pct": 25,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Every electric car on sale in the UK, on",
+          "dir": "light-on-dark",
+          "worst": 16,
+          "mean": 16
+        }
+      ],
+      "cues": [
+        {
+          "t": "Every electric car on sale in the UK, on one d",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        -1657,
+        0,
+        3434
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 7,
+      "y": 2752,
+      "pct": 29,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Every electric car on sale in the UK, on",
+          "dir": "light-on-dark",
+          "worst": 16,
+          "mean": 16
+        }
+      ],
+      "cues": [
+        {
+          "t": "Every electric car on sale in the UK, on one d",
+          "o": 0.91
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        -2013,
+        0,
+        3078
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 8,
+      "y": 3109,
+      "pct": 32,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Further out means further on a charge.A ",
+          "dir": "light-on-dark",
+          "worst": 16,
+          "mean": 16
+        }
+      ],
+      "cues": [
+        {
+          "t": "Further out means further on a charge.A ring f",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        -2370,
+        0,
+        2721
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 9,
+      "y": 3465,
+      "pct": 36,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Clockwise, they get dearer.From £11,990 ",
+          "dir": "light-on-dark",
+          "worst": 16,
+          "mean": 16
+        }
+      ],
+      "cues": [
+        {
+          "t": "Clockwise, they get dearer.From £11,990 at the",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        -2726,
+        0,
+        2365
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 10,
+      "y": 3822,
+      "pct": 40,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Somewhere on here is yours.Find your mat",
+          "dir": "light-on-dark",
+          "worst": 16,
+          "mean": 16
+        }
+      ],
+      "cues": [
+        {
+          "t": "Somewhere on here is yours.Find your match",
+          "o": 1
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        -3083,
+        0,
+        2008
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 11,
+      "y": 4178,
+      "pct": 44,
+      "settled": true,
+      "contrast": [
+        {
+          "t": "Somewhere on here is yours.Find your mat",
+          "dir": "light-on-dark",
+          "worst": 16,
+          "mean": 16
+        }
+      ],
+      "cues": [
+        {
+          "t": "Somewhere on here is yours.Find your match",
+          "o": 0.97
+        }
+      ],
+      "clips": [],
+      "rails": [
+        0
+      ],
+      "wipes": [],
+      "act": "pin",
+      "stages": [
+        -3439,
+        0,
+        1652
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 12,
+      "y": 5870,
+      "pct": 61,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -38
+      ],
+      "wipes": [],
+      "act": "pan",
+      "stages": [
+        -5131,
+        -1655,
+        0
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 13,
+      "y": 6259,
+      "pct": 65,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -401
+      ],
+      "wipes": [],
+      "act": "pan",
+      "stages": [
+        -5520,
+        -2044,
+        0
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 14,
+      "y": 6648,
+      "pct": 69,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -764
+      ],
+      "wipes": [],
+      "act": "pan",
+      "stages": [
+        -5909,
+        -2433,
+        0
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 15,
+      "y": 7037,
+      "pct": 73,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -1128
+      ],
+      "wipes": [],
+      "act": "pan",
+      "stages": [
+        -6298,
+        -2822,
+        0
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 16,
+      "y": 7426,
+      "pct": 78,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -1491
+      ],
+      "wipes": [],
+      "act": "pan",
+      "stages": [
+        -6687,
+        -3211,
+        0
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 17,
+      "y": 7815,
+      "pct": 82,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -1854
+      ],
+      "wipes": [],
+      "act": "pan",
+      "stages": [
+        -7076,
+        -3600,
+        0
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    },
+    {
+      "i": 18,
+      "y": 9577,
+      "pct": 100,
+      "settled": true,
+      "contrast": [],
+      "cues": [],
+      "clips": [],
+      "rails": [
+        -1892
+      ],
+      "wipes": [],
+      "act": "-",
+      "stages": [
+        -8838,
+        -5362,
+        -1722
+      ],
+      "segs": [],
+      "custom": [],
+      "customHold": false,
+      "seg": null,
+      "segp": null,
+      "bg": "#0e1a2b"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failed": []
+}

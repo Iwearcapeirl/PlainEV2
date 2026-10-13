@@ -1,0 +1,139 @@
+# PlainEV
+
+Recommends electric cars on sale in the UK, from a typed description or a short quiz (four questions plus optional filters). Built with Next.js (App Router), TypeScript and Tailwind CSS v4. All filtering happens in the browser, using `data/cars.json`.
+
+## Run it
+
+```bash
+npm install
+npm run dev        # http://localhost:3000
+npm run build && npm start
+```
+
+Requires Node 20.9 or later.
+
+To let Claude read typed searches, set `ANTHROPIC_API_KEY` on the server (e.g. in `.env.local`, or your host's environment settings). Without it, search still works using the built-in rules.
+
+## How it works
+
+| Route | What it does |
+|---|---|
+| `/` | Homepage. Explains the real-world range (not WLTP) approach, links to the quiz, and features 6 rankings (`FEATURED` in `app/page.tsx`). |
+| `/quiz` | Opens on a search box: describe the car you want in your own words and get the top 5. "Answer questions instead" switches to the quiz: four core questions (budget, minimum range, body style, ranking priority), one per screen, then an optional "More filters" step. A live count shows how many cars still match. |
+| `/results?budget=…&range=…&body=…&priority=…` | The top 5 matches. Optional filters are added only when set (`seats`, `drive`, `battery`, `heatpump`, `v2l`, `eff`, `onestop`). Answers are kept in the URL, so you can share or bookmark results. "Edit answers" takes you back to the quiz with your answers filled in. Results from a typed search also carry `q=` (the text), shown above the answer chips; "Edit search" returns to the search box with it filled in. Older links using `features=` and the old range values still work. Not indexed by search engines (noindex, and blocked in robots.txt). |
+| `/car/[slug]` | One static page per car (471), e.g. `/car/kia-ev3-long-range-my27`. Shows a large photo, interior photos where available, every spec in the data, how the car ranks against all EVs on sale, a short write-up, other versions of the same model, similar cars, and a Source section linking to the car's EV Database page. Every card on the results and ranking pages links here. |
+
+**Filtering** (`lib/quiz.ts` defines every filter once; `lib/match.ts` → `matchesAnswers` applies them)
+- **Budget** is a ceiling on `Price UK GBP`: under £30k means ≤ £30,000, £30–40k means ≤ £40,000, and so on. "Over £70k" and "No limit" both remove the cap.
+- **Minimum range:** any, 200+, 250+, 300+ or 350+ miles, converted to km to filter on `Real range km`. The quiz shows how many cars each option leaves.
+- **Body:** SUV, Hatchback, Sedan + Liftback, and Station (shown as "Estate"). "No preference" allows all body styles, including MPV, SPV, Cabrio and Coupe.
+- **More filters (all optional, default "No preference"):**
+  - Seats: 4+, 5+ or 7
+  - Drive: front, rear or all-wheel
+  - Battery chemistry: LFP or NCM
+  - Heat pump required, and V2L required
+  - Efficiency: 3.5+, 3.8+ or 4.0+ mi/kWh ("Best"), i.e. `Efficiency Wh/km` ≤ 180, 165 or 155
+  - One-stop range: 300+, 350+ or 400+ miles on `1-stop range km`
+
+Each result card shows a "Matches your answers" row with a chip for every filter you set.
+
+If nothing matches, the results page suggests which single answer to loosen and how many cars that would bring back.
+
+**Ranking** (`rankCars`)
+- *Maximum range* (default): highest `Real range km` first. Cars within `RANGE_TIE_KM` (10 km) of each other count as "very close" and are ordered by `Price per km EUR`, lowest first. Each band starts from the highest remaining range, so the order stays stable.
+- *Higher efficiency*: lowest `Efficiency Wh/km` first, with ties broken by range.
+
+## Filter and sort (results page)
+
+Below the answer chips, a "Filter and sort" box narrows the cars that match the reader's answers by any field in the data (price, real-world range, one-stop range, efficiency, price per mile, battery, charging speed, seats, make, body, drive, chemistry, heat pump, V2L, model name), and sorts by any of them, low to high or high to low. Fields and their display units are defined once in `lib/fields.ts`; the box is `components/RefinePanel.tsx`. Once anything is set, the page lists every remaining car (10 at a time) instead of the top 5. State is kept in the URL as `f=key:value` (repeatable; numbers as `min~max`), `sort=` and `dir=asc|desc`.
+
+## Typed search (`/api/understand`)
+
+`components/TextSearch.tsx` posts the text to `app/api/understand/route.ts`, which asks Claude (`claude-opus-5-5`, low effort) to map it onto the quiz's filters. The reply is a structured output whose fields are enums of the real option ids, so it can only pick options the quiz already has; the result then goes through the same `/results` page. If Claude can't be used (no API key, network error, refusal), `answersFromText` in `lib/understand.ts` maps the text with keyword and number rules instead. The browser also falls back to those rules if the route can't be reached, e.g. on a static-only host.
+
+The route is public and each Claude call costs a fraction of a penny. Add rate limiting (or a spend limit on the API key) before heavy traffic.
+
+## Pages and design
+
+Every page scrolls normally; there are no scroll-driven effects.
+
+- **Palette:** bright daylight road-sign colours on a plain page: cobalt blue for the header, hero and radar, fresh green for the rankings, a soft sky-blue band, sunny yellow as the accent, and a plain off-white background (no texture or backdrop). Tokens are at the top of `app/globals.css`.
+- **Range radar** (`components/RangeRadar.tsx`, geometry in `lib/radar.ts`): every car as a dot, distance = real range, angle = price rank. Shown on the homepage and in the quiz, where cars that no longer match switch off.
+- **Homepage budget picker** links to `/quiz?budget=…`; the quiz then starts on question 2 with the budget set.
+
+## Ranking pages (`/best`)
+
+Static pages built at build time by `app/best/[slug]/page.tsx` using `generateStaticParams`. `dynamicParams = false`, so any other slug returns 404. The page definitions are in `lib/rankings.ts`. A page is only generated when at least 5 cars match (`MIN_CARS_PER_PAGE`), and each page lists the top 10 (`CARS_PER_PAGE`).
+
+| URL | Filter | Ranked by |
+|---|---|---|
+| `/best/real-range-under-{30000,40000,50000,70000}` | UK price ≤ budget | Real range, highest first |
+| `/best/most-efficient-{suvs,hatchbacks,saloons,liftbacks,estates}` | Body style | Wh/km, lowest first (ties: range) |
+| `/best/best-value-under-{30000,40000,50000,70000}` | UK price ≤ budget | Real range first. Cars within 10 km (`VALUE_TIE_KM`) of each other are ordered by UK £ per km, lowest first |
+| `/best/lfp-evs` | LFP battery | Real range |
+| `/best/7-seat-evs` | 7 or more seats | Real range |
+| `/best` | Index of all pages | |
+
+In range rankings, cars with the same range are ordered by the lower UK £ per km. The edition labels ("2026", "Updated October 2026") are set in `lib/site.ts`. In production, set `NEXT_PUBLIC_SITE_URL` so canonical URLs use your domain.
+
+## Car pages (`/car/[slug]`)
+
+Built at build time by `app/car/[slug]/page.tsx` with `generateStaticParams` (`dynamicParams = false`, so unknown slugs return 404). The slug is the make and model in lower case, for example `bmw-i3-50-xdrive-my27`. If two cars ever produced the same slug, the ID would be added to both (`lib/cars.ts`).
+
+- **Clickable cards:** on the results and ranking pages, the car name inside each card is a link stretched over the whole card, so clicking anywhere on the card opens the car page. The photo-credit links sit above it and stay clickable.
+- **Back to results:** clicking a card stores the list it came from (quiz results with their full query, or the ranking) in `sessionStorage` (`components/CarLink.tsx`). The car page then shows "Back to your results" or "Back to the ranking", and the breadcrumb's middle step points there. Without that, for example when arriving from Google, the breadcrumb reads Home / Rankings / car. If storage is blocked, the page still works and shows the plain breadcrumb.
+- **Write-up:** EV Database's car pages are spec tables and methodology notes, not reviews, so there was nothing worth summarising there. Instead, `lib/carProfile.ts` writes a short, neutral summary from our own data: what the car is, how its range compares with every EV on sale and with its body style, efficiency against the typical EV, battery and charging, heat pump, V2L and chemistry, and UK price per mile of range against similar cars. It is labelled as written by the site from EV Database figures, and every page links to the original EV Database page in its Source section.
+- **Interior photos:** 219 cars (`interiors` in `cars.json`, up to 2 per car) have freely licensed interior photos from Wikimedia Commons. Each was checked by eye and is credited in the same way as the exterior photos. Where the photo shows a closely related version (for example a petrol Astra, which shares the Astra Electric's cabin), the page says so under the photos.
+- **SEO:** each page has its own title, description and canonical URL, `schema.org/Car` structured data, and an entry in the sitemap.
+
+## Units
+
+The data is stored in km and Wh/km. Everything readers see leads with UK units and gives the metric figure in brackets: `311 mi (500 km)`, `4.1 mi/kWh (151 Wh/km)`, `£172 per mile (£107/km)`. The helpers are in `lib/format.ts`. Rankings sort on the metric values, so the order is the same either way.
+
+## Car photos
+
+Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in `data/cars.json`). 435 of the 471 cars have one; the rest show a neutral placeholder.
+
+- **Licensing:** every photo is CC BY, CC BY-SA or CC0. The author and licence are credited on each photo, with links to the file and the licence, which is what these licences require. EV Database's own images are **not** used, because their terms forbid hotlinking or reusing them.
+- **Accuracy:** photos are matched by model family and checked by eye. They show the right model but not always the exact trim or year. Families with no correct photo are left blank rather than shown a look-alike.
+- **Performance:** `components/CarImage.tsx` reserves a 16:9 frame (no layout shift) and lazy-loads every photo except the number 1 car's. It serves a 500px image (about 60 KB) to phones and a 960px one to larger screens. If an image fails to load, the placeholder appears instead.
+- **Hosting:** images load straight from Wikimedia's servers. If traffic grows, consider downloading them and serving them yourself (the licences allow this, provided you keep the credits).
+- **Updating:** the scripts in `scripts/` rebuild the photo fields. See `data/README.md`.
+
+## Ads (AdSense later)
+
+`components/AdSlot.tsx` renders a placeholder `<div data-ad-slot="…">` with a reserved height, so ads don't shift the layout when they load. The dashed "Ad placeholder" box only shows with `npm run dev`; in production the slots are empty until you add ad code.
+
+| Slot | Where |
+|---|---|
+| `results-top` | Top of the quiz results page |
+| `ranking-top` | Ranking pages, between the intro and the list |
+| `ranking-mid` | Ranking pages, between car 5 and car 6 |
+| `ranking-bottom` | Ranking pages, between the closing quiz link and "More rankings" |
+
+To go live, load the AdSense script once in `app/layout.tsx` and put your `<ins className="adsbygoogle">` unit inside `AdSlot`, keyed by `slot`.
+
+## SEO
+
+- `app/sitemap.ts` → `/sitemap.xml`: the homepage, `/quiz`, `/best` and every ranking page.
+- `app/robots.ts` → `/robots.txt`: allows everything except `/results`, and points to the sitemap.
+- Set `NEXT_PUBLIC_SITE_URL` (e.g. `https://yourdomain.co.uk`) in production. The sitemap, robots.txt and canonical links all use it.
+- The header links to the quiz and rankings. The footer links to the homepage, the quiz, `/best` and every ranking page.
+
+## Structure
+
+```
+app/            layout (nav + footer), homepage (/), quiz (/quiz), results (/results),
+                rankings (/best, /best/[slug]), car pages (/car/[slug]), sitemap.ts, robots.ts
+components/     Quiz, Results, CarCard, CarImage, CarLink, CarBreadcrumb, QuizCta, AdSlot
+scripts/        Python scripts that add Wikimedia photos to cars.json
+lib/            cars.ts (typed data), quiz.ts (questions + URL state), match.ts (quiz filter/rank),
+                rankings.ts (ranking pages), carProfile.ts (car page write-up and comparisons), site.ts (name, edition, site URL), format.ts
+data/           cars.json + README on the data source
+```
+
+## Data
+
+`data/cars.json` holds 471 cars from EV Database (ev-database.org), extracted on 9 October 2026. Only cars marked Available that have a UK price are included. See `data/README.md` for details. Range is EV Database's real-world range, **not WLTP**.
+
+To update the data, replace `data/cars.json` with a new file that has the same fields. No code changes are needed.
