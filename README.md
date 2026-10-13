@@ -43,6 +43,8 @@ If nothing matches, the results page suggests which single answer to loosen and 
 
 **Search covers every column.** The quiz filters above handle the common needs. Everything else in `data/cars.json` is a field in `lib/fields.ts`, which powers the results page's "Filter and sort" panel: make and model name, size class, towbar and towing weight, boot space, weight, Euro NCAP stars, AC charging, charging plug, V2H, V2G, model year, end of sales, availability, prices in Germany and the Netherlands, EUR price per km, and whether each figure is an estimate. The text search fills in the quiz answers *and* any of these extra filters and a sort (Claude returns them as structured output; `refinementFromText` in `lib/understand.ts` is the built-in fallback). The extra filters travel in the results URL as `f=key:value`, `sort=` and `dir=`. Only `ID` and `URL` aren't searchable, because they're identifiers.
 
+**No results.** When the answers plus any extra filters leave no cars, the results page suggests single changes that bring some back, each with a car count (`relaxSearch` in `lib/match.ts`): raise the budget to the next band with matches, set a quiz answer back to "no preference", loosen a number filter to the nearest value a car actually has (e.g. towing 1,500 kg → 1,200 kg), or drop an extra filter. The search text and sort are kept.
+
 **Ranking** (`rankCars`)
 - *Maximum range* (default): highest `Real range km` first. Cars within `RANGE_TIE_KM` (10 km) of each other count as "very close" and are ordered by `Price per km EUR`, lowest first. Each band starts from the highest remaining range, so the order stays stable.
 - *Higher efficiency*: lowest `Efficiency Wh/km` first, with ties broken by range.

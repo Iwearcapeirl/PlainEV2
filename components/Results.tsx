@@ -12,7 +12,7 @@ import RefinePanel from "@/components/RefinePanel";
 import { carHref, cars, type Car } from "@/lib/cars";
 import { formatAccel, formatGbp, formatMi, formatMiPerKwh } from "@/lib/format";
 import { describe, fieldByKey, isRefined, isSet, refine, refinementFromParams, writeRefinement, type Refinement } from "@/lib/fields";
-import { matchedFilters, matchesAnswers, rankCars, suggestRelaxations } from "@/lib/match";
+import { matchedFilters, matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { activeFilters, answersFromParams, answersToQuery, priorityOf, type Answers } from "@/lib/quiz";
 
 /** How many cars a refined list shows at first, and how many more each "Show more" adds. */
@@ -26,7 +26,6 @@ export default function Results() {
   const ranked = useMemo(() => rankCars(cars.filter((c) => matchesAnswers(c, answers)), answers.priority), [answers]);
   const total = ranked.length;
   const top = ranked.slice(0, 5);
-  const relaxations = useMemo(() => (total === 0 ? suggestRelaxations(cars, answers) : []), [total, answers]);
 
   const filters = activeFilters(answers);
   // Extra filters from the URL (set by a search or the "Filter and sort" panel) count as answers too.
@@ -60,6 +59,19 @@ export default function Results() {
 
   const refined = isRefined(refinement);
   const list = useMemo(() => (refined ? refine(ranked, refinement) : []), [refined, ranked, refinement]);
+  // Nothing to show (from the answers alone, or after extra filters): suggest one change that brings cars back.
+  const empty = total === 0 || (refined && list.length === 0);
+  const relaxations = useMemo(() => (empty ? relaxSearch(cars, answers, refinement) : []), [empty, answers, refinement]);
+  const relaxHref = (r: SearchRelaxation) => {
+    const p = writeRefinement(new URLSearchParams(answersToQuery(r.answers)), r.refinement);
+    if (searched) p.set("q", searched);
+    return `/results?${p}`;
+  };
+  const tryRelaxation = (r: SearchRelaxation) => {
+    // Same quiz answers: only the extra filters change, so update them in place (the URL follows).
+    if (answersToQuery(r.answers) === query) change(r.refinement);
+    else router.push(relaxHref(r));
+  };
   const change = (next: Refinement) => {
     setRefinement(next);
     setShown(PAGE);
@@ -163,10 +175,7 @@ export default function Results() {
               )}
             </>
           ) : (
-            <div className="mt-5 rounded-2xl bg-card p-6 shadow-[0_0_0_1px_var(--line)]">
-              <p className="font-semibold">No cars match these filters.</p>
-              <p className="mt-1 text-muted">Widen a range or remove a filter to bring cars back.</p>
-            </div>
+            <Loosen title="No cars match all of these" relaxations={relaxations} href={relaxHref} onPick={tryRelaxation} />
           )}
         </section>
       ) : total > 0 ? (
@@ -198,30 +207,56 @@ export default function Results() {
           )}
         </>
       ) : (
-        <div className="mx-auto mt-6 max-w-3xl rounded-2xl bg-card p-6 shadow-[0_0_0_1px_var(--line)]">
-          <h2 className="font-wide text-lg font-semibold">Try loosening one answer</h2>
-          {relaxations.length > 0 ? (
-            <ul className="mt-4 grid gap-2">
-              {relaxations.map((r) => (
-                <li key={r.label}>
-                  <Link
-                    href={`/results?${answersToQuery(r.answers)}`}
-                    className="flex items-center justify-between gap-4 rounded-xl bg-background px-4 py-3.5 text-[15px] font-medium hover:bg-accent-soft"
-                  >
-                    <span>{r.label}</span>
-                    <span className="shrink-0 text-sm font-normal tabular-nums text-muted">
-                      {r.count} {r.count === 1 ? "car" : "cars"}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-muted">Loosening any single answer still gives no matches, so try changing a few of them.</p>
-          )}
+        <div className="mx-auto mt-1 max-w-3xl">
+          <Loosen title="Try loosening one answer" relaxations={relaxations} href={relaxHref} onPick={tryRelaxation} />
         </div>
       )}
     </>
+  );
+}
+
+/** Suggestions for an empty result: each is one change, with how many cars it brings back. */
+function Loosen({
+  title,
+  relaxations,
+  href,
+  onPick,
+}: {
+  title: string;
+  relaxations: SearchRelaxation[];
+  href: (r: SearchRelaxation) => string;
+  onPick: (r: SearchRelaxation) => void;
+}) {
+  return (
+    <div className="mt-5 rounded-2xl bg-card p-6 shadow-[0_0_0_1px_var(--line)]">
+      <h2 className="font-wide text-lg font-semibold">{title}</h2>
+      {relaxations.length > 0 ? (
+        <>
+          <p className="mt-1 text-muted">Change one thing to bring cars back:</p>
+          <ul className="mt-4 grid gap-2">
+            {relaxations.map((r) => (
+              <li key={r.label}>
+                <Link
+                  href={href(r)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onPick(r);
+                  }}
+                  className="flex items-center justify-between gap-4 rounded-xl bg-background px-4 py-3.5 text-[15px] font-medium hover:bg-accent-soft"
+                >
+                  <span>{r.label}</span>
+                  <span className="shrink-0 text-sm font-normal tabular-nums text-muted">
+                    {r.count} {r.count === 1 ? "car" : "cars"}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="mt-2 text-muted">No single change brings cars back, so try changing a few of your answers or filters.</p>
+      )}
+    </div>
   );
 }
 
