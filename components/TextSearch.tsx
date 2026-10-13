@@ -39,7 +39,10 @@ export default function TextSearch({ initial = "", onUseQuiz }: { initial?: stri
         body: JSON.stringify({ text: q }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      answers = (await res.json()).answers;
+      const data = await res.json();
+      answers = data.answers;
+      // Shows in the browser console why Claude wasn't used (e.g. "no_api_key"); the server log has the details.
+      if (data.source === "rules") console.warn(`Search used the built-in rules instead of Claude (${data.reason ?? "unknown"}).`);
     } catch {
       answers = answersFromText(q);
     }

@@ -9,6 +9,12 @@ import { MAX_QUERY_LENGTH, answersFromText, answersSchema, normaliseAnswers, opt
  * network, refusal, bad output) the built-in rules answer instead, so search always works.
  */
 
+// Give Claude time to answer on Vercel and similar hosts (the default limit can be shorter than the API call).
+export const maxDuration = 60;
+
+/** Short reason codes for the fallback, so you can see why the rules were used without exposing anything sensitive. */
+type FallbackReason = "no_api_key" | "api_error" | "timeout" | "refusal" | "bad_output" | "unreachable";
+
 const prices = cars.map((c) => c.priceGbp).sort((a, b) => a - b);
 const ranges = cars.map((c) => kmToMiles(c.rangeKm)).sort((a, b) => a - b);
 
@@ -37,8 +43,19 @@ export async function POST(request: Request) {
   }
   if (!text) return Response.json({ error: "Describe the car you're looking for." }, { status: 400 });
 
+  const fallback = (reason: FallbackReason, detail = "") => {
+    console.warn(`understand: using built-in rules (${reason})${detail ? `: ${detail}` : ""}`);
+    return Response.json({ answers: answersFromText(text), source: "rules", reason });
+  };
+
+  // The SDK reads ANTHROPIC_API_KEY. If it's missing here, the variable isn't reaching this deployment
+  // (wrong name, wrong environment, or the site hasn't been redeployed since it was added).
+  if (!process.env.ANTHROPIC_API_KEY?.trim()) {
+    return fallback("no_api_key", "ANTHROPIC_API_KEY is not set for this deployment");
+  }
+
   try {
-    const client = new Anthropic({ timeout: 20_000, maxRetries: 1 });
+    const client = new Anthropic({ timeout: 45_000, maxRetries: 1 });
     const response = await client.beta.messages.create({
       model: "claude-opus-5-5",
       max_tokens: 4000,
@@ -49,17 +66,20 @@ export async function POST(request: Request) {
       messages: [{ role: "user", content: `Buyer's description:\n<description>\n${text}\n</description>` }],
     });
 
-    if (response.stop_reason === "end_turn") {
-      const out = response.content.find((b) => b.type === "text");
-      if (out && out.type === "text") {
-        return Response.json({ answers: normaliseAnswers(JSON.parse(out.text)), source: "ai" });
-      }
+    if (response.stop_reason === "refusal") return fallback("refusal");
+    const out = response.content.find((b) => b.type === "text");
+    if (response.stop_reason !== "end_turn" || !out || out.type !== "text") {
+      return fallback("bad_output", `stop_reason ${response.stop_reason}`);
     }
-    console.warn(`understand: Claude stopped with ${response.stop_reason}; using built-in rules`);
+    try {
+      return Response.json({ answers: normaliseAnswers(JSON.parse(out.text)), source: "ai", model: response.model });
+    } catch {
+      return fallback("bad_output", "response was not valid JSON");
+    }
   } catch (error) {
-    if (error instanceof Anthropic.APIError) console.warn(`understand: Claude API error ${error.status}; using built-in rules`);
-    else console.warn("understand: Claude unavailable; using built-in rules:", (error as Error).message);
+    if (error instanceof Anthropic.APIConnectionTimeoutError) return fallback("timeout");
+    // The API's own message says what's wrong, e.g. "invalid x-api-key" or a low credit balance. It never contains the key.
+    if (error instanceof Anthropic.APIError) return fallback("api_error", `${error.status} ${error.message}`);
+    return fallback("unreachable", (error as Error).message);
   }
-
-  return Response.json({ answers: answersFromText(text), source: "rules" });
 }
