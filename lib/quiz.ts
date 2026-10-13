@@ -1,4 +1,4 @@
-import type { Car } from "./cars";
+import { cars, type Car } from "./cars";
 import { milesToKm } from "./format";
 
 /**
@@ -120,6 +120,17 @@ const oneStop = (miles: number): FilterOption => ({
 });
 export const ONE_STOPS: FilterOption[] = [any(), oneStop(300), oneStop(350), oneStop(400)];
 
+/** 0–62 mph ceilings in seconds (0–100 km/h is the same measure). */
+const accel = (seconds: number): FilterOption => ({
+  id: String(seconds),
+  label: `${seconds} s or quicker`,
+  chip: `0–62 mph in ${seconds} s or less`,
+  test: (c) => c.accelS <= seconds,
+});
+const accelTimes = cars.map((c) => c.accelS).sort((a, b) => a - b);
+const MEDIAN_ACCEL = accelTimes[Math.floor(accelTimes.length / 2)].toFixed(1);
+export const ACCELS: FilterOption[] = [any(), accel(8), accel(7), accel(6), accel(5), accel(4)];
+
 // ---------- Registry ----------
 
 export const FILTERS = {
@@ -133,6 +144,7 @@ export const FILTERS = {
   v2l: V2L,
   efficiency: EFFICIENCIES,
   oneStop: ONE_STOPS,
+  accel: ACCELS,
 } satisfies Record<string, FilterOption[]>;
 
 export type FilterKey = keyof typeof FILTERS;
@@ -147,11 +159,13 @@ export const MORE_FILTERS: { key: FilterKey; title: string; hint?: string }[] = 
   { key: "v2l", title: "Vehicle-to-load (V2L)", hint: "Power a kettle, laptop or camping kit from the car." },
   { key: "efficiency", title: "Efficiency", hint: "More miles per kWh means cheaper to run." },
   { key: "oneStop", title: "Motorway trip with one 15-minute charge", hint: "Total distance at motorway speed with one quick stop." },
+  { key: "accel", title: "Acceleration (0–62 mph)", hint: `The same as 0–100 km/h. Half the EVs on sale take ${MEDIAN_ACCEL} s or less.` },
 ];
 
 export const PRIORITIES = [
   { id: "range", label: "Maximum range", hint: "Furthest real-world range first" },
   { id: "efficiency", label: "Higher efficiency", hint: "Most miles per kWh first, which means cheaper to run" },
+  { id: "acceleration", label: "Quickest acceleration", hint: "Fastest 0–62 mph first" },
 ] as const;
 export type PriorityId = (typeof PRIORITIES)[number]["id"];
 export const priorityOf = (id: PriorityId) => PRIORITIES.find((p) => p.id === id)!;
@@ -193,6 +207,7 @@ const PARAM: Record<FilterKey, string> = {
   v2l: "v2l",
   efficiency: "eff",
   oneStop: "onestop",
+  accel: "accel",
 };
 
 // Older links (before the quiz was expanded) used these values.

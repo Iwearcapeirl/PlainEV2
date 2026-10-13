@@ -52,6 +52,7 @@ export const FIELDS: Field[] = [
   { key: "permile", label: "Price per mile of range", kind: "number", unit: "£", prefix: true, step: 10, get: (c) => Math.round(c.priceGbp / (c.rangeKm / KM_PER_MILE)) },
   { key: "battery", label: "Usable battery", kind: "number", unit: "kWh", step: 5, get: (c) => c.batteryKwh },
   { key: "charging", label: "Rapid charging speed", kind: "number", unit: "kW", step: 10, get: (c) => c.fastchargeKw },
+  { key: "accel", label: "0–62 mph time", kind: "number", unit: "s", step: 0.1, get: (c) => c.accelS },
   { key: "seats", label: "Seats", kind: "number", unit: "seats", step: 1, get: (c) => c.seats },
   choice("make", "Make", (c) => c.make),
   choice("body", "Body style", (c) => c.body, bodyLabel),

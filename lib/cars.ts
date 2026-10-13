@@ -37,6 +37,7 @@ interface RawCar {
   "1-stop range km": number;
   "Usable battery kWh": number;
   "Fastcharge kW": number;
+  "0-100 km/h s": number;
   "Price per km EUR": number;
   "Price UK GBP": number;
   URL: string;
@@ -62,6 +63,8 @@ export interface Car {
   oneStopKm: number;
   batteryKwh: number;
   fastchargeKw: number;
+  /** 0–100 km/h in seconds (the same as 0–62 mph). */
+  accelS: number;
   pricePerKmEur: number;
   priceGbp: number;
   url: string;
@@ -93,6 +96,7 @@ function toCar(r: RawCar): Car {
     oneStopKm: r["1-stop range km"],
     batteryKwh: r["Usable battery kWh"],
     fastchargeKw: r["Fastcharge kW"],
+    accelS: r["0-100 km/h s"],
     pricePerKmEur: r["Price per km EUR"],
     priceGbp: r["Price UK GBP"],
     url: r.URL,

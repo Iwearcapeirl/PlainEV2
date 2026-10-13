@@ -2,10 +2,10 @@ import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
 import RangeBar from "@/components/RangeBar";
 import { carHref, type Car } from "@/lib/cars";
-import { formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
+import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
 import type { FilterKey } from "@/lib/quiz";
 
-type Metric = "range" | "efficiency" | "value";
+type Metric = "range" | "efficiency" | "value" | "acceleration";
 
 /**
  * One ranked car. `featured` (used for number 1) stacks a large photo above the details;
@@ -60,6 +60,9 @@ export default function CarCard({
     },
     { label: "1-stop range", value: formatMi(car.oneStopKm), sub: `(${formatKm(car.oneStopKm)})` },
   ];
+  if (metric === "acceleration") {
+    stats.push({ label: "0–62 mph", value: formatAccel(car.accelS), sub: "(0–100 km/h)", strong: true });
+  }
   if (metric === "value") {
     stats.push({
       label: "Price per mile",

@@ -34,6 +34,8 @@ To let Claude read typed searches, set `ANTHROPIC_API_KEY` on the server (e.g. i
   - Heat pump required, and V2L required
   - Efficiency: 3.5+, 3.8+ or 4.0+ mi/kWh ("Best"), i.e. `Efficiency Wh/km` ≤ 180, 165 or 155
   - One-stop range: 300+, 350+ or 400+ miles on `1-stop range km`
+  - Acceleration: 0–62 mph in 8, 7, 6, 5 or 4 seconds or less, on `0-100 km/h s`
+- **Priority** can also be *quickest acceleration*: fastest 0–62 mph first, then longest range. Search uses it when someone asks for a quick or sporty car without giving a time, so a tight budget still returns cars; a stated time ("0-60 in under 5 seconds") sets the acceleration filter instead.
 
 Each result card shows a "Matches your answers" row with a chip for every filter you set.
 

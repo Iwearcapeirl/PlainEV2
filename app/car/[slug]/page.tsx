@@ -20,6 +20,7 @@ import {
   type Standing,
 } from "@/lib/carProfile";
 import {
+  formatAccel,
   formatDistance,
   formatEfficiency,
   formatGbp,
@@ -218,11 +219,12 @@ export default async function CarPage({ params }: Props) {
             ]}
           />
           <SpecGroup
-            title="Body and practicality"
+            title="Body and performance"
             rows={[
               ["Body style", bodyLabel(car.body)],
               ["Seats", String(car.seats)],
               ["Drive", driveLabel(car.drive)],
+              ["0–62 mph (0–100 km/h)", formatAccel(car.accelS)],
             ]}
           />
           <SpecGroup

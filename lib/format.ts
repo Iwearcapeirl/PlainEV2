@@ -38,3 +38,6 @@ export const formatEfficiency = (whPerKm: number) => `${formatMiPerKwh(whPerKm)}
 export const formatGbpPerMile = (priceGbp: number, rangeKm: number) => gbp.format(priceGbp / (rangeKm / KM_PER_MILE));
 /** UK price per km of real-world range, e.g. "£107". */
 export const formatGbpPerKm = (priceGbp: number, rangeKm: number) => gbp.format(priceGbp / rangeKm);
+
+/** "5.1 s" — 0–62 mph time (0–100 km/h is the same measure, so the figure is identical). */
+export const formatAccel = (s: number) => `${oneDp.format(s)} s`;

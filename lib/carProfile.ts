@@ -109,6 +109,18 @@ export function similarCars(car: Car, count = 3): Car[] {
 
 // ---------- Write-up ----------
 
+/** "quicker than 80% of the EVs on sale", "slower than most EVs on sale" etc. */
+function accelCompare(car: Car): string {
+  const slower = cars.filter((c) => c.accelS > car.accelS).length;
+  const quicker = cars.filter((c) => c.accelS < car.accelS).length;
+  if (quicker === 0) return "the quickest of the electric cars on sale in the UK";
+  if (slower === 0) return "the slowest of the electric cars on sale in the UK";
+  const pct = Math.round((slower / cars.length) * 100);
+  return pct >= 50
+    ? `quicker than ${pct}% of the electric cars on sale in the UK`
+    : `slower than ${Math.round((quicker / cars.length) * 100)}% of the electric cars on sale in the UK`;
+}
+
 /** A short, neutral summary in plain paragraphs, built only from the data. */
 export function carSummary(car: Car): string[] {
   const s = carStandings(car);
@@ -117,7 +129,8 @@ export function carSummary(car: Car): string[] {
 
   const intro =
     `The ${name} is a ${car.seats}-seat ${bodyNoun(car.body)} with ${driveLabel(car.drive).toLowerCase()}, ` +
-    `on sale in the UK from ${formatGbp(car.priceGbp)}.`;
+    `on sale in the UK from ${formatGbp(car.priceGbp)}. ` +
+    `It accelerates from 0 to 62 mph in ${car.accelS.toFixed(1)} seconds, ${accelCompare(car)}.`;
 
   const tied = cars.filter((c) => c.rangeKm === car.rangeKm).length > 1;
   const joint = tied ? "joint " : "";

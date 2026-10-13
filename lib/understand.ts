@@ -75,7 +75,7 @@ export function answersFromText(input: string): Answers {
   const a = { ...DEFAULT_ANSWERS };
 
   // Budget: an amount after a ceiling word, or any £ amount.
-  const budgetPhrase = t.match(/(?:under|below|less than|up to|max(?:imum)?|budget(?: of| is)?|around|about|no more than)\s*£?\s*[\d,.]+\s*(?:k|grand|thousand)?/);
+  const budgetPhrase = t.match(/(?:under|below|less than|up to|max(?:imum)?|budget(?: of| is)?|around|about|no more than)\s*£?\s*[\d,.]+(?![\d,.])(?!\s*(?:s\b|secs?\b|seconds?|mph|mi\b|miles?|km|kwh|kw\b|seats?))\s*(?:k|grand|thousand)?/);
   const pounds = budgetPhrase ? money(budgetPhrase[0]) : t.includes("£") ? money(t.slice(t.indexOf("£"))) : null;
   if (pounds) a.budget = nearestBudget(pounds);
   else if (/\b(cheap|cheapest|affordable|budget|low cost)\b/.test(t)) a.budget = "under-30k";
@@ -106,6 +106,19 @@ export function answersFromText(input: string): Answers {
   if (/heat ?pump|cold (weather|winters?)/.test(t)) a.heatPump = "yes";
   if (/\bv2l\b|vehicle[- ]to[- ]load|power (appliances|a kettle|tools)|camping/.test(t)) a.v2l = "yes";
   if (/\b(efficient|efficiency|cheap to run|running costs?|economical)\b/.test(t)) a.priority = "efficiency";
+
+  // Acceleration. A stated time ("0-60 in under 5 seconds") sets the matching filter; words like "quick" or
+  // "sporty" without a time rank the quickest cars first instead, so a tight budget still returns cars.
+  const time = t.match(/0\s*[-–to]+\s*(?:60|62|100)\b[^\d]{0,25}?(\d+(?:\.\d+)?)\s*(?:s\b|sec)/) ?? t.match(/\b(?:under|below|less than)\s*(\d+(?:\.\d+)?)\s*(?:s\b|sec)/);
+  if (time) {
+    const seconds = Number(time[1]);
+    const fits = FILTERS.accel.filter((o) => o.id !== "any" && Number(o.id) <= seconds);
+    a.accel = fits.length ? fits[0].id : FILTERS.accel[FILTERS.accel.length - 1].id;
+  }
+  const noCharging = t.replace(/\b(fast|quick|rapid)[- ]?charg\w*|charging (speed|time)s?/g, "");
+  if (time || /\b(quick|fast|nippy|sporty|sports car|performance|accelerat\w*|0\s*-\s*60)\b/.test(noCharging)) {
+    a.priority = "acceleration";
+  }
 
   return a;
 }

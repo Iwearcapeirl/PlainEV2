@@ -33,8 +33,13 @@ const chain =
  * Inside a band, the cheaper price-per-km comes first.
  *
  * Efficiency mode: lowest Wh/km (= most mi/kWh) first, then highest range.
+ *
+ * Acceleration mode: quickest 0–62 mph first, then highest range.
  */
 export function rankCars(list: Car[], priority: PriorityId): Car[] {
+  if (priority === "acceleration") {
+    return [...list].sort(chain((x, y) => x.accelS - y.accelS, byRangeDesc, byPricePerKm, byId));
+  }
   if (priority === "efficiency") {
     return [...list].sort(chain((x, y) => x.whPerKm - y.whPerKm, byRangeDesc, byPricePerKm, byId));
   }

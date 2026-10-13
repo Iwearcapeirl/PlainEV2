@@ -10,7 +10,7 @@ import CarLink from "@/components/CarLink";
 import RangeBar from "@/components/RangeBar";
 import RefinePanel from "@/components/RefinePanel";
 import { carHref, cars, type Car } from "@/lib/cars";
-import { formatGbp, formatMi, formatMiPerKwh } from "@/lib/format";
+import { formatAccel, formatGbp, formatMi, formatMiPerKwh } from "@/lib/format";
 import { describe, fieldByKey, isRefined, isSet, refine, refinementFromParams, writeRefinement, type Refinement } from "@/lib/fields";
 import { matchedFilters, matchesAnswers, rankCars, suggestRelaxations } from "@/lib/match";
 import { activeFilters, answersFromParams, answersToQuery, priorityOf, type Answers } from "@/lib/quiz";
@@ -132,7 +132,15 @@ export default function Results() {
                       car={car}
                       rank={i + 1}
                       matched={matchedFilters(car, answers)}
-                      metric={refinement.sort === "efficiency" ? "efficiency" : refinement.sort === "permile" ? "value" : "range"}
+                      metric={
+                        refinement.sort === "efficiency"
+                          ? "efficiency"
+                          : refinement.sort === "permile"
+                            ? "value"
+                            : refinement.sort === "accel" || (!refinement.sort && answers.priority === "acceleration")
+                              ? "acceleration"
+                              : "range"
+                      }
                       returnLabel="your results"
                     />
                   </li>
@@ -170,7 +178,13 @@ export default function Results() {
               <ol start={2} className="mt-5 grid gap-4">
                 {more.map((car, i) => (
                   <li key={car.id}>
-                    <CarCard car={car} rank={i + 2} matched={matchedFilters(car, answers)} returnLabel="your results" />
+                    <CarCard
+                      car={car}
+                      rank={i + 2}
+                      matched={matchedFilters(car, answers)}
+                      metric={answers.priority === "acceleration" ? "acceleration" : "range"}
+                      returnLabel="your results"
+                    />
                   </li>
                 ))}
               </ol>
@@ -209,6 +223,7 @@ export default function Results() {
 function TopMatch({ car, total, answers }: { car: Car; total: number; answers: Answers }) {
   const matched = matchedFilters(car, answers);
   const efficient = answers.priority === "efficiency";
+  const quick = answers.priority === "acceleration";
 
   return (
     <article aria-labelledby="top-title" className="on-ink overflow-hidden rounded-2xl shadow-[var(--sc-e2)]">
@@ -254,6 +269,10 @@ function TopMatch({ car, total, answers }: { car: Car; total: number; answers: A
           <div>
             <dt className="text-on-ink/70">1-stop range</dt>
             <dd className="font-wide text-lg font-semibold tabular-nums">{formatMi(car.oneStopKm)}</dd>
+          </div>
+          <div>
+            <dt className={quick ? "text-signal" : "text-on-ink/70"}>0–62 mph</dt>
+            <dd className="font-wide text-lg font-semibold tabular-nums">{formatAccel(car.accelS)}</dd>
           </div>
         </dl>
 

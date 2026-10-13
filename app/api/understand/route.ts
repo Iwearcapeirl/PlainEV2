@@ -17,11 +17,16 @@ type FallbackReason = "no_api_key" | "api_error" | "timeout" | "refusal" | "bad_
 
 const prices = cars.map((c) => c.priceGbp).sort((a, b) => a - b);
 const ranges = cars.map((c) => kmToMiles(c.rangeKm)).sort((a, b) => a - b);
+const accels = cars.map((c) => c.accelS).sort((a, b) => a - b);
+/** Quickest 0–62 mph time within each budget ceiling, so Claude knows what "quick" can mean at a given price. */
+const quickestUnder = [30_000, 40_000, 50_000, 70_000]
+  .map((cap) => `£${cap / 1000}k: ${Math.min(...cars.filter((c) => c.priceGbp <= cap).map((c) => c.accelS))} s`)
+  .join(", ");
 
 // Fixed text, so repeated requests share one cached prefix.
 const SYSTEM = `You turn a UK car buyer's description of the electric car they want into filters for an EV comparison site.
 
-The site lists ${cars.length} EVs on sale in the UK, from £${prices[0].toLocaleString("en-GB")} to £${prices[prices.length - 1].toLocaleString("en-GB")}, with real-world ranges from ${ranges[0]} to ${ranges[ranges.length - 1]} miles. Results are the five best matches ranked by the priority.
+The site lists ${cars.length} EVs on sale in the UK, from £${prices[0].toLocaleString("en-GB")} to £${prices[prices.length - 1].toLocaleString("en-GB")}, with real-world ranges from ${ranges[0]} to ${ranges[ranges.length - 1]} miles and 0–62 mph times from ${accels[0]} to ${accels[accels.length - 1]} seconds (median ${accels[Math.floor(accels.length / 2)]} s). The quickest car at or under each price: ${quickestUnder}. Results are the five best matches ranked by the priority.
 
 Filters (key: "option id" = meaning):
 ${optionsGuide()}
@@ -31,6 +36,7 @@ How to choose:
 - Budget options are price ceilings. Pick the band whose ceiling is closest to the stated maximum; "over-70k" and "no-limit" both mean no ceiling.
 - Range options are minimums in real-world miles. Pick the highest option that does not exceed what they ask for. Regular long motorway trips suggest "300"; typical commuting needs no filter unless they give a distance.
 - Infer sensibly from everyday language: "a big dog and three kids" suggests an SUV or estate only if they also mention space; "seven seats" or "third row" means seats "7"; snowy or rural roads suggest drive "awd"; very cold winters suggest a heat pump; camping or powering tools suggests V2L; cheap running costs suggest priority "efficiency".
+- Acceleration: 0–60 mph, 0–62 mph and 0–100 km/h are treated as the same measure. When they want a quick, fast, sporty or nippy car without giving a time, set priority to "acceleration" (quickest first within their other filters) and leave "accel" on "any", because a time cut-off can easily rule out every car at their budget. Set "accel" only when they state a time or clearly ask for a seriously fast car with no tight budget; pick the option at or just below the time they give. If they ask for both quick acceleration and long range, use priority "acceleration" only if pace is the main point of the description.
 - Anything the filters can't express (colour, brand loyalty, towing) is ignored.`;
 
 export async function POST(request: Request) {
