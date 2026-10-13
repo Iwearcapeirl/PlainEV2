@@ -43,43 +43,58 @@ export async function POST(request: Request) {
   }
   if (!text) return Response.json({ error: "Describe the car you're looking for." }, { status: 400 });
 
-  const fallback = (reason: FallbackReason, detail = "") => {
-    console.warn(`understand: using built-in rules (${reason})${detail ? `: ${detail}` : ""}`);
-    return Response.json({ answers: answersFromText(text), source: "rules", reason });
+  const fallback = (reason: FallbackReason, error?: { status?: number; type?: string | null; message?: string }) => {
+    const detail = error ? ` ${error.status ?? ""} ${error.type ?? ""} ${error.message ?? ""}`.replace(/\s+/g, " ") : "";
+    console.warn(`understand: using built-in rules (${reason})${detail}`);
+    // `error` carries the API's status, error type and message (never the key), so the cause shows in the browser too.
+    return Response.json({ answers: answersFromText(text), source: "rules", reason, ...(error ? { error } : {}) });
   };
 
   // The SDK reads ANTHROPIC_API_KEY. If it's missing here, the variable isn't reaching this deployment
   // (wrong name, wrong environment, or the site hasn't been redeployed since it was added).
   if (!process.env.ANTHROPIC_API_KEY?.trim()) {
-    return fallback("no_api_key", "ANTHROPIC_API_KEY is not set for this deployment");
+    return fallback("no_api_key", { message: "ANTHROPIC_API_KEY is not set for this deployment" });
   }
 
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim(), timeout: 45_000, maxRetries: 1 });
+  const base = {
+    model: "claude-opus-5-5",
+    max_tokens: 4000,
+    output_config: { effort: "low" as const, format: { type: "json_schema" as const, schema: answersSchema() } },
+    system: [{ type: "text" as const, text: SYSTEM, cache_control: { type: "ephemeral" as const } }],
+    messages: [{ role: "user" as const, content: `Buyer's description:\n<description>\n${text}\n</description>` }],
+  };
+
   try {
-    const client = new Anthropic({ timeout: 45_000, maxRetries: 1 });
-    const response = await client.beta.messages.create({
-      model: "claude-opus-5-5",
-      max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low", format: { type: "json_schema", schema: answersSchema() } },
-      system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: `Buyer's description:\n<description>\n${text}\n</description>` }],
-    });
+    let response;
+    try {
+      // Server-side fallback (beta): if the model declines, the API retries on a recommended model in the same call.
+      response = await client.beta.messages.create({ ...base, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
+    } catch (error) {
+      // If the API rejects the request itself (not the key or billing), try once more without the beta feature.
+      const billing = error instanceof Anthropic.APIError && /credit|billing|balance/i.test(error.message);
+      if (!(error instanceof Anthropic.APIError && error.status === 400 && !billing)) throw error;
+      console.warn(`understand: request rejected with fallbacks (${error.message}); retrying without them`);
+      response = await client.beta.messages.create(base);
+    }
 
     if (response.stop_reason === "refusal") return fallback("refusal");
     const out = response.content.find((b) => b.type === "text");
     if (response.stop_reason !== "end_turn" || !out || out.type !== "text") {
-      return fallback("bad_output", `stop_reason ${response.stop_reason}`);
+      return fallback("bad_output", { message: `stop_reason ${response.stop_reason}` });
     }
     try {
       return Response.json({ answers: normaliseAnswers(JSON.parse(out.text)), source: "ai", model: response.model });
     } catch {
-      return fallback("bad_output", "response was not valid JSON");
+      return fallback("bad_output", { message: "response was not valid JSON" });
     }
   } catch (error) {
     if (error instanceof Anthropic.APIConnectionTimeoutError) return fallback("timeout");
+    if (error instanceof Anthropic.APIConnectionError) return fallback("unreachable", { message: error.message });
     // The API's own message says what's wrong, e.g. "invalid x-api-key" or a low credit balance. It never contains the key.
-    if (error instanceof Anthropic.APIError) return fallback("api_error", `${error.status} ${error.message}`);
-    return fallback("unreachable", (error as Error).message);
+    if (error instanceof Anthropic.APIError) {
+      return fallback("api_error", { status: error.status, type: error.type, message: error.message.slice(0, 300) });
+    }
+    return fallback("unreachable", { message: (error as Error).message });
   }
 }
