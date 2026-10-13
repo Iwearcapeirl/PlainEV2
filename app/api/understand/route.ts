@@ -46,8 +46,8 @@ export async function POST(request: Request) {
   const fallback = (reason: FallbackReason, error?: { status?: number; type?: string | null; message?: string }) => {
     const detail = error ? ` ${error.status ?? ""} ${error.type ?? ""} ${error.message ?? ""}`.replace(/\s+/g, " ") : "";
     console.warn(`understand: using built-in rules (${reason})${detail}`);
-    // `error` carries the API's status, error type and message (never the key), so the cause shows in the browser too.
-    return Response.json({ answers: answersFromText(text), source: "rules", reason, ...(error ? { error } : {}) });
+    // The details stay in the server log (Vercel → Logs); visitors only get the short reason code.
+    return Response.json({ answers: answersFromText(text), source: "rules", reason });
   };
 
   // The SDK reads ANTHROPIC_API_KEY. If it's missing here, the variable isn't reaching this deployment
@@ -58,7 +58,8 @@ export async function POST(request: Request) {
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim(), timeout: 45_000, maxRetries: 1 });
   const base = {
-    model: "claude-opus-5-5",
+    // Haiku is the fastest and cheapest model, and mapping a description onto fixed options is a simple job.
+    model: "claude-haiku-5-5",
     max_tokens: 4000,
     output_config: { effort: "low" as const, format: { type: "json_schema" as const, schema: answersSchema() } },
     system: [{ type: "text" as const, text: SYSTEM, cache_control: { type: "ephemeral" as const } }],
@@ -66,17 +67,7 @@ export async function POST(request: Request) {
   };
 
   try {
-    let response;
-    try {
-      // Server-side fallback (beta): if the model declines, the API retries on a recommended model in the same call.
-      response = await client.beta.messages.create({ ...base, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
-    } catch (error) {
-      // If the API rejects the request itself (not the key or billing), try once more without the beta feature.
-      const billing = error instanceof Anthropic.APIError && /credit|billing|balance/i.test(error.message);
-      if (!(error instanceof Anthropic.APIError && error.status === 400 && !billing)) throw error;
-      console.warn(`understand: request rejected with fallbacks (${error.message}); retrying without them`);
-      response = await client.beta.messages.create(base);
-    }
+    const response = await client.beta.messages.create(base);
 
     if (response.stop_reason === "refusal") return fallback("refusal");
     const out = response.content.find((b) => b.type === "text");
