@@ -38,6 +38,28 @@ interface RawCar {
   "Usable battery kWh": number;
   "Fastcharge kW": number;
   "0-100 km/h s": number;
+  Status: string;
+  Availability: string;
+  "Available from": string;
+  "Available to": string | null;
+  "Year from": number;
+  "Year to": number | null;
+  Segment: string;
+  "Towbar possible": boolean;
+  "Euro NCAP stars": number | null;
+  V2H: boolean;
+  V2G: boolean;
+  "AC charge kW": number;
+  "Charge plug": string;
+  "Range estimated": boolean;
+  "Efficiency estimated": boolean;
+  "Weight kg": number;
+  "Battery estimated": boolean;
+  "Towing kg": number;
+  "Cargo L": number;
+  "Price/km estimated": boolean;
+  "Price Germany EUR": number | null;
+  "Price Netherlands EUR": number | null;
   "Price per km EUR": number;
   "Price UK GBP": number;
   URL: string;
@@ -65,6 +87,38 @@ export interface Car {
   fastchargeKw: number;
   /** 0–100 km/h in seconds (the same as 0–62 mph). */
   accelS: number;
+  /** Sales status (every car on the site is "Available"). */
+  status: string;
+  /** e.g. "Available to order since April 2026" */
+  availability: string;
+  /** ISO dates: when orders opened, and when sales end (null when no end date is announced). */
+  availableFrom: string;
+  availableTo: string | null;
+  /** First (and, if announced, last) model year. */
+  yearFrom: number;
+  yearTo: number | null;
+  /** Size class: A city car … F luxury, N van-based people carrier, S sports car. */
+  segment: string;
+  towbar: boolean;
+  /** Maximum braked towing weight; 0 means not approved for towing. */
+  towingKg: number;
+  /** Boot space in litres. */
+  cargoL: number;
+  weightKg: number;
+  /** null when the car hasn't been tested. */
+  ncapStars: number | null;
+  v2h: boolean;
+  v2g: boolean;
+  /** Maximum AC (home or destination) charging power. */
+  acChargeKw: number;
+  chargePlug: string;
+  /** Whether each figure is an estimate rather than a confirmed one. */
+  rangeEstimated: boolean;
+  efficiencyEstimated: boolean;
+  batteryEstimated: boolean;
+  pricePerKmEstimated: boolean;
+  priceDeEur: number | null;
+  priceNlEur: number | null;
   pricePerKmEur: number;
   priceGbp: number;
   url: string;
@@ -97,6 +151,28 @@ function toCar(r: RawCar): Car {
     batteryKwh: r["Usable battery kWh"],
     fastchargeKw: r["Fastcharge kW"],
     accelS: r["0-100 km/h s"],
+    status: r.Status,
+    availability: r.Availability,
+    availableFrom: r["Available from"],
+    availableTo: r["Available to"],
+    yearFrom: r["Year from"],
+    yearTo: r["Year to"],
+    segment: r.Segment,
+    towbar: r["Towbar possible"],
+    towingKg: r["Towing kg"],
+    cargoL: r["Cargo L"],
+    weightKg: r["Weight kg"],
+    ncapStars: r["Euro NCAP stars"],
+    v2h: r.V2H,
+    v2g: r.V2G,
+    acChargeKw: r["AC charge kW"],
+    chargePlug: r["Charge plug"],
+    rangeEstimated: r["Range estimated"],
+    efficiencyEstimated: r["Efficiency estimated"],
+    batteryEstimated: r["Battery estimated"],
+    pricePerKmEstimated: r["Price/km estimated"],
+    priceDeEur: r["Price Germany EUR"],
+    priceNlEur: r["Price Netherlands EUR"],
     pricePerKmEur: r["Price per km EUR"],
     priceGbp: r["Price UK GBP"],
     url: r.URL,

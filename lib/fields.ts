@@ -1,4 +1,4 @@
-import { bodyLabel, driveLabel } from "./carProfile";
+import { bodyLabel, driveLabel, segmentLabel } from "./carProfile";
 import { cars, type Car } from "./cars";
 import { KM_PER_MILE, kmToMiles, miPerKwh } from "./format";
 
@@ -11,6 +11,8 @@ import { KM_PER_MILE, kmToMiles, miPerKwh } from "./format";
 interface Base {
   key: string;
   label: string;
+  /** Extra meaning for the search assistant (not shown on the page). */
+  about?: string;
 }
 export interface NumberField extends Base {
   kind: "number";
@@ -18,7 +20,10 @@ export interface NumberField extends Base {
   unit: string;
   prefix?: boolean;
   step: number;
-  get: (c: Car) => number;
+  /** null when the data has no value for this car (it then fails any min/max filter and sorts last). */
+  get: (c: Car) => number | null;
+  /** false for years, which shouldn't be written "2,026". */
+  grouping?: boolean;
 }
 export interface ChoiceField extends Base {
   kind: "choice";
@@ -52,15 +57,37 @@ export const FIELDS: Field[] = [
   { key: "permile", label: "Price per mile of range", kind: "number", unit: "£", prefix: true, step: 10, get: (c) => Math.round(c.priceGbp / (c.rangeKm / KM_PER_MILE)) },
   { key: "battery", label: "Usable battery", kind: "number", unit: "kWh", step: 5, get: (c) => c.batteryKwh },
   { key: "charging", label: "Rapid charging speed", kind: "number", unit: "kW", step: 10, get: (c) => c.fastchargeKw },
-  { key: "accel", label: "0–62 mph time", kind: "number", unit: "s", step: 0.1, get: (c) => c.accelS },
+  { key: "accel", label: "0–62 mph time", kind: "number", unit: "s", step: 0.1, get: (c) => c.accelS, about: "same as 0–100 km/h" },
+  { key: "ac", label: "AC charging speed", kind: "number", unit: "kW", step: 1, get: (c) => c.acChargeKw, about: "home wallbox or destination charging" },
+  { key: "boot", label: "Boot space", kind: "number", unit: "L", step: 10, get: (c) => c.cargoL, about: "litres" },
+  { key: "towing", label: "Towing capacity", kind: "number", unit: "kg", step: 100, get: (c) => c.towingKg, about: "braked; 0 means not approved for towing" },
+  { key: "weight", label: "Weight", kind: "number", unit: "kg", step: 50, get: (c) => c.weightKg },
+  { key: "ncap", label: "Euro NCAP safety rating", kind: "number", unit: "stars", step: 1, get: (c) => c.ncapStars, about: "blank when not yet tested" },
+  { key: "year", label: "Model year", kind: "number", unit: "", step: 1, grouping: false, get: (c) => c.yearFrom, about: "year the current version went on sale" },
+  { key: "lastyear", label: "Last model year", kind: "number", unit: "", step: 1, grouping: false, get: (c) => c.yearTo, about: "only set when the end of sales has been announced" },
+  { key: "ppkeur", label: "Price per km of range (EUR)", kind: "number", unit: "€", prefix: true, step: 5, get: (c) => c.pricePerKmEur, about: "European value-for-money measure" },
+  { key: "pricede", label: "Price in Germany", kind: "number", unit: "€", prefix: true, step: 1000, get: (c) => c.priceDeEur },
+  { key: "pricenl", label: "Price in the Netherlands", kind: "number", unit: "€", prefix: true, step: 1000, get: (c) => c.priceNlEur },
   { key: "seats", label: "Seats", kind: "number", unit: "seats", step: 1, get: (c) => c.seats },
   choice("make", "Make", (c) => c.make),
   choice("body", "Body style", (c) => c.body, bodyLabel),
   choice("drive", "Drive", (c) => c.drive, driveLabel),
   choice("chemistry", "Battery chemistry", (c) => c.chemistry ?? "Unknown"),
+  choice("segment", "Size class", (c) => c.segment, segmentLabel),
+  choice("plug", "Charging plug", (c) => c.chargePlug),
+  choice("status", "Sales status", (c) => c.status),
   { key: "heatpump", label: "Heat pump", kind: "bool", get: (c) => c.heatPump },
   { key: "v2l", label: "Vehicle-to-load (V2L)", kind: "bool", get: (c) => c.v2l },
-  { key: "name", label: "Model name", kind: "text", get: (c) => c.fullName },
+  { key: "v2h", label: "Vehicle-to-home (V2H)", kind: "bool", get: (c) => c.v2h, about: "can power a house" },
+  { key: "v2g", label: "Vehicle-to-grid (V2G)", kind: "bool", get: (c) => c.v2g, about: "can sell power back to the grid" },
+  { key: "towbar", label: "Towbar available", kind: "bool", get: (c) => c.towbar },
+  { key: "ending", label: "End of sales announced", kind: "bool", get: (c) => c.availableTo !== null, about: "being discontinued" },
+  { key: "rangeest", label: "Range is an estimate", kind: "bool", get: (c) => c.rangeEstimated, about: "no = confirmed figure" },
+  { key: "effest", label: "Efficiency is an estimate", kind: "bool", get: (c) => c.efficiencyEstimated },
+  { key: "battest", label: "Battery size is an estimate", kind: "bool", get: (c) => c.batteryEstimated },
+  { key: "ppkest", label: "Price per km is an estimate", kind: "bool", get: (c) => c.pricePerKmEstimated },
+  { key: "name", label: "Model name", kind: "text", get: (c) => c.fullName, about: "make and model, e.g. a brand or trim word" },
+  { key: "availability", label: "Availability", kind: "text", get: (c) => `${c.availability} (${c.availableFrom}${c.availableTo ? ` to ${c.availableTo}` : ""})`, about: 'e.g. "Available to order since April 2026 (2026-04-01)"' },
 ];
 
 export const fieldByKey = (key: string) => FIELDS.find((f) => f.key === key);
@@ -118,6 +145,7 @@ export function passes(car: Car, f: CustomFilter): boolean {
     case "number": {
       const [lo, hi] = parseRange(f.value);
       const v = field.get(car);
+      if (v === null) return false;
       return (lo === null || v >= lo) && (hi === null || v <= hi);
     }
     case "choice":
@@ -135,12 +163,14 @@ export function refine(ranked: Car[], r: Refinement): Car[] {
   const field = r.sort ? fieldByKey(r.sort) : undefined;
   if (!field || field.kind === "bool") return out;
   const sign = r.dir === "asc" ? 1 : -1;
-  const value = field.get as (c: Car) => number | string;
+  const value = field.get as (c: Car) => number | string | null;
   return out
     .map((car, i) => ({ car, i }))
     .sort((x, y) => {
       const a = value(x.car);
       const b = value(y.car);
+      // Cars with no value for this field go last, whichever direction.
+      if (a === null || b === null) return a === b ? x.i - y.i : a === null ? 1 : -1;
       const d = typeof a === "number" && typeof b === "number" ? a - b : String(a).localeCompare(String(b));
       return d * sign || x.i - y.i;
     })
@@ -154,7 +184,8 @@ export function describe(f: CustomFilter): string {
   switch (field.kind) {
     case "number": {
       const [lo, hi] = parseRange(f.value);
-      const fmt = (n: number) => (field.prefix ? `${field.unit}${n.toLocaleString("en-GB")}` : `${n.toLocaleString("en-GB")} ${field.unit}`);
+      const show = (n: number) => n.toLocaleString("en-GB", { useGrouping: field.grouping ?? true });
+      const fmt = (n: number) => (field.prefix ? `${field.unit}${show(n)}` : `${show(n)} ${field.unit}`.trim());
       if (lo !== null && hi !== null) return `${field.label}: ${fmt(lo)} to ${fmt(hi)}`;
       return `${field.label}: ${lo !== null ? `at least ${fmt(lo)}` : `up to ${fmt(hi!)}`}`;
     }

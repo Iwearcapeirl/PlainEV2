@@ -20,6 +20,7 @@ This file lists the electric cars that are currently on sale and have a UK price
 - `Battery chemistry` is null for 20 cars because the source sheet has it blank.
 - `1-stop range km` is the total range at highway speed with one 15-minute charging stop.
 - `Fastcharge kW` is the average power from 10% to 80% charge, not the peak.
+- Every other column from the sheet's "All cars" tab is also included, under its original name: `Status`, `Availability`, `Available from` / `Available to` (ISO dates; `Available to` is null unless an end of sales is announced), `Year from` / `Year to`, `Segment` (A city car to F luxury, N van-based people carrier, S sports car), `Towbar possible`, `Euro NCAP stars` (null when not tested), `V2H`, `V2G`, `AC charge kW`, `Charge plug`, `Weight kg`, `Towing kg` (0 = not approved for towing), `Cargo L` (boot space), `Price Germany EUR` and `Price Netherlands EUR` (null when not listed), and the four "estimated" flags (`Range estimated`, `Efficiency estimated`, `Battery estimated`, `Price/km estimated`). Yes/No columns are true/false.
 - `0-100 km/h s` is the 0–100 km/h time in seconds, added later from the same sheet's `0-100 km/h s` column. Every car has one. The site shows it as 0–62 mph, which is the same measure.
 - `Price per km EUR` is EV Database's value-for-money figure: the price in EUR for each km of real range. Lower is better.
 - `URL` links to the car's page on EV Database.

@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { answersToQuery, type Answers } from "@/lib/quiz";
-import { MAX_QUERY_LENGTH, answersFromText } from "@/lib/understand";
+import { EMPTY_REFINEMENT, writeRefinement, type Refinement } from "@/lib/fields";
+import { MAX_QUERY_LENGTH, answersFromText, refinementFromText } from "@/lib/understand";
 
 const EXAMPLES = [
   "A 7-seater under £50k for family trips to Cornwall",
@@ -32,6 +33,7 @@ export default function TextSearch({ initial = "", onUseQuiz }: { initial?: stri
     setError(null);
     setBusy(true);
     let answers: Answers;
+    let refinement: Refinement;
     try {
       const res = await fetch("/api/understand", {
         method: "POST",
@@ -41,12 +43,17 @@ export default function TextSearch({ initial = "", onUseQuiz }: { initial?: stri
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
       answers = data.answers;
+      refinement = data.refinement ?? EMPTY_REFINEMENT;
       // Shows in the browser console why Claude wasn't used (e.g. "no_api_key"); the server log has the details.
       if (data.source === "rules") console.warn(`Search used the built-in rules instead of Claude (${data.reason ?? "unknown"}).`);
     } catch {
       answers = answersFromText(q);
+      refinement = refinementFromText(q);
     }
-    router.push(`/results?${answersToQuery(answers)}&q=${encodeURIComponent(q)}`);
+    // Quiz answers, then any extra filters and sort (the results page's "Filter and sort" reads f=, sort= and dir=).
+    const params = writeRefinement(new URLSearchParams(answersToQuery(answers)), refinement);
+    params.set("q", q);
+    router.push(`/results?${params}`);
   };
 
   return (

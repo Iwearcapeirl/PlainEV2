@@ -29,9 +29,15 @@ export default function Results() {
   const relaxations = useMemo(() => (total === 0 ? suggestRelaxations(cars, answers) : []), [total, answers]);
 
   const filters = activeFilters(answers);
+  // Extra filters from the URL (set by a search or the "Filter and sort" panel) count as answers too.
+  const urlRefinement = refinementFromParams(params);
+  const extraChips = urlRefinement.filters.filter(isSet).map(describe);
+  const urlSort = urlRefinement.sort ? fieldByKey(urlRefinement.sort) : undefined;
   const summary = [
-    ...(filters.length ? filters.map((f) => f.chip) : ["No filters"]),
-    `Ranked by ${priorityOf(answers.priority).label.toLowerCase()}`,
+    ...(filters.length || extraChips.length ? [...filters.map((f) => f.chip), ...extraChips] : ["No filters"]),
+    urlSort
+      ? `Sorted by ${urlSort.label[0].toLowerCase()}${urlSort.label.slice(1)}, ${urlSort.kind === "number" ? (urlRefinement.dir === "asc" ? "low to high" : "high to low") : urlRefinement.dir === "asc" ? "A to Z" : "Z to A"}`
+      : `Ranked by ${priorityOf(answers.priority).label.toLowerCase()}`,
   ];
 
   const [best, ...more] = top;

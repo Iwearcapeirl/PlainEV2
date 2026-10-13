@@ -1,10 +1,14 @@
+import { cars } from "./cars";
+import { EMPTY_REFINEMENT, FIELDS, SORT_FIELDS, fieldByKey, isSet, type CustomFilter, type Refinement } from "./fields";
 import { milesToKm } from "./format";
 import { DEFAULT_ANSWERS, FILTER_KEYS, FILTERS, PRIORITIES, type Answers, type FilterKey, type PriorityId } from "./quiz";
 
 /**
  * Free-text search: turns "a 7-seater under £50k that can do 300 miles" into the same Answers the quiz produces,
- * so it shares the quiz's results page. The server route asks Claude first; `answersFromText` below is the
- * built-in fallback (and runs in the browser if the route can't be reached).
+ * so it shares the quiz's results page. Anything the quiz can't express (towing, boot space, safety rating,
+ * make, V2H…) becomes a "Filter and sort" refinement on the results page, so every column in the data can be
+ * searched. The server route asks Claude first; `answersFromText` and `refinementFromText` below are the
+ * built-in fallback (and run in the browser if the route can't be reached).
  */
 
 export const MAX_QUERY_LENGTH = 500;
@@ -122,3 +126,186 @@ export function answersFromText(input: string): Answers {
 
   return a;
 }
+
+// ---------- Extra filters and sort (every other column in the data) ----------
+
+/** JSON schema for the search: the quiz answers plus extra field filters and an optional sort. */
+export function searchSchema() {
+  const base = answersSchema();
+  return {
+    ...base,
+    properties: {
+      ...base.properties,
+      extra: {
+        type: "array" as const,
+        items: {
+          type: "object" as const,
+          properties: {
+            field: { type: "string" as const, enum: FIELDS.map((f) => f.key) },
+            min: { type: ["number", "null"] },
+            max: { type: ["number", "null"] },
+            equals: { type: ["string", "null"] },
+          },
+          required: ["field", "min", "max", "equals"],
+          additionalProperties: false,
+        },
+      },
+      sort: {
+        type: "object" as const,
+        properties: {
+          field: { type: "string" as const, enum: ["none", ...SORT_FIELDS.map((f) => f.key)] },
+          direction: { type: "string" as const, enum: ["asc", "desc"] },
+        },
+        required: ["field", "direction"],
+        additionalProperties: false,
+      },
+    },
+    required: [...base.required, "extra", "sort"],
+  };
+}
+
+/** Every filterable field, written out for the model: key, type, unit and (for choices) the allowed values. */
+export function fieldsGuide(): string {
+  return FIELDS.map((f) => {
+    const about = f.about ? `; ${f.about}` : "";
+    switch (f.kind) {
+      case "number":
+        return `- ${f.key}: ${f.label} (number${f.unit ? `, ${f.unit}` : ""}${about}) → min/max`;
+      case "choice":
+        return `- ${f.key}: ${f.label} (one of: ${f.options.map((o) => (o.label === o.value ? `"${o.value}"` : `"${o.value}" = ${o.label}`)).join(", ")}${about}) → equals`;
+      case "bool":
+        return `- ${f.key}: ${f.label} (yes/no${about}) → equals "yes" or "no"`;
+      case "text":
+        return `- ${f.key}: ${f.label} (text, matches if it contains the words${about}) → equals`;
+    }
+  }).join("\n");
+}
+
+type RawExtra = { field?: unknown; min?: unknown; max?: unknown; equals?: unknown };
+
+/** Turns the model's extra filters and sort into a Refinement, dropping anything invalid. */
+export function normaliseRefinement(raw: { extra?: unknown; sort?: unknown }): Refinement {
+  const byKey = new Map<string, CustomFilter>();
+  for (const e of Array.isArray(raw.extra) ? (raw.extra as RawExtra[]) : []) {
+    const field = typeof e?.field === "string" ? fieldByKey(e.field) : undefined;
+    if (!field) continue;
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    const text = typeof e.equals === "string" ? e.equals.trim() : "";
+    let value: string | null = null;
+    if (field.kind === "number") {
+      const lo = num(e.min);
+      const hi = num(e.max);
+      if (lo !== null || hi !== null) value = `${lo ?? ""}~${hi ?? ""}`;
+    } else if (field.kind === "choice") {
+      const want = text.toLowerCase();
+      value = field.options.find((o) => o.value.toLowerCase() === want || o.label.toLowerCase() === want)?.value ?? null;
+    } else if (field.kind === "bool") {
+      if (/^(yes|true)$/i.test(text)) value = "yes";
+      else if (/^(no|false)$/i.test(text)) value = "no";
+    } else if (text) {
+      value = text;
+    }
+    if (value !== null) byKey.set(field.key, { key: field.key, value });
+  }
+  const sortRaw = (raw.sort ?? {}) as { field?: unknown; direction?: unknown };
+  const sort = typeof sortRaw.field === "string" && SORT_FIELDS.some((f) => f.key === sortRaw.field) ? sortRaw.field : null;
+  return { filters: [...byKey.values()].filter(isSet), sort, dir: sortRaw.direction === "desc" ? "desc" : "asc" };
+}
+
+// Built-in rules for the extra fields.
+
+/** Spoken or common names for makes in the data. */
+const MAKE_ALIASES: Record<string, string> = {
+  vw: "Volkswagen",
+  mercedes: "Mercedes-Benz",
+  merc: "Mercedes-Benz",
+  skoda: "Škoda",
+  citroen: "Citroën",
+  vauxhall: "Opel",
+  "range rover": "Land Rover",
+  "rolls royce": "Rolls-Royce",
+  ds: "DS Automobiles",
+};
+/** Makes that are also everyday words, so they only count when written with a capital letter. */
+const CASE_SENSITIVE_MAKES = new Set(["Mini", "Smart", "Alpine", "Genesis", "Lotus", "DS Automobiles", "Jeep"]);
+const MAKES = [...new Set(cars.map((c) => c.make))];
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** A whole-word match that also works for names with accents (Škoda, Citroën). */
+const wordRe = (word: string, caseSensitive: boolean) =>
+  new RegExp(`(?<![\\p{L}\\p{N}])${escape(word)}(?![\\p{L}\\p{N}])`, caseSensitive ? "u" : "iu");
+
+function makeFromText(input: string): string | null {
+  for (const make of MAKES) if (wordRe(make, CASE_SENSITIVE_MAKES.has(make)).test(input)) return make;
+  for (const [alias, make] of Object.entries(MAKE_ALIASES)) {
+    // "DS" only counts in capitals.
+    if (alias === "ds" ? wordRe("DS", true).test(input) : wordRe(alias, false).test(input)) return make;
+  }
+  return null;
+}
+
+/** Extra filters and sort from plain words, for when Claude can't be reached. */
+export function refinementFromText(input: string): Refinement {
+  const t = input.toLowerCase();
+  const filters: CustomFilter[] = [];
+  let sort: string | null = null;
+  let dir: "asc" | "desc" = "asc";
+  const add = (key: string, value: string) => filters.push({ key, value });
+  const kg = (near: RegExp) => {
+    const m = t.match(new RegExp(`(?:${near.source})[^\\d]{0,30}?(\\d[\\d,]*)\\s*kg|(\\d[\\d,]*)\\s*kg[^\\d]{0,30}?(?:${near.source})`));
+    return m ? Number((m[1] ?? m[2]).replace(/,/g, "")) : null;
+  };
+
+  const make = makeFromText(input);
+  if (make) add("make", make);
+
+  // Towing
+  if (/\btow(s|ing|bar)?\b|caravan|trailer|horse ?box/.test(t)) {
+    add("towbar", "yes");
+    const weight = kg(/tow\w*|caravan|trailer|horse ?box/);
+    if (weight) add("towing", `${weight}~`);
+    else if (/caravan|horse ?box/.test(t)) add("towing", "1200~");
+  }
+
+  // Boot space
+  const litres = t.match(/(\d{3,4})\s*(?:l\b|litres?|liters?)/);
+  if (litres) add("boot", `${litres[1]}~`);
+  else if (/\b(big|large|huge|massive|biggest|largest|lots of) (boot|luggage|cargo)|boot space|luggage space/.test(t)) {
+    sort = "boot";
+    dir = "desc";
+  }
+
+  // Safety
+  const stars = t.match(/\b([345])[- ]?star/);
+  if (stars) add("ncap", `${stars[1]}~`);
+  else if (/\b(safest|euro ?ncap|safety rating|very safe)\b/.test(t)) add("ncap", "5~");
+
+  // Bidirectional charging
+  if (/\bv2h\b|vehicle[- ]to[- ]home|power (my|the|our) (house|home)/.test(t)) add("v2h", "yes");
+  if (/\bv2g\b|vehicle[- ]to[- ]grid|sell (power|electricity|energy) back/.test(t)) add("v2g", "yes");
+
+  // AC charging
+  const ac = t.match(/\b(22|11|7)\s*kw\s*(?:ac|home|onboard|on-board|wallbox)/) ?? t.match(/\b(?:ac|onboard|on-board) (?:charging|charger) (?:of )?(22|11|7)\s*kw/);
+  if (ac) add("ac", `${ac[1]}~`);
+  else if (/\b(fast|quick) (home|ac) charging|22\s*kw\b/.test(t)) add("ac", "22~");
+
+  // Weight
+  const heavy = kg(/weigh\w*|weight/);
+  if (heavy) add("weight", `~${heavy}`);
+  else if (/\b(lightweight|lightest|light car|not too heavy)\b/.test(t)) {
+    if (!sort) sort = "weight";
+  }
+
+  // Age of the model
+  const year = t.match(/\b(20[2-3]\d)\s*(?:model|onwards|or newer|or later)/);
+  if (year) add("year", `${year[1]}~`);
+  else if (/\b(newest|latest|brand new) models?\b/.test(t) && !sort) {
+    sort = "year";
+    dir = "desc";
+  }
+  if (/\b(discontinued|end of line|run-?out|being replaced)\b/.test(t)) add("ending", "yes");
+  if (/\b(confirmed|official|verified) (range|figures?|numbers?)\b/.test(t)) add("rangeest", "no");
+
+  return filters.length || sort ? { filters, sort, dir } : EMPTY_REFINEMENT;
+}
+

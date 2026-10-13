@@ -16,6 +16,7 @@ import {
   driveLabel,
   getCarBySlug,
   otherVersions,
+  segmentLabel,
   similarCars,
   type Standing,
 } from "@/lib/carProfile";
@@ -199,40 +200,67 @@ export default async function CarPage({ params }: Props) {
       {/* ---------- Full specs ---------- */}
       <section aria-labelledby="specs-title" className="mt-12">
         <SectionTitle id="specs-title">Specifications</SectionTitle>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        {/* Every column in the data. Figures marked "estimate" aren't confirmed by the maker yet. */}
+        <div className="mt-4 gap-4 md:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
           <SpecGroup
-            title="Range and charging"
+            title="Range and efficiency"
             rows={[
-              ["Real-world range", formatDistance(car.rangeKm)],
-              ["Efficiency", formatEfficiency(car.whPerKm)],
+              ["Real-world range", est(formatDistance(car.rangeKm), car.rangeEstimated)],
+              ["Efficiency", est(formatEfficiency(car.whPerKm), car.efficiencyEstimated)],
               ["Range with one 15-min stop", formatDistance(car.oneStopKm)],
-              ["Rapid charging (10–80% average)", `${car.fastchargeKw} kW`],
             ]}
           />
           <SpecGroup
-            title="Battery and features"
+            title="Charging"
             rows={[
-              ["Usable battery", `${car.batteryKwh} kWh`],
+              ["Rapid charging (10–80% average)", `${car.fastchargeKw} kW`],
+              ["AC charging (home or destination)", `${car.acChargeKw} kW`],
+              ["Charging plug", car.chargePlug],
+              ["Vehicle-to-load (V2L)", yesNo(car.v2l)],
+              ["Vehicle-to-home (V2H)", yesNo(car.v2h)],
+              ["Vehicle-to-grid (V2G)", yesNo(car.v2g)],
+            ]}
+          />
+          <SpecGroup
+            title="Battery"
+            rows={[
+              ["Usable battery", est(`${car.batteryKwh} kWh`, car.batteryEstimated)],
               ["Battery chemistry", car.chemistry ? (CHEMISTRY_LABEL[car.chemistry] ?? car.chemistry) : "Not listed"],
-              ["Heat pump", car.heatPump ? "Yes" : "No"],
-              ["Vehicle-to-load (V2L)", car.v2l ? "Yes" : "No"],
+              ["Heat pump", yesNo(car.heatPump)],
             ]}
           />
           <SpecGroup
             title="Body and performance"
             rows={[
               ["Body style", bodyLabel(car.body)],
+              ["Size class", segmentLabel(car.segment)],
               ["Seats", String(car.seats)],
               ["Drive", driveLabel(car.drive)],
               ["0–62 mph (0–100 km/h)", formatAccel(car.accelS)],
+              ["Weight", `${car.weightKg.toLocaleString("en-GB")} kg`],
             ]}
           />
           <SpecGroup
-            title="Price"
+            title="Practicality and safety"
+            rows={[
+              ["Boot space", `${car.cargoL.toLocaleString("en-GB")} litres`],
+              ["Towbar available", yesNo(car.towbar)],
+              ["Towing capacity (braked)", car.towingKg > 0 ? `${car.towingKg.toLocaleString("en-GB")} kg` : "Not approved for towing"],
+              ["Euro NCAP rating", car.ncapStars !== null ? `${car.ncapStars} stars` : "Not yet tested"],
+            ]}
+          />
+          <SpecGroup
+            title="Price and availability"
             rows={[
               ["UK starting price", formatGbp(car.priceGbp)],
               ["UK price per mile of range", `${formatGbpPerMile(car.priceGbp, car.rangeKm)} (${formatGbpPerKm(car.priceGbp, car.rangeKm)}/km)`],
-              ["Price per km of range (EUR)", `€${car.pricePerKmEur}`],
+              ["Price per km of range (EUR)", est(`€${car.pricePerKmEur}`, car.pricePerKmEstimated)],
+              ["Price in Germany", car.priceDeEur !== null ? euro(car.priceDeEur) : "Not listed"],
+              ["Price in the Netherlands", car.priceNlEur !== null ? euro(car.priceNlEur) : "Not listed"],
+              ["Availability", car.availability],
+              ["On sale", `${monthYear(car.availableFrom)}${car.availableTo ? ` to ${monthYear(car.availableTo)}` : " onwards"}`],
+              ["Model years", car.yearTo ? `${car.yearFrom} to ${car.yearTo}` : `${car.yearFrom} onwards`],
+              ["Status", car.status],
             ]}
           />
         </div>
@@ -403,6 +431,12 @@ function SpecGroup({ title, rows }: { title: string; rows: [string, string][] })
     </div>
   );
 }
+
+const yesNo = (v: boolean) => (v ? "Yes" : "No");
+const est = (value: string, estimated: boolean) => (estimated ? `${value} (estimate)` : value);
+const euro = (n: number) => `€${n.toLocaleString("en-GB")}`;
+const monthYear = (iso: string) =>
+  new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 
 const formatDate = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });

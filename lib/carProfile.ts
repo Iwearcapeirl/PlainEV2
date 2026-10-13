@@ -30,6 +30,19 @@ export const bodyLabel = (body: string) => {
   return n === "SUV" || n === "MPV" ? n : n[0].toUpperCase() + n.slice(1);
 };
 
+/** Size classes as the data uses them. */
+export const SEGMENT_LABEL: Record<string, string> = {
+  A: "A · City car",
+  B: "B · Small car",
+  C: "C · Medium car",
+  D: "D · Large car",
+  E: "E · Executive car",
+  F: "F · Luxury car",
+  N: "N · Van-based people carrier",
+  S: "S · Sports car",
+};
+export const segmentLabel = (s: string) => SEGMENT_LABEL[s] ?? s;
+
 export const driveLabel = (drive: string) =>
   ({ "Front Wheel Drive": "Front-wheel drive", "Rear Wheel Drive": "Rear-wheel drive", "All Wheel Drive": "All-wheel drive" })[drive] ??
   drive;
