@@ -35,18 +35,23 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Logo />
               <span className="font-wide whitespace-nowrap text-[15px] font-semibold max-[439px]:sr-only">{SITE_NAME}</span>
             </Link>
-            <nav aria-label="Main" className="flex items-center gap-1 text-sm sm:gap-2">
-              <Link href="/best" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium text-on-ink/80 hover:text-on-ink sm:px-3">
+            <nav aria-label="Main" className="flex items-center gap-1 text-sm max-[359px]:gap-0.5 sm:gap-2">
+              <Link href="/best" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[359px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 Rankings
               </Link>
-              <Link href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium text-on-ink/80 hover:text-on-ink sm:px-3">
+              <Link href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[359px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 All cars
+              </Link>
+              <Link href="/compare" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[359px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
+                Compare
               </Link>
               <Link
                 href="/quiz"
-                className="whitespace-nowrap rounded-lg bg-signal px-3 py-2 font-semibold text-signal-ink hover:brightness-95 sm:px-3.5"
+                className="whitespace-nowrap rounded-lg bg-signal px-3 py-2 font-semibold max-[359px]:px-2 text-signal-ink hover:brightness-95 sm:px-3.5"
               >
-                Find your match
+                {/* Narrow phones get the short label so all four links fit on one line. */}
+                <span className="max-sm:hidden">Find your match</span>
+                <span className="sm:hidden">Quiz</span>
               </Link>
             </nav>
           </div>
@@ -63,6 +68,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <li><Link href="/" className="text-muted hover:text-foreground">Home</Link></li>
                   <li><Link href="/quiz" className="text-muted hover:text-foreground">Find your match</Link></li>
                   <li><Link href="/cars" className="text-muted hover:text-foreground">All cars</Link></li>
+                  <li><Link href="/compare" className="text-muted hover:text-foreground">Compare cars</Link></li>
                   <li><Link href="/best" className="text-muted hover:text-foreground">All rankings</Link></li>
                 </ul>
               </div>

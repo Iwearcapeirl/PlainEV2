@@ -30,7 +30,7 @@ const FEATURED = [
 ];
 
 /**
- * The homepage: hero, three ways in, the budget picker, buying used, real range vs WLTP, the range dial (new cars)
+ * The homepage: hero, four ways in, the budget picker, buying used, real range vs WLTP, the range dial (new cars)
  * and popular rankings. Plain sections that scroll normally.
  */
 export default function HomePage() {
@@ -71,7 +71,7 @@ export default function HomePage() {
             Every EV sold in the UK since {firstYear}, with real-world range, honest used-price estimates and a quick quiz to
             find your match.
           </p>
-          <div className="mt-8 flex flex-col gap-2.5 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
             <Link
               href="/quiz"
               className="rounded-xl bg-signal px-6 py-3.5 text-center text-[15px] font-semibold text-signal-ink transition-[filter,transform] duration-150 hover:brightness-95 active:scale-[0.97]"
@@ -90,21 +90,28 @@ export default function HomePage() {
             >
               Rankings
             </Link>
+            <Link
+              href="/compare"
+              className="rounded-xl px-6 py-3.5 text-center text-[15px] font-semibold text-on-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--on-ink)_35%,transparent)] transition-shadow duration-150 hover:shadow-[inset_0_0_0_1.5px_var(--on-ink)]"
+            >
+              Compare cars
+            </Link>
           </div>
           <p className="mt-5 text-sm text-on-ink/65">Buying in Germany or the Netherlands? We show euro prices too.</p>
         </div>
       </section>
 
-      {/* 2 · Three ways to start */}
+      {/* 2 · Four ways to start */}
       <section aria-labelledby="ways-title" className="mx-auto max-w-5xl py-[clamp(4rem,9vw,7rem)]">
         <h2 id="ways-title" className="font-wide text-3xl font-semibold leading-tight text-balance sm:text-4xl">
-          Three ways to start
+          Four ways to start
         </h2>
-        <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { href: "/quiz", title: "Answer 5 questions", text: "Tell us your budget, range and size, and get your top 5 matches, new or used." },
             { href: "/cars", title: "Browse every car", text: "Filter by price, range, size, towing and more, and sort any way you like." },
             { href: "/best", title: "See the rankings", text: "The best EVs for range, value, families and more, ten to a list." },
+            { href: "/compare", title: "Compare up to 3 cars", text: "Side by side, with the best in each row marked in green." },
           ].map((w) => (
             <li key={w.href}>
               <Link
