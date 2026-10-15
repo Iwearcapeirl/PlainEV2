@@ -1,42 +1,59 @@
 import { cars, type Car } from "./cars";
 import { milesToKm } from "./format";
+import { COUNTRIES, COUNTRY_IDS, CONDITIONS, inMarket, lowestPrice, offer, type Condition, type Country } from "./market";
 
 /**
  * Every filter in the quiz is defined the same way: a list of options, each with
  * - `label`/`hint`: what the quiz shows
  * - `chip`: short text for the results summary and the "matches" chips on each car (null = no filter)
- * - `test`: whether a car passes
+ * - `test`: whether a car passes (given all the answers, since the budget depends on the country and on new/used)
  * The first option in each list is the default ("no preference").
+ * Prices in labels and chips are written in pounds; `inCurrency` switches them to euros for Germany and the Netherlands.
  */
 export interface FilterOption {
   id: string;
   label: string;
   hint?: string;
   chip: string | null;
-  test: (c: Car) => boolean;
+  test: (c: Car, a: Answers) => boolean;
 }
 
 const any = (label = "No preference", hint?: string): FilterOption => ({ id: "any", label, hint, chip: null, test: () => true });
 
 // ---------- Core questions ----------
 
+/**
+ * Budget bands are ceilings in the buyer's currency. A car fits when its new price (if they'd buy new and it's on
+ * sale there) or its cheapest estimated used price (if they'd buy used) is within the band.
+ */
 const budget = (id: string, label: string, max: number | null): FilterOption => ({
   id,
   label,
   chip: max === null ? null : `Up to £${max / 1000}k`,
-  test: (c) => max === null || c.priceGbp <= max,
+  test: (c, a) => {
+    if (max === null) return true;
+    const lowest = lowestPrice(offer(c, a.country, a.condition));
+    return lowest !== null && lowest <= max;
+  },
 });
+
+/** Swap the pound sign for the buyer's currency: "Under £30k" → "Under €30k". */
+export const inCurrency = (text: string, country: Country) => text.replace(/£/g, COUNTRIES[country].symbol);
 
 export const BUDGETS: FilterOption[] = [
   budget("no-limit", "No limit", null),
-  budget("under-30k", "Under £30k", 30_000),
+  budget("under-10k", "Under £10k", 10_000),
+  budget("10-15k", "£10–15k", 15_000),
+  budget("15-20k", "£15–20k", 20_000),
+  // Kept as "under-30k" so older links still work; it's the £20–30k band now the lower bands exist.
+  budget("under-30k", "£20–30k", 30_000),
   budget("30-40k", "£30–40k", 40_000),
   budget("40-50k", "£40–50k", 50_000),
   budget("50-70k", "£50–70k", 70_000),
   budget("over-70k", "Over £70k", null),
 ];
 /** Display order in the quiz (the default sits last here, as "No limit"). */
-export const BUDGET_ORDER = ["under-30k", "30-40k", "40-50k", "50-70k", "over-70k", "no-limit"];
+export const BUDGET_ORDER = ["under-10k", "10-15k", "15-20k", "under-30k", "30-40k", "40-50k", "50-70k", "over-70k", "no-limit"];
 
 const minRange = (miles: number, hint: string): FilterOption => ({
   id: String(miles),
@@ -170,12 +187,23 @@ export const PRIORITIES = [
 export type PriorityId = (typeof PRIORITIES)[number]["id"];
 export const priorityOf = (id: PriorityId) => PRIORITIES.find((p) => p.id === id)!;
 
-export type Answers = Record<FilterKey, string> & { priority: PriorityId };
+export type Answers = Record<FilterKey, string> & {
+  priority: PriorityId;
+  /** Where they're buying: decides which cars are on offer and the currency. */
+  country: Country;
+  /** New, used or either. */
+  condition: Condition;
+};
 
 export const DEFAULT_ANSWERS: Answers = {
   ...(Object.fromEntries(FILTER_KEYS.map((k) => [k, FILTERS[k][0].id])) as Record<FilterKey, string>),
   priority: "range",
+  country: "uk",
+  condition: "both",
 };
+
+/** Whether a car can be bought the way the answers ask (country, new/used), before any other filter. */
+export const availableFor = (c: Car, a: Answers) => inMarket(c, a.country, a.condition);
 
 export const optionOf = (key: FilterKey, a: Answers): FilterOption =>
   FILTERS[key].find((o) => o.id === a[key]) ?? FILTERS[key][0];
@@ -184,7 +212,7 @@ export const optionOf = (key: FilterKey, a: Answers): FilterOption =>
 export function activeFilters(a: Answers): { key: FilterKey; chip: string }[] {
   return FILTER_KEYS.flatMap((key) => {
     const chip = optionOf(key, a).chip;
-    return chip ? [{ key, chip }] : [];
+    return chip ? [{ key, chip: inCurrency(chip, a.country) }] : [];
   });
 }
 
@@ -222,6 +250,10 @@ export function answersFromParams(params: Reader): Answers {
   }
   const p = params.get("priority");
   if (PRIORITIES.some((o) => o.id === p)) a.priority = p as PriorityId;
+  const country = params.get("country");
+  if (COUNTRY_IDS.includes(country as Country)) a.country = country as Country;
+  const condition = params.get("condition");
+  if (CONDITIONS.some((o) => o.id === condition)) a.condition = condition as Condition;
 
   // Legacy "features=heat-pump,v2l,awd,7-seats,lfp"
   for (const f of (params.get("features") ?? "").split(",")) {
@@ -240,6 +272,8 @@ export function answersToQuery(a: Answers): string {
     if (key === "budget" || key === "range" || key === "body") continue;
     if (a[key] !== FILTERS[key][0].id) p.set(PARAM[key], a[key]);
   }
+  if (a.country !== DEFAULT_ANSWERS.country) p.set("country", a.country);
+  if (a.condition !== DEFAULT_ANSWERS.condition) p.set("condition", a.condition);
   return p.toString();
 }
 

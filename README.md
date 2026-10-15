@@ -1,6 +1,6 @@
 # PlainEV
 
-Recommends electric cars on sale in the UK, from a typed description or a short quiz (four questions plus optional filters). Built with Next.js (App Router), TypeScript and Tailwind CSS v4. All filtering happens in the browser, using `data/cars.json`.
+Recommends electric cars to buy new or used, in the UK, Germany or the Netherlands, from a typed description or a short quiz (five questions plus optional filters). Built with Next.js (App Router), TypeScript and Tailwind CSS v4. All filtering happens in the browser, using `data/cars.min.json` (a compact copy of `data/cars.json`).
 
 ## Run it
 
@@ -19,12 +19,12 @@ To let Claude read typed searches, set `ANTHROPIC_API_KEY` on the server (e.g. i
 | Route | What it does |
 |---|---|
 | `/` | Homepage. Explains the real-world range (not WLTP) approach, links to the quiz, and features 6 rankings (`FEATURED` in `app/page.tsx`). |
-| `/quiz` | Opens on a search box: describe the car you want in your own words and get the top 5. "Answer questions instead" switches to the quiz: four core questions (budget, minimum range, body style, ranking priority), one per screen, then an optional "More filters" step. A live count shows how many cars still match. |
-| `/results?budget=…&range=…&body=…&priority=…` | The top 5 matches. Optional filters are added only when set (`seats`, `drive`, `battery`, `heatpump`, `v2l`, `eff`, `onestop`). Answers are kept in the URL, so you can share or bookmark results. "Edit answers" takes you back to the quiz with your answers filled in. Results from a typed search also carry `q=` (the text), shown above the answer chips; "Edit search" returns to the search box with it filled in. Older links using `features=` and the old range values still work. Not indexed by search engines (noindex, and blocked in robots.txt). |
-| `/car/[slug]` | One static page per car (471), e.g. `/car/kia-ev3-long-range-my27`. Shows a large photo, interior photos where available, every spec in the data, how the car ranks against all EVs on sale, a short write-up, other versions of the same model, similar cars, and a Source section linking to the car's EV Database page. Every card on the results and ranking pages links here. |
+| `/quiz` | Opens on a search box: describe the car you want in your own words and get the top 5. "Answer questions instead" switches to the quiz: five core questions (new/used, budget, minimum range, body style, ranking priority), one per screen, then an optional "More filters" step. A live count shows how many cars still match. |
+| `/results?budget=…&range=…&body=…&priority=…` | The top 5 matches, at most one per model. `country=de|nl` and `condition=new|used` are added when not the default (UK, new or used). Optional filters are added only when set (`seats`, `drive`, `battery`, `heatpump`, `v2l`, `eff`, `onestop`). Answers are kept in the URL, so you can share or bookmark results. "Edit answers" takes you back to the quiz with your answers filled in. Results from a typed search also carry `q=` (the text), shown above the answer chips; "Edit search" returns to the search box with it filled in. Older links using `features=` and the old range values still work. Not indexed by search engines (noindex, and blocked in robots.txt). |
+| `/car/[slug]` | One static page per car (1,493: on sale, no longer sold new, and coming soon), e.g. `/car/kia-ev3-long-range-my27`. Shows a large photo, interior photos where available, every spec in the data, how the car ranks against all EVs on sale, a short write-up, other versions of the same model, similar cars, and a Source section linking to the car's EV Database page. Every card on the results and ranking pages links here. |
 
 **Filtering** (`lib/quiz.ts` defines every filter once; `lib/match.ts` → `matchesAnswers` applies them)
-- **Budget** is a ceiling on `Price UK GBP`: under £30k means ≤ £30,000, £30–40k means ≤ £40,000, and so on. "Over £70k" and "No limit" both remove the cap.
+- **Budget** is a ceiling on the lowest price the buyer could pay: the new price (if wanted and on sale new in that country) or the cheapest estimated used price. Bands: under £10k, £10–15k, £15–20k, £20–30k, £30–40k, £40–50k, £50–70k (ceilings ≤ £10,000, ≤ £15,000 and so on; € in Germany and the Netherlands). "Over £70k" and "No limit" remove the cap. The id `under-30k` is kept for old links but now means £20–30k in the quiz.
 - **Minimum range:** any, 200+, 250+, 300+ or 350+ miles, converted to km to filter on `Real range km`. The quiz shows how many cars each option leaves.
 - **Body:** SUV, Hatchback, Sedan + Liftback, and Station (shown as "Estate"). "No preference" allows all body styles, including MPV, SPV, Cabrio and Coupe.
 - **More filters (all optional, default "No preference"):**
@@ -44,6 +44,16 @@ If nothing matches, the results page suggests which single answer to loosen and 
 **Search covers every column.** The quiz filters above handle the common needs. Everything else in `data/cars.json` is a field in `lib/fields.ts`, which powers the results page's "Filter and sort" panel: make and model name, size class, towbar and towing weight, boot space, weight, Euro NCAP stars, AC charging, charging plug, V2H, V2G, model year, end of sales, availability, prices in Germany and the Netherlands, EUR price per km, and whether each figure is an estimate. The text search fills in the quiz answers *and* any of these extra filters and a sort (Claude returns them as structured output; `refinementFromText` in `lib/understand.ts` is the built-in fallback). The extra filters travel in the results URL as `f=key:value`, `sort=` and `dir=`. Only `ID` and `URL` aren't searchable, because they're identifiers.
 
 **No results.** When the answers plus any extra filters leave no cars, the results page suggests single changes that bring some back, each with a car count (`relaxSearch` in `lib/match.ts`): raise the budget to the next band with matches, set a quiz answer back to "no preference", loosen a number filter to the nearest value a car actually has (e.g. towing 1,500 kg → 1,200 kg), or drop an extra filter. The search text and sort are kept.
+
+## New and used (`lib/market.ts`)
+
+- **Country** (`country`, default UK): which new prices count (`Price UK GBP`, `Price Germany EUR` or `Price Netherlands EUR`) and the currency. A car is only offered in a country where it has a price.
+- **Condition** (`condition`): new, used, or both (default). New means on sale new today. Used means any model year from launch to last year (still on sale) or to its last year (no longer sold). Coming-soon cars are never in results, only on their own pages.
+- **Estimated used prices** come from the new price and the car's age (`retained`): 57–65% kept after 1 year, 38–42% after 3 (evenly in between), then 10–15% less each further year. Shown as a range, rounded to 100. Age is measured from `NEXT_PUBLIC_VALUATION_YEAR`, set to the build year in `next.config.ts`, so estimates move on with each deploy. These are estimates only, not valuations.
+- **Range today** assumes 2% battery capacity loss a year (`BATTERY_LOSS_PER_YEAR`). Cars are still ranked on range when new.
+- **Grouping:** results merge the same version across model years (same make and name without the "(MY..)" tag), e.g. "Tesla Model 3 Long Range AWD (2019–2023)". The top 5 shows at most one per model family. Cards are tagged New and/or Used.
+- **Find one for sale:** car pages link to AutoTrader (UK, by make, electric only) or AutoScout24 (Germany and the Netherlands, by make and model).
+- Ranking pages (`/best`) and the homepage radar stay new cars on sale in the UK.
 
 **Ranking** (`rankCars`)
 - *Maximum range* (default): highest `Real range km` first. Cars within `RANGE_TIE_KM` (10 km) of each other count as "very close" and are ordered by `Price per km EUR`, lowest first. Each band starts from the highest remaining range, so the order stays stable.
@@ -84,12 +94,14 @@ In range rankings, cars with the same range are ordered by the lower UK £ per k
 
 ## Car pages (`/car/[slug]`)
 
-Built at build time by `app/car/[slug]/page.tsx` with `generateStaticParams` (`dynamicParams = false`, so unknown slugs return 404). The slug is the make and model in lower case, for example `bmw-i3-50-xdrive-my27`. If two cars ever produced the same slug, the ID would be added to both (`lib/cars.ts`).
+Built at build time by `app/car/[slug]/page.tsx` with `generateStaticParams` (`dynamicParams = false`, so unknown slugs return 404). The slug is the make and model in lower case, for example `bmw-i3-50-xdrive-my27`. Cars on sale in the UK claim their slugs first, so their URLs haven't changed. Other cars whose slug is taken get their years added (`-2019-2022`), or the ID if that's still taken (`lib/cars.ts`).
+
+- **Status and used prices:** each page shows whether the car is on sale new, no longer sold new (with years) or coming soon, its new price, and a "Buying one used" table of estimated prices and range today for each model year, with a "Find one for sale" link. Other versions list their years.
 
 - **Clickable cards:** on the results and ranking pages, the car name inside each card is a link stretched over the whole card, so clicking anywhere on the card opens the car page. The photo-credit links sit above it and stay clickable.
 - **Back to results:** clicking a card stores the list it came from (quiz results with their full query, or the ranking) in `sessionStorage` (`components/CarLink.tsx`). The car page then shows "Back to your results" or "Back to the ranking", and the breadcrumb's middle step points there. Without that, for example when arriving from Google, the breadcrumb reads Home / Rankings / car. If storage is blocked, the page still works and shows the plain breadcrumb.
 - **Write-up:** EV Database's car pages are spec tables and methodology notes, not reviews, so there was nothing worth summarising there. Instead, `lib/carProfile.ts` writes a short, neutral summary from our own data: what the car is, how its range compares with every EV on sale and with its body style, efficiency against the typical EV, battery and charging, heat pump, V2L and chemistry, and UK price per mile of range against similar cars. It is labelled as written by the site from EV Database figures, and every page links to the original EV Database page in its Source section.
-- **Interior photos:** 219 cars (`interiors` in `cars.json`, up to 2 per car) have freely licensed interior photos from Wikimedia Commons. Each was checked by eye and is credited in the same way as the exterior photos. Where the photo shows a closely related version (for example a petrol Astra, which shares the Astra Electric's cabin), the page says so under the photos.
+- **Interior photos:** cars with freely licensed interior photos (`interiors` in `cars.json`, served from `data/car-extras.json`, up to 2 per car) have freely licensed interior photos from Wikimedia Commons. Each was checked by eye and is credited in the same way as the exterior photos. Where the photo shows a closely related version (for example a petrol Astra, which shares the Astra Electric's cabin), the page says so under the photos.
 - **SEO:** each page has its own title, description and canonical URL, `schema.org/Car` structured data, and an entry in the sitemap.
 
 ## Units
@@ -98,7 +110,7 @@ The data is stored in km and Wh/km. Everything readers see leads with UK units a
 
 ## Car photos
 
-Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in `data/cars.json`). 435 of the 471 cars have one; the rest show a neutral placeholder.
+Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in `data/cars.json`). 763 of the 1,493 cars have one; the rest show a neutral placeholder. Older generations of a model get the placeholder, because the current model's photo would show the wrong car.
 
 - **Licensing:** every photo is CC BY, CC BY-SA or CC0. The author and licence are credited on each photo, with links to the file and the licence, which is what these licences require. EV Database's own images are **not** used, because their terms forbid hotlinking or reusing them.
 - **Accuracy:** photos are matched by model family and checked by eye. They show the right model but not always the exact trim or year. Families with no correct photo are left blank rather than shown a look-alike.
@@ -132,14 +144,14 @@ To go live, load the AdSense script once in `app/layout.tsx` and put your `<ins 
 app/            layout (nav + footer), homepage (/), quiz (/quiz), results (/results),
                 rankings (/best, /best/[slug]), car pages (/car/[slug]), sitemap.ts, robots.ts
 components/     Quiz, Results, CarCard, CarImage, CarLink, CarBreadcrumb, QuizCta, AdSlot
-scripts/        Python scripts that add Wikimedia photos to cars.json
-lib/            cars.ts (typed data), quiz.ts (questions + URL state), match.ts (quiz filter/rank),
+scripts/        build.py (spreadsheet → cars.json, cars.min.json, car-extras.json) and the photo lists it uses
+lib/            cars.ts (typed data), market.ts (country, new/used, used-price estimates, grouping), carExtras.ts (server-only), quiz.ts (questions + URL state), match.ts (quiz filter/rank),
                 rankings.ts (ranking pages), carProfile.ts (car page write-up and comparisons), site.ts (name, edition, site URL), format.ts
-data/           cars.json + README on the data source
+data/           cars.json (full), cars.min.json (browser copy), car-extras.json (car pages only) + README
 ```
 
 ## Data
 
-`data/cars.json` holds 471 cars from EV Database (ev-database.org), extracted on 9 October 2026. Only cars marked Available that have a UK price are included. See `data/README.md` for details. Range is EV Database's real-world range, **not WLTP**.
+`data/cars.json` holds all 1,493 cars from EV Database (ev-database.org), extracted on 9 October 2026: 661 on sale, 823 no longer sold new, 9 coming soon. Rankings and the homepage use the 471 on sale new with a UK price. See `data/README.md` for details. Range is EV Database's real-world range, **not WLTP**.
 
-To update the data, replace `data/cars.json` with a new file that has the same fields. No code changes are needed.
+To update the data, export a new spreadsheet with the same columns and run `python3 scripts/build.py ev-database-cars.xlsx data/cars.json`. It rewrites all three data files. No code changes are needed.

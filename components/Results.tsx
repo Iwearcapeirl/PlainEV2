@@ -4,13 +4,26 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import AdSlot from "@/components/AdSlot";
-import CarCard from "@/components/CarCard";
+import CarCard, { type CardMarket } from "@/components/CarCard";
 import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
 import RangeBar from "@/components/RangeBar";
+import CountrySwitch from "@/components/CountrySwitch";
 import RefinePanel from "@/components/RefinePanel";
-import { carHref, cars, type Car } from "@/lib/cars";
-import { formatAccel, formatGbp, formatMi, formatMiPerKwh } from "@/lib/format";
+import { allCars, carHref, type Car } from "@/lib/cars";
+import { formatAccel, formatMi, formatMiPerKwh } from "@/lib/format";
+import {
+  COUNTRIES,
+  CONDITIONS,
+  formatMoney,
+  groupOffer,
+  groupResults,
+  miles,
+  onePerModel,
+  yearsLabel,
+  type Country,
+  type ResultGroup,
+} from "@/lib/market";
 import { describe, fieldByKey, isRefined, isSet, refine, refinementFromParams, writeRefinement, type Refinement } from "@/lib/fields";
 import { matchedFilters, matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { activeFilters, answersFromParams, answersToQuery, priorityOf, type Answers } from "@/lib/quiz";
@@ -22,10 +35,21 @@ export default function Results() {
   const router = useRouter();
   const params = useSearchParams();
   const answers = useMemo(() => answersFromParams(params), [params]);
-  // Every car that matches the answers, best match first. The top 5 come from here; filters and sorting refine it.
-  const ranked = useMemo(() => rankCars(cars.filter((c) => matchesAnswers(c, answers)), answers.priority), [answers]);
-  const total = ranked.length;
-  const top = ranked.slice(0, 5);
+  // Every car (any year, new or used) that matches the answers, best match first. Versions with the same name
+  // merge into one result across their model years; the top 5 then shows at most one per model.
+  const ranked = useMemo(() => rankCars(allCars.filter((c) => matchesAnswers(c, answers)), answers.priority), [answers]);
+  const groups = useMemo(() => groupResults(ranked), [ranked]);
+  const total = groups.length;
+  const top = useMemo(() => onePerModel(groups, 5), [groups]);
+  const market = (g: ResultGroup): CardMarket => ({
+    country: answers.country,
+    offer: groupOffer(g, answers.country, answers.condition),
+    title: g.car.variant,
+    years: yearsLabel(g),
+  });
+  const where = `${answers.condition === "both" ? "new and used" : answers.condition === "new" ? "new" : "used"}, ${
+    answers.country === "uk" ? "in the UK" : answers.country === "nl" ? "in the Netherlands" : `in ${COUNTRIES[answers.country].label}`
+  }`;
 
   const filters = activeFilters(answers);
   // Extra filters from the URL (set by a search or the "Filter and sort" panel) count as answers too.
@@ -33,6 +57,8 @@ export default function Results() {
   const extraChips = urlRefinement.filters.filter(isSet).map(describe);
   const urlSort = urlRefinement.sort ? fieldByKey(urlRefinement.sort) : undefined;
   const summary = [
+    ...(answers.country !== "uk" ? [`Buying in ${COUNTRIES[answers.country].label}`] : []),
+    ...(answers.condition !== "both" ? [CONDITIONS.find((c) => c.id === answers.condition)!.label] : []),
     ...(filters.length || extraChips.length ? [...filters.map((f) => f.chip), ...extraChips] : ["No filters"]),
     urlSort
       ? `Sorted by ${urlSort.label[0].toLowerCase()}${urlSort.label.slice(1)}, ${urlSort.kind === "number" ? (urlRefinement.dir === "asc" ? "low to high" : "high to low") : urlRefinement.dir === "asc" ? "A to Z" : "Z to A"}`
@@ -58,14 +84,20 @@ export default function Results() {
   }, [refinement]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refined = isRefined(refinement);
-  const list = useMemo(() => (refined ? refine(ranked, refinement) : []), [refined, ranked, refinement]);
+  const list = useMemo(() => (refined ? groupResults(refine(ranked, refinement)) : []), [refined, ranked, refinement]);
   // Nothing to show (from the answers alone, or after extra filters): suggest one change that brings cars back.
   const empty = total === 0 || (refined && list.length === 0);
-  const relaxations = useMemo(() => (empty ? relaxSearch(cars, answers, refinement) : []), [empty, answers, refinement]);
+  const relaxations = useMemo(() => (empty ? relaxSearch(allCars, answers, refinement) : []), [empty, answers, refinement]);
   const relaxHref = (r: SearchRelaxation) => {
     const p = writeRefinement(new URLSearchParams(answersToQuery(r.answers)), r.refinement);
     if (searched) p.set("q", searched);
     return `/results?${p}`;
+  };
+  const setCountry = (country: Country) => {
+    const p = new URLSearchParams(params.toString());
+    if (country === "uk") p.delete("country");
+    else p.set("country", country);
+    router.push(`/results?${p}`);
   };
   const tryRelaxation = (r: SearchRelaxation) => {
     // Same quiz answers: only the extra filters change, so update them in place (the URL follows).
@@ -95,8 +127,8 @@ export default function Results() {
             </h1>
             <p className="mt-2 text-muted">
               {total === 0
-                ? "None of the EVs on sale in the UK meet all of your answers."
-                : `${top.length} of ${total} matching ${total === 1 ? "car" : "cars"} on sale in the UK.`}
+                ? `None of the EVs available ${where.split(", ")[1]} meet all of your answers.`
+                : `${top.length} of ${total} matching ${total === 1 ? "car" : "cars"}, ${where}.`}
             </p>
           </div>
           <Link
@@ -106,6 +138,8 @@ export default function Results() {
             {searched ? "Edit search" : "Edit answers"}
           </Link>
         </div>
+
+        <CountrySwitch value={answers.country} onChange={setCountry} className="mt-5" />
 
         {searched && (
           <p className="mt-5 max-w-[60ch] text-pretty">
@@ -144,12 +178,13 @@ export default function Results() {
           {list.length > 0 ? (
             <>
               <ol className="mt-5 grid gap-4">
-                {list.slice(0, shown).map((car, i) => (
-                  <li key={car.id}>
+                {list.slice(0, shown).map((g, i) => (
+                  <li key={g.key}>
                     <CarCard
-                      car={car}
+                      car={g.car}
+                      market={market(g)}
                       rank={i + 1}
-                      matched={matchedFilters(car, answers)}
+                      matched={matchedFilters(g.car, answers)}
                       metric={
                         refinement.sort === "efficiency"
                           ? "efficiency"
@@ -182,7 +217,7 @@ export default function Results() {
         <>
           <ol className="mx-auto mt-8 max-w-3xl sm:mt-10" aria-label="Your top matches">
             <li>
-              <TopMatch car={best} total={total} answers={answers} />
+              <TopMatch group={best} market={market(best)} total={total} answers={answers} />
             </li>
           </ol>
           {more.length > 0 && (
@@ -191,12 +226,13 @@ export default function Results() {
                 More good matches
               </h2>
               <ol start={2} className="mt-5 grid gap-4">
-                {more.map((car, i) => (
-                  <li key={car.id}>
+                {more.map((g, i) => (
+                  <li key={g.key}>
                     <CarCard
-                      car={car}
+                      car={g.car}
+                      market={market(g)}
                       rank={i + 2}
-                      matched={matchedFilters(car, answers)}
+                      matched={matchedFilters(g.car, answers)}
                       metric={answers.priority === "acceleration" ? "acceleration" : "range"}
                       returnLabel="your results"
                     />
@@ -261,7 +297,9 @@ function Loosen({
 }
 
 /** The number 1 match: the car's photo, its real-world range and the headline figures, on the dark instrument ground. */
-function TopMatch({ car, total, answers }: { car: Car; total: number; answers: Answers }) {
+function TopMatch({ group, market, total, answers }: { group: ResultGroup; market: CardMarket; total: number; answers: Answers }) {
+  const car: Car = group.car;
+  const { offer: o, country } = market;
   const matched = matchedFilters(car, answers);
   const efficient = answers.priority === "efficiency";
   const quick = answers.priority === "acceleration";
@@ -290,19 +328,37 @@ function TopMatch({ car, total, answers }: { car: Car; total: number; answers: A
         <p className="mt-4 text-on-ink/80">{car.make}</p>
         <h2 id="top-title" className="font-wide text-[2rem] font-semibold leading-[1.04] text-balance sm:text-[2.8rem]">
           <CarLink href={carHref(car)} returnLabel="your results" className="hover:underline hover:decoration-signal hover:decoration-2 hover:underline-offset-8">
-            {car.model}
+            {market.title}
           </CarLink>
         </h2>
+        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-sm text-on-ink/80">
+          {o.newPrice !== null && <span className="rounded bg-on-ink px-1.5 py-0.5 text-xs font-semibold text-ink">New</span>}
+          {o.used && <span className="rounded bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-ink">Used</span>}
+          <span>{market.years}</span>
+        </p>
 
         <div className="mt-6">
           <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />
+          {o.used && (
+            <p className="mt-2 text-sm text-on-ink/75">
+              Range when new. A {o.used.year} car today: about {miles(o.used.rangeTodayKm)} miles (estimated, after battery wear).
+            </p>
+          )}
         </div>
 
         <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm">
-          <div>
-            <dt className="text-on-ink/70">From</dt>
-            <dd className="font-wide text-lg font-semibold tabular-nums">{formatGbp(car.priceGbp)}</dd>
-          </div>
+          {o.newPrice !== null && (
+            <div>
+              <dt className="text-on-ink/70">New from</dt>
+              <dd className="font-wide text-lg font-semibold tabular-nums">{formatMoney(o.newPrice, country)}</dd>
+            </div>
+          )}
+          {o.used && (
+            <div>
+              <dt className="text-on-ink/70">Used from (est.)</dt>
+              <dd className="font-wide text-lg font-semibold tabular-nums">{formatMoney(o.used.low, country)}</dd>
+            </div>
+          )}
           <div>
             <dt className={efficient ? "text-signal" : "text-on-ink/70"}>Efficiency</dt>
             <dd className="font-wide text-lg font-semibold tabular-nums">{formatMiPerKwh(car.whPerKm)}</dd>

@@ -2,16 +2,19 @@
 
 ## cars.json
 
-This file lists the electric cars that are currently on sale and have a UK price, sorted by real-world range from longest to shortest. It has 471 cars.
+This file lists every electric car in the spreadsheet: 1,493 cars (661 on sale, 823 no longer sold new, 9 coming soon), sorted by real-world range from longest to shortest. It is built by `scripts/build.py`, which also writes:
+
+- `cars.min.json`: the same cars for the browser, as `columns` + `rows` arrays with photo credits listed once, and without `interiors`, `URL` and `Full name`.
+- `car-extras.json`: `{ID: {url, interiors}}`, read only by car pages on the server.
 
 **Source:** `ev-database-cars.xlsx`, "All cars" sheet. The data was taken from [EV Database](https://ev-database.org/) on 9 October 2026, using the site's overview listing rather than each car's full spec page.
 
 **Range is EV Database's real-world range, not WLTP.** `Real range km` is EV Database's estimate of range in mixed real-world driving. It is usually well below the official WLTP figure. `Efficiency Wh/km` uses the same standardised conditions.
 
 ### How it was built
-1. Kept only rows where `Status` = "Available". That left 661 of 1,493 cars.
-2. Dropped cars with no `Price UK GBP` (190 cars) or no `Real range km` (none).
-3. Sorted by `Real range km`, highest first. Ties are broken by `Price UK GBP`, cheapest first.
+1. Kept every row. `Price UK GBP`, `Price Germany EUR` and `Price Netherlands EUR` are null when the car wasn't sold there (for cars no longer sold, the last new price). Every car has at least one.
+2. Added `family` and `variant` (the model name without "(MY..)" tags, used to group the same version across years).
+3. Sorted by `Real range km`, highest first. Ties are broken by UK price (or German price), cheapest first.
 
 ### Field notes
 - `ID`, `Seats`, ranges, `Efficiency Wh/km`, `Usable battery kWh`, `Fastcharge kW`, `Price per km EUR` and `Price UK GBP` are all numbers. `Price UK GBP` is the UK starting price including VAT.
@@ -27,11 +30,11 @@ This file lists the electric cars that are currently on sale and have a UK price
 
 ### Photos (`image`, `imageCredit`)
 
-- `image` is a 960px-wide photo URL from **Wikimedia Commons**, or `null` when no suitable free photo exists. 435 of the 471 cars have one, using 161 different photos.
+- `image` is a 960px-wide photo URL from **Wikimedia Commons**, or `null` when no suitable free photo exists. 763 cars have one. Cars no longer sold only reuse their model's photo when they are the same generation (on sale within a year of the current versions' launch, or a model-year update of a version still sold); older generations get none.
 - `imageCredit` holds `author`, `license`, `licenseUrl`, `source` (the Commons file page) and `subject` (the model the photo shows). Every photo is CC BY, CC BY-SA or CC0. The site shows the author and licence on each photo, which is the attribution these licences require.
 - Photos are matched by **model family**, not by exact trim. A photo of a Kia EV4 GT-Line is used for every EV4. Every photo was checked by eye. 17 model families (36 cars) have no photo because no freely licensed picture of the correct badge, body style or generation could be found.
 - **EV Database images are not used.** Their data-services page says: "Hot linking to, or direct use of, any images on EV Database's servers is not allowed".
-- `interiors` is a list of up to 2 interior photos from Wikimedia Commons, each with `image`, `width`, `height` and the same credit fields as `imageCredit`. 219 cars have at least one. They were found with the Commons search API, checked by eye, and are listed in `scripts/interiors.py`. Some show a closely related version with the same cabin (for example a petrol Astra for the Astra Electric); `subject` says which, and the car page notes it.
+- `interiors` is a list of up to 2 interior photos from Wikimedia Commons, each with `image`, `width`, `height` and the same credit fields as `imageCredit`. Interiors follow the same generation rule. They were found with the Commons search API, checked by eye, and are listed in `scripts/interiors.py`. Some show a closely related version with the same cabin (for example a petrol Astra for the Astra Electric); `subject` says which, and the car page notes it.
 - `family` is the model family shared by every version of a model (for example "Hyundai Ioniq 5"). The car pages use it for the "Other versions" list.
-- How to rebuild: `scripts/families.py` maps each car to a model family and a Wikipedia article. `scripts/photos.py` lists the accepted exterior Commons files (`PHOTOS` by Wikipedia article, plus `FAMILY_PHOTOS` picked by hand) and the families rejected for showing the wrong car. Run `python3 scripts/build.py data/cars.json data/cars.json` to apply them.
+- How to rebuild: `scripts/families.py` maps each car to a model family and a Wikipedia article. `scripts/photos.py` lists the accepted exterior Commons files (`PHOTOS` by Wikipedia article, plus `FAMILY_PHOTOS` picked by hand) and the families rejected for showing the wrong car. Run `python3 scripts/build.py ev-database-cars.xlsx data/cars.json` to apply them.
 

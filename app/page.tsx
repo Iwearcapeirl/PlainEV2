@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { carHref, cars } from "@/lib/cars";
+import { allCars, carHref, cars } from "@/lib/cars";
 import RangeBar from "@/components/RangeBar";
 import RangeRadar from "@/components/RangeRadar";
 import RangeRings from "@/components/RangeRings";
 import { formatGbp, formatMi, formatMiPerKwh, kmToMiles } from "@/lib/format";
-import { BUDGET_ORDER, BUDGETS } from "@/lib/quiz";
+import { groupResults } from "@/lib/market";
+import { matchesAnswers } from "@/lib/match";
+import { BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS } from "@/lib/quiz";
 import { cheapest, dearest } from "@/lib/radar";
 import { byRange, getRankingPage, rankingPages, shortLabel, type RankingPage } from "@/lib/rankings";
 import { DATA_YEAR, SITE_NAME, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
@@ -40,7 +42,8 @@ export default function HomePage() {
   const longestMiles = kmToMiles(ranges[ranges.length - 1]);
   const budgets = BUDGET_ORDER.map((id) => BUDGETS.find((b) => b.id === id)!).map((b) => ({
     ...b,
-    count: b.chip ? cars.filter(b.test).length : null,
+    // Models a UK buyer would see in the results for this budget, new and used (as the quiz counts them).
+    count: groupResults(allCars.filter((c) => matchesAnswers(c, { ...DEFAULT_ANSWERS, budget: b.id }))).length,
   }));
 
   return (
@@ -255,7 +258,7 @@ export default function HomePage() {
                 >
                   <span className="font-wide text-lg font-semibold">{b.label}</span>
                   <span className="mt-1 text-sm tabular-nums text-muted">
-                    {b.count === null ? `All ${cars.length} cars` : `${b.count} cars`}
+                    {b.chip ? `${b.count} new and used` : `All ${b.count}, new and used`}
                   </span>
                 </Link>
               </li>

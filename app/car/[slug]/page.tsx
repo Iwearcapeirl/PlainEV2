@@ -6,7 +6,8 @@ import CarBreadcrumb from "@/components/CarBreadcrumb";
 import CarImage from "@/components/CarImage";
 import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
-import { carHref, cars, type Car, type ImageCredit } from "@/lib/cars";
+import { carExtras } from "@/lib/carExtras";
+import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import {
   bodyLabel,
   bodyPlural,
@@ -15,6 +16,7 @@ import {
   CHEMISTRY_LABEL,
   driveLabel,
   getCarBySlug,
+  homeCountry,
   otherVersions,
   segmentLabel,
   similarCars,
@@ -32,6 +34,18 @@ import {
   formatMiPerKwh,
   formatWhPerKm,
 } from "@/lib/format";
+import {
+  BATTERY_LOSS_PER_YEAR,
+  COUNTRIES,
+  formatMoney,
+  formatMoneyRange,
+  listingSearch,
+  miles,
+  newPrice,
+  usedEstimates,
+  usedFrom,
+  type Country,
+} from "@/lib/market";
 import { SITE_NAME, SITE_URL, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -40,17 +54,44 @@ type Props = { params: Promise<{ slug: string }> };
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return cars.map((c) => ({ slug: c.slug }));
+  // Every car: on sale, no longer sold new, and coming soon.
+  return allCars.map((c) => ({ slug: c.slug }));
+}
+
+const countryName = (c: Country) => (c === "uk" ? "the UK" : c === "nl" ? "the Netherlands" : COUNTRIES[c].label);
+
+/** "On sale new", "No longer sold new · 2019–2022", "Coming soon" */
+function statusLabel(car: Car): string {
+  if (car.status === "Upcoming") return "Coming soon";
+  if (car.status === "Discontinued") {
+    const years = car.yearTo && car.yearTo !== car.yearFrom ? `${car.yearFrom}–${car.yearTo}` : `${car.yearFrom}`;
+    return `No longer sold new · sold ${years}`;
+  }
+  return car.priceGbp !== null ? "On sale new" : `On sale new in ${[car.priceDeEur !== null && "Germany", car.priceNlEur !== null && "the Netherlands"].filter(Boolean).join(" and ")}`;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const car = getCarBySlug((await params).slug);
   if (!car) return {};
   const name = `${car.make} ${car.model}`;
-  const title = `${name}: real-world range, specs and UK price`;
+  const country = homeCountry(car);
+  const price = country ? newPrice(car, country) : null;
+  const used = country ? usedFrom(car, country) : null;
+  const title =
+    car.status === "Available" && car.priceGbp !== null
+      ? `${name}: real-world range, specs and UK price`
+      : `${name}: real-world range, specs and used prices`;
+  const pricing =
+    car.status === "Available" && price !== null && country
+      ? `from ${formatMoney(price, country)} in ${countryName(country)}`
+      : used && country
+        ? `used from about ${formatMoney(used.low, country)} (estimated)`
+        : car.status === "Upcoming"
+          ? "coming soon"
+          : "";
   const description =
     `${name}: ${formatDistance(car.rangeKm)} real-world range (not WLTP), ${formatEfficiency(car.whPerKm)}, ` +
-    `${car.fastchargeKw} kW average rapid charging, from ${formatGbp(car.priceGbp)} in the UK.`;
+    `${car.fastchargeKw} kW average rapid charging${pricing ? `, ${pricing}` : ""}.`;
   return {
     title,
     description,
@@ -64,6 +105,12 @@ export default async function CarPage({ params }: Props) {
   if (!car) notFound();
 
   const name = `${car.make} ${car.model}`;
+  const { url, interiors } = carExtras(car.id);
+  const country = homeCountry(car);
+  const price = country ? newPrice(car, country) : null;
+  const usedTable = country ? usedEstimates(car, country) : [];
+  const cheapestUsed = usedTable.length ? usedTable[usedTable.length - 1] : null;
+  const listing = country && usedTable.length ? listingSearch(car, country) : null;
   const standings = carStandings(car);
   const summary = carSummary(car);
   const versions = otherVersions(car);
@@ -93,15 +140,37 @@ export default async function CarPage({ params }: Props) {
         />
 
         <header className="rounded-2xl bg-card p-5 shadow-[0_0_0_1px_var(--line),0_24px_48px_-32px_rgb(14_26_43/0.35)] sm:p-6">
-          <p className="text-sm font-medium text-muted">{car.make}</p>
+          <p className="flex flex-wrap items-center justify-between gap-2 text-sm font-medium text-muted">
+            <span>{car.make}</span>
+            <span
+              className={`rounded px-2 py-0.5 text-xs font-semibold ${
+                car.status === "Available" ? "bg-ink text-on-ink" : car.status === "Upcoming" ? "bg-accent-soft text-foreground" : "bg-signal text-signal-ink"
+              }`}
+            >
+              {statusLabel(car)}
+            </span>
+          </p>
           <h1 className="font-wide mt-1 text-[1.75rem] font-semibold leading-[1.1] text-balance sm:text-3xl">{car.model}</h1>
           {car.fullName !== name && <p className="mt-1.5 text-sm text-muted">{car.fullName}</p>}
 
-          <p className="mt-4 flex items-baseline gap-2">
-            <span className="text-sm text-muted">From</span>
-            <span className="font-wide text-2xl font-semibold tabular-nums">{formatGbp(car.priceGbp)}</span>
-            <span className="text-sm text-muted">UK price</span>
-          </p>
+          {country && price !== null && (
+            <div className="mt-4 grid gap-1">
+              <p className="flex flex-wrap items-baseline gap-x-2">
+                <span className="text-sm text-muted">{car.status === "Available" ? "From" : car.status === "Upcoming" ? "Expected" : "Was"}</span>
+                <span className="font-wide text-2xl font-semibold tabular-nums">{formatMoney(price, country)}</span>
+                <span className="text-sm text-muted">
+                  {car.status === "Discontinued" ? `new, ${countryName(country)}` : `${countryName(country)} price`}
+                </span>
+              </p>
+              {cheapestUsed && (
+                <p className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-sm text-muted">Used from</span>
+                  <span className="font-wide text-xl font-semibold tabular-nums">{formatMoney(cheapestUsed.low, country)}</span>
+                  <span className="text-sm text-muted">estimated, {cheapestUsed.year} car</span>
+                </p>
+              )}
+            </div>
+          )}
 
           <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="At a glance">
             {[
@@ -128,14 +197,28 @@ export default async function CarPage({ params }: Props) {
             <Tile label="Efficiency" value={formatMiPerKwh(car.whPerKm)} sub={formatWhPerKm(car.whPerKm)} />
             <Tile label="1-stop range" value={formatMi(car.oneStopKm)} sub={formatKm(car.oneStopKm)} />
             <Tile label="Rapid charging" value={`${car.fastchargeKw} kW`} sub="average, 10–80%" />
-            <Tile label="Price per mile" value={formatGbpPerMile(car.priceGbp, car.rangeKm)} sub={`${formatGbpPerKm(car.priceGbp, car.rangeKm)}/km of range`} />
+            {car.status === "Available" && car.priceGbp !== null ? (
+              <Tile label="Price per mile" value={formatGbpPerMile(car.priceGbp, car.rangeKm)} sub={`${formatGbpPerKm(car.priceGbp, car.rangeKm)}/km of range`} />
+            ) : (
+              <Tile label="0–62 mph" value={formatAccel(car.accelS)} sub="0–100 km/h" />
+            )}
           </dl>
 
+          {listing && (
+            <a
+              href={listing.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 flex items-center justify-center gap-1.5 rounded-xl bg-signal px-4 py-3 text-center text-sm font-semibold text-signal-ink hover:brightness-95"
+            >
+              Find one for sale: {listing.label} <span aria-hidden>↗</span>
+            </a>
+          )}
           <a
-            href={car.url}
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-5 flex items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-on-ink hover:bg-ink/90"
+            className={`${listing ? "mt-2.5" : "mt-5"} flex items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-on-ink hover:bg-ink/90`}
           >
             Full data on EV Database <span aria-hidden>↗</span>
           </a>
@@ -143,11 +226,11 @@ export default async function CarPage({ params }: Props) {
       </div>
 
       {/* ---------- Interior ---------- */}
-      {car.interiors.length > 0 && (
+      {interiors.length > 0 && (
         <section aria-labelledby="inside-title" className="mt-12">
           <SectionTitle id="inside-title">Inside</SectionTitle>
-          <div className={`mt-4 grid gap-3 ${car.interiors.length > 1 ? "sm:grid-cols-2" : ""}`}>
-            {car.interiors.map((p, i) => (
+          <div className={`mt-4 grid gap-3 ${interiors.length > 1 ? "sm:grid-cols-2" : ""}`}>
+            {interiors.map((p, i) => (
               <CarImage
                   key={p.image}
                   src={p.image}
@@ -155,15 +238,54 @@ export default async function CarPage({ params }: Props) {
                   make={car.make}
                   model={car.model}
                   alt={`Interior of the ${p.subject}${i ? ", second view" : ""}`}
-                  frameClass={`rounded-2xl shadow-[0_0_0_1px_var(--line)] ${car.interiors.length > 1 ? "aspect-[4/3]" : "aspect-[16/9]"}`}
-                  sizes={car.interiors.length > 1 ? "(min-width: 640px) 500px, 100vw" : "(min-width: 1024px) 960px, 100vw"}
+                  frameClass={`rounded-2xl shadow-[0_0_0_1px_var(--line)] ${interiors.length > 1 ? "aspect-[4/3]" : "aspect-[16/9]"}`}
+                  sizes={interiors.length > 1 ? "(min-width: 640px) 500px, 100vw" : "(min-width: 1024px) 960px, 100vw"}
                 />
             ))}
           </div>
-          {car.interiors.some((p) => p.subject !== car.family) && (
+          {interiors.some((p) => p.subject !== car.family) && (
             <p className="mt-2 text-xs text-muted">
-              {car.interiors.length > 1 ? "Photos show" : "Photo shows"} the {car.interiors.find((p) => p.subject !== car.family)!.subject}, which
+              {interiors.length > 1 ? "Photos show" : "Photo shows"} the {interiors.find((p) => p.subject !== car.family)!.subject}, which
               shares this cabin. Trim and screens can differ by version and market.
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* ---------- Used prices (estimated) ---------- */}
+      {country && usedTable.length > 0 && (
+        <section aria-labelledby="used-title" className="mt-12">
+          <SectionTitle id="used-title">Buying one used</SectionTitle>
+          <p className="mt-2 max-w-[66ch] text-muted text-pretty">
+            Estimated prices by model year{country !== "uk" ? ` in ${countryName(country)}` : ""}, from its price when new and typical EV
+            depreciation, and the real-world range you can expect today after about {Math.round(BATTERY_LOSS_PER_YEAR * 100)}% battery
+            wear a year. These are estimates, not valuations: mileage, condition and battery health make a big difference.
+          </p>
+          <div className="mt-4 overflow-hidden rounded-2xl bg-card shadow-[0_0_0_1px_var(--line)]">
+            <table className="w-full text-sm tabular-nums">
+              <thead className="bg-accent-soft text-left text-xs text-muted">
+                <tr>
+                  <th scope="col" className="px-4 py-2.5 font-medium sm:px-5">Model year</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Estimated price</th>
+                  <th scope="col" className="px-4 py-2.5 text-right font-medium sm:px-5">Range today (est.)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usedTable.map((e) => (
+                  <tr key={e.year} className="border-t border-line">
+                    <th scope="row" className="px-4 py-2.5 text-left font-semibold sm:px-5">{e.year}</th>
+                    <td className="px-4 py-2.5">{formatMoneyRange(e.low, e.high, country)}</td>
+                    <td className="px-4 py-2.5 text-right sm:px-5">{miles(e.rangeTodayKm)} miles</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {listing && (
+            <p className="mt-3 text-sm">
+              <a href={listing.url} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-signal decoration-2 underline-offset-4">
+                Check real prices: {listing.label} ↗
+              </a>
             </p>
           )}
         </section>
@@ -188,10 +310,13 @@ export default async function CarPage({ params }: Props) {
           <SectionTitle id="compare-title">How it compares</SectionTitle>
           <ul className="mt-4 grid gap-2.5">
             <Rank label="Real-world range" s={standings.range} scope="of all EVs on sale" />
-            <Rank label="Range among" extra={bodyPlural(car.body)} s={standings.rangeInBody} scope={`of ${standings.rangeInBody.of} ${bodyPlural(car.body)}`} />
+            {standings.rangeInBody.of > 0 && (
+              <Rank label="Range among" extra={bodyPlural(car.body)} s={standings.rangeInBody} scope={`of ${standings.rangeInBody.of} ${bodyPlural(car.body)}`} />
+            )}
             <Rank label="Efficiency" s={standings.efficiency} scope="of all EVs on sale" />
             <Rank label="Rapid-charging speed" s={standings.charging} scope="of all EVs on sale" />
           </ul>
+          <p className="mt-2.5 text-xs text-muted">Compared with the EVs on sale new in the UK today.</p>
         </aside>
       </div>
 
@@ -252,15 +377,17 @@ export default async function CarPage({ params }: Props) {
           <SpecGroup
             title="Price and availability"
             rows={[
-              ["UK starting price", formatGbp(car.priceGbp)],
-              ["UK price per mile of range", `${formatGbpPerMile(car.priceGbp, car.rangeKm)} (${formatGbpPerKm(car.priceGbp, car.rangeKm)}/km)`],
+              [car.status === "Available" ? "UK starting price" : "UK price when new", car.priceGbp !== null ? formatGbp(car.priceGbp) : "Not sold in the UK"],
+              ...(car.priceGbp !== null
+                ? [["UK price per mile of range", `${formatGbpPerMile(car.priceGbp, car.rangeKm)} (${formatGbpPerKm(car.priceGbp, car.rangeKm)}/km)`] as [string, string]]
+                : []),
               ["Price per km of range (EUR)", est(`€${car.pricePerKmEur}`, car.pricePerKmEstimated)],
               ["Price in Germany", car.priceDeEur !== null ? euro(car.priceDeEur) : "Not listed"],
               ["Price in the Netherlands", car.priceNlEur !== null ? euro(car.priceNlEur) : "Not listed"],
               ["Availability", car.availability],
-              ["On sale", `${monthYear(car.availableFrom)}${car.availableTo ? ` to ${monthYear(car.availableTo)}` : " onwards"}`],
+              [car.status === "Upcoming" ? "Expected on sale" : "On sale new", `${monthYear(car.availableFrom)}${car.availableTo ? ` to ${monthYear(car.availableTo)}` : " onwards"}`],
               ["Model years", car.yearTo ? `${car.yearFrom} to ${car.yearTo}` : `${car.yearFrom} onwards`],
-              ["Status", car.status],
+              ["Status", statusLabel(car)],
             ]}
           />
         </div>
@@ -281,7 +408,7 @@ export default async function CarPage({ params }: Props) {
           <div className="text-sm">
             <p className="font-semibold">Photos</p>
             <ul className="mt-2 grid gap-2 text-on-ink/75">
-              {[car.imageCredit && { ...car.imageCredit, what: "Exterior" }, ...car.interiors.map((p) => ({ ...p, what: "Interior" }))]
+              {[car.imageCredit && { ...car.imageCredit, what: "Exterior" }, ...interiors.map((p) => ({ ...p, what: "Interior" }))]
                 .filter((c): c is ImageCredit & { what: string } => Boolean(c))
                 .map((c) => (
                   <li key={c.source}>
@@ -296,7 +423,7 @@ export default async function CarPage({ params }: Props) {
                     ), Wikimedia Commons
                   </li>
                 ))}
-              {!car.imageCredit && car.interiors.length === 0 && <li>No freely licensed photos of this model yet.</li>}
+              {!car.imageCredit && interiors.length === 0 && <li>No freely licensed photos of this model yet.</li>}
             </ul>
             <p className="mt-3 text-xs text-on-ink/55">Photos show the model, not always the exact version or year.</p>
           </div>
@@ -317,12 +444,12 @@ export default async function CarPage({ params }: Props) {
                       {v.model}
                     </span>
                     <span className="block text-xs text-muted">
-                      {driveLabel(v.drive)} · {v.batteryKwh} kWh · {formatMiPerKwh(v.whPerKm)}
+                      {versionYears(v)} · {driveLabel(v.drive)} · {v.batteryKwh} kWh · {formatMiPerKwh(v.whPerKm)}
                     </span>
                   </span>
                   <span className="shrink-0 text-right tabular-nums">
                     <span className="block font-semibold">{formatMi(v.rangeKm)}</span>
-                    <span className="block text-xs text-muted">{formatGbp(v.priceGbp)}</span>
+                    <span className="block text-xs text-muted">{versionPrice(v)}</span>
                   </span>
                   <span aria-hidden className="text-muted transition-transform group-hover:translate-x-0.5">→</span>
                 </Link>
@@ -438,6 +565,21 @@ const euro = (n: number) => `€${n.toLocaleString("en-GB")}`;
 const monthYear = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 
+/** "2019–2022, used", "2024 on, new", "coming soon" for the versions list. */
+function versionYears(v: Car): string {
+  if (v.status === "Upcoming") return "Coming soon";
+  if (v.status === "Available") return `${v.yearFrom} on`;
+  return v.yearTo && v.yearTo !== v.yearFrom ? `${v.yearFrom}–${v.yearTo}` : `${v.yearFrom}`;
+}
+/** New price if on sale, otherwise the cheapest estimated used price, in the car's home currency. */
+function versionPrice(v: Car): string {
+  const c = homeCountry(v);
+  if (!c) return "";
+  if (v.status === "Available") return formatMoney(newPrice(v, c)!, c);
+  const u = usedFrom(v, c);
+  return u ? `used from ${formatMoney(u.low, c)}` : "";
+}
+
 const formatDate = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
@@ -455,6 +597,10 @@ function jsonLd(car: Car) {
     driveWheelConfiguration: driveLabel(car.drive),
     seatingCapacity: car.seats,
     fuelType: "Electricity",
-    offers: { "@type": "Offer", price: car.priceGbp, priceCurrency: "GBP", availability: "https://schema.org/InStock" },
+    // Only cars on sale new in the UK have a price to offer.
+    offers:
+      car.status === "Available" && car.priceGbp !== null
+        ? { "@type": "Offer", price: car.priceGbp, priceCurrency: "GBP", availability: "https://schema.org/InStock" }
+        : undefined,
   };
 }

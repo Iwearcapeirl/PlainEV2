@@ -1,6 +1,7 @@
-import { cars } from "./cars";
+import { allCars } from "./cars";
 import { EMPTY_REFINEMENT, FIELDS, SORT_FIELDS, fieldByKey, isSet, type CustomFilter, type Refinement } from "./fields";
 import { milesToKm } from "./format";
+import { CONDITIONS, COUNTRY_IDS, type Condition, type Country } from "./market";
 import { DEFAULT_ANSWERS, FILTER_KEYS, FILTERS, PRIORITIES, type Answers, type FilterKey, type PriorityId } from "./quiz";
 
 /**
@@ -21,6 +22,8 @@ export function normaliseAnswers(raw: Partial<Record<string, unknown>>): Answers
     if (typeof v === "string" && FILTERS[key].some((o) => o.id === v)) a[key] = v;
   }
   if (PRIORITIES.some((p) => p.id === raw.priority)) a.priority = raw.priority as PriorityId;
+  if (COUNTRY_IDS.includes(raw.country as Country)) a.country = raw.country as Country;
+  if (CONDITIONS.some((c) => c.id === raw.condition)) a.condition = raw.condition as Condition;
   return a;
 }
 
@@ -29,6 +32,8 @@ export function answersSchema() {
   const properties: Record<string, { type: "string"; enum: string[] }> = {};
   for (const key of FILTER_KEYS) properties[key] = { type: "string", enum: FILTERS[key].map((o) => o.id) };
   properties.priority = { type: "string", enum: PRIORITIES.map((p) => p.id) };
+  properties.country = { type: "string", enum: [...COUNTRY_IDS] };
+  properties.condition = { type: "string", enum: CONDITIONS.map((c) => c.id) };
   return {
     type: "object" as const,
     properties,
@@ -44,12 +49,17 @@ export function optionsGuide(): string {
     return `- ${key}: ${opts.join("; ")}`;
   });
   lines.push(`- priority: ${PRIORITIES.map((p) => `"${p.id}" = ${p.hint}`).join("; ")}`);
+  lines.push(`- country: "uk" = buying in the UK (prices in £); "de" = Germany (prices in €); "nl" = the Netherlands (prices in €)`);
+  lines.push(`- condition: ${CONDITIONS.map((c) => `"${c.id}" = ${c.label.toLowerCase()}`).join("; ")}`);
   return lines.join("\n");
 }
 
 // ---------- Built-in rules ----------
 
 const BUDGET_CAPS: [string, number][] = [
+  ["under-10k", 10_000],
+  ["10-15k", 15_000],
+  ["15-20k", 20_000],
   ["under-30k", 30_000],
   ["30-40k", 40_000],
   ["40-50k", 50_000],
@@ -58,7 +68,7 @@ const BUDGET_CAPS: [string, number][] = [
 
 /** A money amount in pounds from "£35k", "35,000", "35 grand", "£35000". */
 function money(text: string): number | null {
-  const m = text.match(/£?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(k|grand|thousand)?/i);
+  const m = text.match(/[£€]?\s*(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s*(k|grand|thousand)?/i);
   if (!m) return null;
   let n = Number(m[1].replace(/,/g, ""));
   if (m[2]) n *= 1000;
@@ -74,13 +84,23 @@ function nearestBudget(max: number): string {
   return best[0];
 }
 
-export function answersFromText(input: string): Answers {
+export function answersFromText(input: string, defaultCountry: Country = "uk"): Answers {
   const t = input.toLowerCase();
   const a = { ...DEFAULT_ANSWERS };
 
+  // Where they're buying ("German" alone usually means the make, so only country names count), and new or used.
+  if (/\b(germany|deutschland)\b/.test(t)) a.country = "de";
+  else if (/\b(the netherlands|netherlands|holland|nederland)\b/.test(t)) a.country = "nl";
+  else if (/\b(the uk|in uk|united kingdom|britain|england|scotland|wales)\b/.test(t)) a.country = "uk";
+  else a.country = defaultCountry;
+  const used = /\bused\b(?! (to|for|by|as|in|on|with)\b)|\bsecond[- ]?hand\b|\bpre[- ]?owned\b|\bnearly new\b/.test(t);
+  const isNew = /\bbrand[- ]new\b|\bnew car\b|\bbuy(ing)? (it )?new\b|\bnew only\b|\bfrom new\b/.test(t);
+  a.condition = used && !isNew ? "used" : isNew && !used ? "new" : "both";
+
   // Budget: an amount after a ceiling word, or any £ amount.
-  const budgetPhrase = t.match(/(?:under|below|less than|up to|max(?:imum)?|budget(?: of| is)?|around|about|no more than)\s*£?\s*[\d,.]+(?![\d,.])(?!\s*(?:s\b|secs?\b|seconds?|mph|mi\b|miles?|km|kwh|kw\b|seats?))\s*(?:k|grand|thousand)?/);
-  const pounds = budgetPhrase ? money(budgetPhrase[0]) : t.includes("£") ? money(t.slice(t.indexOf("£"))) : null;
+  const budgetPhrase = t.match(/(?:under|below|less than|up to|max(?:imum)?|budget(?: of| is)?|around|about|no more than)\s*[£€]?\s*[\d,.]+(?![\d,.])(?!\s*(?:s\b|secs?\b|seconds?|mph|mi\b|miles?|km|kwh|kw\b|seats?))\s*(?:k|grand|thousand)?/);
+  const symbol = t.includes("£") ? "£" : t.includes("€") ? "€" : null;
+  const pounds = budgetPhrase ? money(budgetPhrase[0]) : symbol ? money(t.slice(t.indexOf(symbol))) : null;
   if (pounds) a.budget = nearestBudget(pounds);
   else if (/\b(cheap|cheapest|affordable|budget|low cost)\b/.test(t)) a.budget = "under-30k";
   if (/\b(no (budget|limit)|money no object|luxury)\b/.test(t)) a.budget = "no-limit";
@@ -228,7 +248,7 @@ const MAKE_ALIASES: Record<string, string> = {
 };
 /** Makes that are also everyday words, so they only count when written with a capital letter. */
 const CASE_SENSITIVE_MAKES = new Set(["Mini", "Smart", "Alpine", "Genesis", "Lotus", "DS Automobiles", "Jeep"]);
-const MAKES = [...new Set(cars.map((c) => c.make))];
+const MAKES = [...new Set(allCars.map((c) => c.make))];
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** A whole-word match that also works for names with accents (Škoda, Citroën). */

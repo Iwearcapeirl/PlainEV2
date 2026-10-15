@@ -2,9 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import CountrySwitch from "@/components/CountrySwitch";
 import RangeRadar from "@/components/RangeRadar";
 import TextSearch from "@/components/TextSearch";
-import { cars } from "@/lib/cars";
+import { allCars } from "@/lib/cars";
+import { CONDITIONS, groupResults, type Condition } from "@/lib/market";
 import { matchesAnswers } from "@/lib/match";
 import {
   BODIES,
@@ -18,6 +20,8 @@ import {
   RANGES,
   answersFromParams,
   answersToQuery,
+  availableFor,
+  inCurrency,
   hasAnswers,
   moreFilterCount,
   type Answers,
@@ -31,7 +35,18 @@ type CoreKey = "budget" | "range" | "body";
 type Draft = Omit<Answers, CoreKey> & Record<CoreKey, string | null>;
 
 const STEPS = [
-  { key: "budget", name: "Budget", title: "What’s your maximum budget?", sub: "UK starting price, including VAT." },
+  {
+    key: "condition",
+    name: "New or used",
+    title: "Are you buying new, used or either?",
+    sub: "Used prices are estimates based on each car’s age and its price when new.",
+  },
+  {
+    key: "budget",
+    name: "Budget",
+    title: "What’s your maximum budget?",
+    sub: "Including VAT. For used cars we compare it with an estimated price for the oldest model year.",
+  },
   {
     key: "range",
     name: "Range",
@@ -57,15 +72,19 @@ const filled = (d: Draft): Answers => ({
   body: d.body ?? DEFAULT_ANSWERS.body,
 });
 
-const countMatches = (a: Answers) => cars.reduce((n, c) => n + (matchesAnswers(c, a) ? 1 : 0), 0);
+/** Results the way the results page counts them: each version once, however many model years it covers. */
+const countMatches = (a: Answers) => groupResults(allCars.filter((c) => matchesAnswers(c, a))).length;
+/** Everything on offer for this country and new/used choice, before any other answer. */
+const countAvailable = (a: Answers) => groupResults(allCars.filter((c) => availableFor(c, a))).length;
 
 export default function Quiz() {
   const router = useRouter();
   const params = useSearchParams();
 
-  // Arriving from the homepage's budget picker (?budget=… on its own) starts on question 2 with the budget set.
+  // Arriving from the homepage's budget picker (?budget=… on its own) starts at the range question with the budget set
+  // (new or used stays on "either").
   const presetBudget = hasAnswers(params) ? null : BUDGETS.find((o) => o.id === params.get("budget"))?.id ?? null;
-  const [step, setStep] = useState(presetBudget ? 1 : 0);
+  const [step, setStep] = useState(presetBudget ? STEPS.findIndex((s) => s.key === "range") : 0);
   // Describing what you want is the default; the step-by-step quiz is the alternative. Links that carry
   // quiz answers (homepage budget picker, "Edit answers") open the quiz directly.
   const [mode, setMode] = useState<"text" | "quiz">(presetBudget || hasAnswers(params) ? "quiz" : "text");
@@ -82,8 +101,9 @@ export default function Quiz() {
 
   const answers = useMemo(() => filled(draft), [draft]);
   const liveCount = useMemo(() => countMatches(answers), [answers]);
+  const availableCount = useMemo(() => countAvailable(answers), [answers]);
   // The cars still in play, for the radar: each answer switches the rest off.
-  const lit = useMemo(() => new Set(cars.filter((c) => matchesAnswers(c, answers)).map((c) => c.id)), [answers]);
+  const lit = useMemo(() => new Set(allCars.filter((c) => matchesAnswers(c, answers)).map((c) => c.id)), [answers]);
   // How many cars each range option would leave, given the answers so far.
   const rangeCounts = useMemo(
     () => Object.fromEntries(RANGES.map((o) => [o.id, countMatches({ ...answers, range: o.id })])),
@@ -95,6 +115,13 @@ export default function Quiz() {
     next();
   };
   const setFilter = (key: FilterKey, value: string) => setDraft((d) => ({ ...d, [key]: value }));
+  const chooseCondition = (condition: Condition) => {
+    setDraft((d) => ({ ...d, condition }));
+    next();
+  };
+  const countrySwitch = (
+    <CountrySwitch value={draft.country} onChange={(country) => setDraft((d) => ({ ...d, country }))} className="mb-6" />
+  );
   const resetMore = () =>
     setDraft((d) => ({ ...d, ...Object.fromEntries(MORE_FILTERS.map((f) => [f.key, DEFAULT_ANSWERS[f.key]])) }));
 
@@ -105,7 +132,7 @@ export default function Quiz() {
   };
 
   const canContinue =
-    current.key === "priority" || current.key === "more" || draft[current.key as CoreKey] !== null;
+    current.key === "condition" || current.key === "priority" || current.key === "more" || draft[current.key as CoreKey] !== null;
   const extraCount = moreFilterCount(answers);
 
   if (mode === "text") {
@@ -117,14 +144,15 @@ export default function Quiz() {
               Find the right electric car for you.
             </h1>
             <p className="mt-4 max-w-[52ch] text-lg text-muted text-pretty">
-              Tell us what you need in your own words. We’ll show you the five EVs on sale in the UK that fit you best, ranked
-              by real-world range.
+              Tell us what you need in your own words, new or used. We’ll show you the five EVs that fit you best, ranked by
+              real-world range.
             </p>
           </div>
-          <TextSearch initial={params.get("q") ?? ""} onUseQuiz={() => setMode("quiz")} />
+          {countrySwitch}
+          <TextSearch initial={params.get("q") ?? ""} country={draft.country} onUseQuiz={() => setMode("quiz")} />
         </div>
         <aside aria-label="Every car on sale" className="sticky top-6 hidden lg:block">
-          <Instrument lit={lit} count={liveCount} />
+          <Instrument lit={lit} count={liveCount} of={availableCount} />
         </aside>
       </section>
     );
@@ -142,8 +170,8 @@ export default function Quiz() {
             Find the right electric car for you.
           </h1>
           <p className="mt-4 max-w-[52ch] text-lg text-muted text-pretty">
-            Four quick questions, then optional filters if you want to be more precise. We’ll show you the five EVs on sale in
-            the UK that fit you best, ranked by real-world range.
+            Five quick questions, then optional filters if you want to be more precise. We’ll show you the five EVs, new or
+            used, that fit you best, ranked by real-world range.
           </p>
           <button
             type="button"
@@ -155,9 +183,11 @@ export default function Quiz() {
         </div>
       )}
 
+      {countrySwitch}
+
       {/* Progress: the questions, in order */}
       <div className="mb-8">
-        <ol className="grid grid-cols-5 gap-1.5" aria-label="Progress">
+        <ol className="grid grid-cols-6 gap-1.5" aria-label="Progress">
           {STEPS.map((s, i) => (
             <li key={s.key} aria-current={i === step ? "step" : undefined}>
               <span
@@ -185,7 +215,7 @@ export default function Quiz() {
         </div>
       </div>
 
-      <Instrument lit={lit} count={liveCount} compact className="mb-8 lg:hidden" />
+      <Instrument lit={lit} count={liveCount} of={availableCount} compact className="mb-8 lg:hidden" />
 
       <div key={step} className="quiz-step">
       <div className="flex items-start justify-between gap-4">
@@ -215,10 +245,17 @@ export default function Quiz() {
           role="radiogroup"
           aria-labelledby="question-title"
         >
+          {current.key === "condition" &&
+            CONDITIONS.map((o) => (
+              <Option key={o.id} selected={draft.condition === o.id} hint={o.hint} onClick={() => chooseCondition(o.id)}>
+                {o.label}
+              </Option>
+            ))}
+
           {current.key === "budget" &&
             ordered(BUDGETS, BUDGET_ORDER).map((o) => (
               <Option key={o.id} selected={draft.budget === o.id} onClick={() => chooseAndAdvance("budget", o.id)}>
-                {o.label}
+                {inCurrency(o.label, draft.country)}
               </Option>
             ))}
 
@@ -349,7 +386,7 @@ export default function Quiz() {
       </div>
 
       <aside aria-label="Cars still matching" className="sticky top-6 hidden lg:block">
-        <Instrument lit={lit} count={liveCount} />
+        <Instrument lit={lit} count={liveCount} of={availableCount} />
       </aside>
     </section>
   );
@@ -362,11 +399,14 @@ export default function Quiz() {
 function Instrument({
   lit,
   count,
+  of,
   compact = false,
   className = "",
 }: {
   lit: ReadonlySet<number>;
   count: number;
+  /** Everything on offer for the buyer's country and new/used choice */
+  of: number;
   compact?: boolean;
   className?: string;
 }) {
@@ -379,13 +419,13 @@ function Instrument({
         <p className="text-xs text-on-ink/65">Still in the running</p>
         <p className="mt-0.5 flex items-baseline gap-1.5">
           <span className={`font-wide font-semibold tabular-nums ${compact ? "text-2xl" : "text-4xl"}`}>{count}</span>
-          <span className="text-sm text-on-ink/65">of {cars.length} cars</span>
+          <span className="text-sm text-on-ink/65">of {of} cars</span>
         </p>
       </div>
       <RangeRadar lit={lit} className={compact ? "order-1 size-20 shrink-0" : "mt-4 w-full"} />
       {!compact && (
         <p className="mt-4 text-xs leading-relaxed text-on-ink/65">
-          Each dot is a car on sale. Further from the centre means more real-world range; clockwise means dearer.
+          Each dot is a car on sale new in the UK. Further from the centre means more real-world range; clockwise means dearer.
         </p>
       )}
     </div>

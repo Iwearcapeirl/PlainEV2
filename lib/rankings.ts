@@ -1,4 +1,5 @@
-import { cars as allCars, type Car } from "./cars";
+// Rankings are of cars on sale new in the UK, so every car here has a UK price.
+import { cars as allCars, type UkCar as Car } from "./cars";
 import { formatDistance, formatEfficiency, formatGbp, kmToMiles } from "./format";
 import { DATA_YEAR } from "./site";
 

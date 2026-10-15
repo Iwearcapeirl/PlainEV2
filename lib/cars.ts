@@ -1,4 +1,4 @@
-import raw from "@/data/cars.json";
+import data from "@/data/cars.min.json";
 
 /** Photo credit for a Wikimedia Commons image (all images are freely licensed and need attribution). */
 export interface ImageCredit {
@@ -20,12 +20,15 @@ export interface InteriorPhoto extends ImageCredit {
   height: number;
 }
 
-/** Shape of each record in data/cars.json (field names as exported from the spreadsheet). */
+/**
+ * Shape of each record in data/cars.json (field names as exported from the spreadsheet). The browser loads the
+ * compact copy, data/cars.min.json (same fields as columns + rows, without interior photos and source links;
+ * those are in data/car-extras.json for car pages, see lib/carExtras.ts).
+ */
 interface RawCar {
   ID: number;
   Make: string;
   Model: string;
-  "Full name": string;
   Body: string;
   Drive: string;
   Seats: number;
@@ -61,12 +64,12 @@ interface RawCar {
   "Price Germany EUR": number | null;
   "Price Netherlands EUR": number | null;
   "Price per km EUR": number;
-  "Price UK GBP": number;
-  URL: string;
+  "Price UK GBP": number | null;
   image: string | null;
   imageCredit: ImageCredit | null;
-  interiors: InteriorPhoto[];
   family: string;
+  /** Model name without model-year tags, e.g. "IONIQ 5 Long Range 2WD" */
+  variant: string;
 }
 
 export interface Car {
@@ -87,8 +90,8 @@ export interface Car {
   fastchargeKw: number;
   /** 0–100 km/h in seconds (the same as 0–62 mph). */
   accelS: number;
-  /** Sales status (every car on the site is "Available"). */
-  status: string;
+  /** "Available" (on sale new), "Discontinued" (no longer sold new) or "Upcoming" (not on sale yet). */
+  status: "Available" | "Discontinued" | "Upcoming";
   /** e.g. "Available to order since April 2026" */
   availability: string;
   /** ISO dates: when orders opened, and when sales end (null when no end date is announced). */
@@ -120,15 +123,15 @@ export interface Car {
   priceDeEur: number | null;
   priceNlEur: number | null;
   pricePerKmEur: number;
-  priceGbp: number;
-  url: string;
+  /** UK price new (current, or last price when it was sold new); null when it was never sold in the UK. */
+  priceGbp: number | null;
   /** 960px-wide Wikimedia thumbnail, or null when no suitable free photo exists. */
   image: string | null;
   imageCredit: ImageCredit | null;
-  /** Interior photos (0–2); empty when no suitable free photo exists. */
-  interiors: InteriorPhoto[];
-  /** Model family shared by all versions of a model, e.g. "Hyundai Ioniq 5". */
+  /** Model family shared by all versions of a model, across years and generations, e.g. "Hyundai Ioniq 5". */
   family: string;
+  /** Model name without model-year tags; the same version sold across several years shares it. */
+  variant: string;
   /** URL slug for the car's page: /car/{slug} */
   slug: string;
 }
@@ -138,7 +141,7 @@ function toCar(r: RawCar): Car {
     id: r.ID,
     make: r.Make,
     model: r.Model,
-    fullName: r["Full name"],
+    fullName: `${r.Make} ${r.Model}`,
     body: r.Body,
     drive: r.Drive,
     seats: r.Seats,
@@ -151,7 +154,7 @@ function toCar(r: RawCar): Car {
     batteryKwh: r["Usable battery kWh"],
     fastchargeKw: r["Fastcharge kW"],
     accelS: r["0-100 km/h s"],
-    status: r.Status,
+    status: r.Status as Car["status"],
     availability: r.Availability,
     availableFrom: r["Available from"],
     availableTo: r["Available to"],
@@ -175,11 +178,10 @@ function toCar(r: RawCar): Car {
     priceNlEur: r["Price Netherlands EUR"],
     pricePerKmEur: r["Price per km EUR"],
     priceGbp: r["Price UK GBP"],
-    url: r.URL,
     image: r.image,
     imageCredit: r.imageCredit,
-    interiors: r.interiors ?? [],
     family: r.family,
+    variant: r.variant,
     slug: slugify(`${r.Make} ${r.Model}`),
   };
 }
@@ -195,15 +197,42 @@ export function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** All available cars with a UK price (pre-filtered when cars.json was built). */
-export const cars: Car[] = (() => {
-  const list = (raw as unknown as RawCar[]).map(toCar);
-  // Slugs are make + model. If two versions ever share one, both get the EV Database ID appended so URLs stay unique.
-  const seen = new Map<string, number>();
-  for (const c of list) seen.set(c.slug, (seen.get(c.slug) ?? 0) + 1);
-  for (const c of list) if (seen.get(c.slug)! > 1) c.slug = `${c.slug}-${c.id}`;
+/** A car on sale new in the UK: the set the rankings, homepage and comparisons use. */
+export type UkCar = Car & { priceGbp: number };
+
+/** Every car in the data: on sale, discontinued and upcoming, in any country. Longest real-world range first. */
+export const allCars: Car[] = (() => {
+  const { columns, credits, rows } = data as { columns: string[]; credits: ImageCredit[]; rows: unknown[][] };
+  const list = rows.map((row) => {
+    const r = Object.fromEntries(columns.map((k, i) => [k, row[i]])) as Record<string, unknown>;
+    if (typeof r.imageCredit === "number") r.imageCredit = credits[r.imageCredit];
+    return toCar(r as unknown as RawCar);
+  });
+
+  // Slugs are make + model. Cars on sale in the UK claim theirs first, so their existing URLs never change; then
+  // other cars on sale, discontinued and upcoming ones. A later car whose slug is taken gets its years added
+  // ("-2019-2022"), and the EV Database ID if that's still not unique.
+  const rank = (c: Car) => (c.status === "Available" ? (c.priceGbp !== null ? 0 : 1) : c.status === "Discontinued" ? 2 : 3);
+  const order = [...list].sort((x, y) => rank(x) - rank(y));
+  // Within the UK on-sale set, names shared by two versions keep the old rule (both get the ID), as before.
+  const ukCount = new Map<string, number>();
+  for (const c of order) if (rank(c) === 0) ukCount.set(c.slug, (ukCount.get(c.slug) ?? 0) + 1);
+  const taken = new Set<string>();
+  for (const c of order) {
+    let slug = c.slug;
+    if (rank(c) === 0 && ukCount.get(slug)! > 1) slug = `${slug}-${c.id}`;
+    else if (taken.has(slug)) {
+      slug = `${c.slug}-${c.yearFrom}-${c.yearTo ?? "on"}`;
+      if (taken.has(slug)) slug = `${c.slug}-${c.id}`;
+    }
+    c.slug = slug;
+    taken.add(slug);
+  }
   return list;
 })();
+
+/** Cars on sale new in the UK (with a UK price), longest range first. */
+export const cars: UkCar[] = allCars.filter((c): c is UkCar => c.status === "Available" && c.priceGbp !== null);
 
 /** The page for one car. */
 export const carHref = (car: Pick<Car, "slug">) => `/car/${car.slug}`;

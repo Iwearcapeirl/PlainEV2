@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { cars } from "@/lib/cars";
+import { allCars, cars } from "@/lib/cars";
 import { kmToMiles } from "@/lib/format";
+import { COUNTRY_IDS, type Country } from "@/lib/market";
 import {
   MAX_QUERY_LENGTH,
   answersFromText,
@@ -36,7 +37,7 @@ const quickestUnder = [30_000, 40_000, 50_000, 70_000]
 // Fixed text, so repeated requests share one cached prefix.
 const SYSTEM = `You turn a UK car buyer's description of the electric car they want into filters for an EV comparison site.
 
-The site lists ${cars.length} EVs on sale in the UK, from £${prices[0].toLocaleString("en-GB")} to £${prices[prices.length - 1].toLocaleString("en-GB")}, with real-world ranges from ${ranges[0]} to ${ranges[ranges.length - 1]} miles and 0–62 mph times from ${accels[0]} to ${accels[accels.length - 1]} seconds (median ${accels[Math.floor(accels.length / 2)]} s). The quickest car at or under each price: ${quickestUnder}. Results are the five best matches ranked by the priority.
+The site covers ${allCars.length} electric cars, new and used: ${cars.length} on sale new in the UK, plus cars no longer sold new (back to ${Math.min(...allCars.map((c) => c.yearFrom))}) and cars sold only in Germany or the Netherlands. New cars on sale in the UK cost from £${prices[0].toLocaleString("en-GB")} to £${prices[prices.length - 1].toLocaleString("en-GB")}, with real-world ranges from ${ranges[0]} to ${ranges[ranges.length - 1]} miles and 0–62 mph times from ${accels[0]} to ${accels[accels.length - 1]} seconds (median ${accels[Math.floor(accels.length / 2)]} s). The quickest new car on sale in the UK at or under each price: ${quickestUnder} (used examples of much quicker cars can fit lower budgets). Results are the five best matches ranked by the priority.
 
 Quiz filters (key: "option id" = meaning):
 ${optionsGuide()}
@@ -48,19 +49,24 @@ Sort ("sort"): {field, direction}. Use field "none" to keep the normal ranking b
 
 How to choose:
 - Every filter defaults to "any" (or "no-limit" for budget). Only set a filter when the description clearly asks for it or strongly implies it. Over-filtering leaves the buyer with no matches, so when unsure, leave it on the default.
-- Budget options are price ceilings. Pick the band whose ceiling is closest to the stated maximum; "over-70k" and "no-limit" both mean no ceiling. If they give an exact maximum that isn't a band ceiling (say £35k), pick the smallest band whose ceiling is at or above it and also add an extra filter on "price" with that max.
+- Budget options are price ceilings. Pick the band whose ceiling is closest to the stated maximum; "over-70k" and "no-limit" both mean no ceiling. If they give an exact maximum that isn't a band ceiling (say £35k), pick the smallest band whose ceiling is at or above it. Only when they're buying new in the UK, also add an extra filter on "price" (the UK price when new) with that max; never use "price" for used or either, because it would rule out used cars that cost more when new.
 - Range options are minimums in real-world miles. Pick the highest option that does not exceed what they ask for. Regular long motorway trips suggest "300"; typical commuting needs no filter unless they give a distance.
 - Infer sensibly from everyday language: "a big dog and three kids" suggests an SUV or estate only if they also mention space; "seven seats" or "third row" means seats "7"; snowy or rural roads suggest drive "awd"; very cold winters suggest a heat pump; camping or powering tools suggests V2L; cheap running costs suggest priority "efficiency".
 - Acceleration: 0–60 mph, 0–62 mph and 0–100 km/h are treated as the same measure. When they want a quick, fast, sporty or nippy car without giving a time, set priority to "acceleration" (quickest first within their other filters) and leave "accel" on "any", because a time cut-off can easily rule out every car at their budget. Set "accel" only when they state a time or clearly ask for a seriously fast car with no tight budget; pick the option at or just below the time they give. If they ask for both quick acceleration and long range, use priority "acceleration" only if pace is the main point of the description.
 - Use the quiz filters for anything they cover (budget, range, body, seats, drive, battery chemistry, heat pump, V2L, efficiency, one-stop range, acceleration). Use extra filters for everything else: a make or model name, towing (a towbar, or a minimum towing weight; a typical caravan needs about 1,200 kg), boot space in litres, weight, Euro NCAP stars, AC charging speed, V2H or V2G, size class, model year, whether sales are ending, whether figures are confirmed or estimated, and prices in Germany or the Netherlands. You can also use an extra filter for a precise number the quiz bands can't express, such as "at least 280 miles" (field "range", in miles).
 - Leave "extra" empty and sort on "none" when nothing beyond the quiz filters is asked for.
+- Country: keep the page's "Buying in" setting unless the description says they're buying somewhere else (e.g. "I live in Germany"). "German" or "Dutch" on their own usually describe a make, not where they're buying.
+- New or used: "used", "second-hand", "pre-owned" or a tight budget for an older car mean "used"; "brand new", "a new car" or "buy new" mean "new"; otherwise "both". Used prices are estimated from the price when new and the car's age (about 57–65% after one year, 38–42% after three, then 10–15% less a year), and a budget matches if either the new price or the cheapest used estimate fits. So "I've got £15k" with "both" already includes used cars.
 - Anything the data can't express (colour, interior materials, brand loyalty) is ignored.`;
 
 export async function POST(request: Request) {
   let text = "";
+  // The page's "Buying in" switch; the description can override it ("I'm in Germany").
+  let country: Country = "uk";
   try {
     const body = await request.json();
     text = typeof body?.text === "string" ? body.text.trim().slice(0, MAX_QUERY_LENGTH) : "";
+    if (COUNTRY_IDS.includes(body?.country)) country = body.country;
   } catch {
     return Response.json({ error: "Send JSON with a text field." }, { status: 400 });
   }
@@ -70,7 +76,7 @@ export async function POST(request: Request) {
     const detail = error ? ` ${error.status ?? ""} ${error.type ?? ""} ${error.message ?? ""}`.replace(/\s+/g, " ") : "";
     console.warn(`understand: using built-in rules (${reason})${detail}`);
     // The details stay in the server log (Vercel → Logs); visitors only get the short reason code.
-    return Response.json({ answers: answersFromText(text), refinement: refinementFromText(text), source: "rules", reason });
+    return Response.json({ answers: answersFromText(text, country), refinement: refinementFromText(text), source: "rules", reason });
   };
 
   // The SDK reads ANTHROPIC_API_KEY. If it's missing here, the variable isn't reaching this deployment
@@ -86,7 +92,12 @@ export async function POST(request: Request) {
     max_tokens: 4000,
     output_config: { effort: "low" as const, format: { type: "json_schema" as const, schema: searchSchema() } },
     system: [{ type: "text" as const, text: SYSTEM, cache_control: { type: "ephemeral" as const } }],
-    messages: [{ role: "user" as const, content: `Buyer's description:\n<description>\n${text}\n</description>` }],
+    messages: [
+      {
+        role: "user" as const,
+        content: `"Buying in" setting on the page: ${country}\n\nBuyer's description:\n<description>\n${text}\n</description>`,
+      },
+    ],
   };
 
   try {

@@ -1,5 +1,5 @@
 import { bodyLabel, driveLabel, segmentLabel } from "./carProfile";
-import { cars, type Car } from "./cars";
+import { allCars, type Car } from "./cars";
 import { KM_PER_MILE, kmToMiles, miPerKwh } from "./format";
 
 /**
@@ -46,15 +46,15 @@ const choice = (key: string, label: string, get: (c: Car) => string, display: (v
   label,
   kind: "choice",
   get,
-  options: [...new Set(cars.map(get))].map((value) => ({ value, label: display(value) })).sort((a, b) => a.label.localeCompare(b.label)),
+  options: [...new Set(allCars.map(get))].map((value) => ({ value, label: display(value) })).sort((a, b) => a.label.localeCompare(b.label)),
 });
 
 export const FIELDS: Field[] = [
-  { key: "price", label: "Price (UK)", kind: "number", unit: "£", prefix: true, step: 1000, get: (c) => c.priceGbp },
+  { key: "price", label: "UK price when new", kind: "number", unit: "£", prefix: true, step: 1000, get: (c) => c.priceGbp },
   { key: "range", label: "Real-world range", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.rangeKm) },
   { key: "onestop", label: "Range with one 15-min charge", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.oneStopKm) },
   { key: "efficiency", label: "Efficiency", kind: "number", unit: "mi/kWh", step: 0.1, get: (c) => Math.round(miPerKwh(c.whPerKm) * 10) / 10 },
-  { key: "permile", label: "Price per mile of range", kind: "number", unit: "£", prefix: true, step: 10, get: (c) => Math.round(c.priceGbp / (c.rangeKm / KM_PER_MILE)) },
+  { key: "permile", label: "Price per mile of range", kind: "number", unit: "£", prefix: true, step: 10, get: (c) => (c.priceGbp === null ? null : Math.round(c.priceGbp / (c.rangeKm / KM_PER_MILE))) },
   { key: "battery", label: "Usable battery", kind: "number", unit: "kWh", step: 5, get: (c) => c.batteryKwh },
   { key: "charging", label: "Rapid charging speed", kind: "number", unit: "kW", step: 10, get: (c) => c.fastchargeKw },
   { key: "accel", label: "0–62 mph time", kind: "number", unit: "s", step: 0.1, get: (c) => c.accelS, about: "same as 0–100 km/h" },

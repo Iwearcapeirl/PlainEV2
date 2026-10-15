@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import type { Country } from "@/lib/market";
 import { answersToQuery, type Answers } from "@/lib/quiz";
 import { EMPTY_REFINEMENT, writeRefinement, type Refinement } from "@/lib/fields";
 import { MAX_QUERY_LENGTH, answersFromText, refinementFromText } from "@/lib/understand";
@@ -17,7 +18,16 @@ const EXAMPLES = [
  * Describe-it search: the default way into the results. The description is sent to /api/understand,
  * which maps it onto the quiz's filters; if that route can't be reached, the built-in rules run here instead.
  */
-export default function TextSearch({ initial = "", onUseQuiz }: { initial?: string; onUseQuiz: () => void }) {
+export default function TextSearch({
+  initial = "",
+  country = "uk",
+  onUseQuiz,
+}: {
+  initial?: string;
+  /** The "Buying in" switch: used unless the description names a country itself. */
+  country?: Country;
+  onUseQuiz: () => void;
+}) {
   const router = useRouter();
   const [text, setText] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -38,7 +48,7 @@ export default function TextSearch({ initial = "", onUseQuiz }: { initial?: stri
       const res = await fetch("/api/understand", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: q }),
+        body: JSON.stringify({ text: q, country }),
       });
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
@@ -47,7 +57,7 @@ export default function TextSearch({ initial = "", onUseQuiz }: { initial?: stri
       // Shows in the browser console why Claude wasn't used (e.g. "no_api_key"); the server log has the details.
       if (data.source === "rules") console.warn(`Search used the built-in rules instead of Claude (${data.reason ?? "unknown"}).`);
     } catch {
-      answers = answersFromText(q);
+      answers = answersFromText(q, country);
       refinement = refinementFromText(q);
     }
     // Quiz answers, then any extra filters and sort (the results page's "Filter and sort" reads f=, sort= and dir=).

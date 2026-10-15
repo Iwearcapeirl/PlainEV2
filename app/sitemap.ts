@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { carHref, cars } from "@/lib/cars";
+import { allCars as cars, carHref } from "@/lib/cars";
 import { rankingPages } from "@/lib/rankings";
 import { SITE_URL, UPDATED_ISO } from "@/lib/site";
 

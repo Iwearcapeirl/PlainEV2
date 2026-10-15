@@ -1,18 +1,19 @@
 import type { Car } from "./cars";
+import { groupResults } from "./market";
 import { describe, fieldByKey, isSet, refine, type CustomFilter, type Refinement } from "./fields";
-import { activeFilters, BUDGETS, DEFAULT_ANSWERS, FILTER_KEYS, optionOf, type Answers, type FilterKey, type PriorityId } from "./quiz";
+import { activeFilters, availableFor, BUDGETS, DEFAULT_ANSWERS, inCurrency, FILTER_KEYS, optionOf, type Answers, type FilterKey, type PriorityId } from "./quiz";
 
 /** Cars whose real-world ranges are within this many km of each other count as "very close". */
 export const RANGE_TIE_KM = 10;
 
 /** A car matches when it passes every filter (filters left on "no preference" always pass). */
 export function matchesAnswers(car: Car, a: Answers): boolean {
-  return FILTER_KEYS.every((key) => optionOf(key, a).test(car));
+  return availableFor(car, a) && FILTER_KEYS.every((key) => optionOf(key, a).test(car, a));
 }
 
 /** The filters the user set, each of which this car meets (for the "matches" chips on result cards). */
 export function matchedFilters(car: Car, a: Answers): { key: FilterKey; chip: string }[] {
-  return activeFilters(a).filter((f) => optionOf(f.key, a).test(car));
+  return activeFilters(a).filter((f) => optionOf(f.key, a).test(car, a));
 }
 
 const byRangeDesc = (x: Car, y: Car) => y.rangeKm - x.rangeKm;
@@ -99,12 +100,12 @@ export interface SearchRelaxation {
   label: string;
   answers: Answers;
   refinement: Refinement;
-  /** Cars shown after this change. */
+  /** Results shown after this change (versions merged across years, as on the results page). */
   count: number;
 }
 
 /** Budget bands from lowest ceiling to none, for "raise the budget". */
-const BUDGET_STEPS = ["under-30k", "30-40k", "40-50k", "50-70k", "no-limit"];
+const BUDGET_STEPS = ["under-10k", "10-15k", "15-20k", "under-30k", "30-40k", "40-50k", "50-70k", "no-limit"];
 
 /**
  * When the quiz answers plus any extra filters (from a search or the "Filter and sort" panel) leave no cars,
@@ -115,8 +116,9 @@ const BUDGET_STEPS = ["under-30k", "30-40k", "40-50k", "50-70k", "no-limit"];
  * - any extra filter: drop it.
  */
 export function relaxSearch(all: Car[], a: Answers, r: Refinement): SearchRelaxation[] {
+  // Counted as the results page shows them: versions of the same name across years are one result.
   const shown = (a2: Answers, r2: Refinement) =>
-    refine(rankCars(all.filter((c) => matchesAnswers(c, a2)), a2.priority), r2).length;
+    groupResults(refine(rankCars(all.filter((c) => matchesAnswers(c, a2)), a2.priority), r2)).length;
   const out: SearchRelaxation[] = [];
   const push = (label: string, answers: Answers, refinement: Refinement) => {
     const count = shown(answers, refinement);
@@ -129,13 +131,16 @@ export function relaxSearch(all: Car[], a: Answers, r: Refinement): SearchRelaxa
         const next = { ...a, budget: id };
         if (shown(next, r) === 0) continue;
         const ceiling = BUDGETS.find((o) => o.id === id)?.chip;
-        push(ceiling ? `Raise the budget to ${ceiling.replace(/^Up to /, "")}` : "Remove the budget limit", next, r);
+        push(ceiling ? `Raise the budget to ${inCurrency(ceiling.replace(/^Up to /, ""), a.country)}` : "Remove the budget limit", next, r);
         break;
       }
     } else {
       push(RELAX_LABEL[key] ?? `Drop “${chip}”`, { ...a, [key]: DEFAULT_ANSWERS[key] } as Answers, r);
     }
   }
+
+  // New only or used only: offer the other kind too.
+  if (a.condition !== "both") push(a.condition === "new" ? "Include used cars" : "Include new cars", { ...a, condition: "both" }, r);
 
   const set = r.filters.filter(isSet);
   for (const f of set) {

@@ -10,7 +10,7 @@ export default function QuizCta({ compact = false }: { compact?: boolean }) {
     >
       <div>
         <p className={`font-wide font-semibold ${compact ? "text-base" : "text-xl"}`}>Not sure which one is right for you?</p>
-        <p className="mt-1 text-sm text-on-ink/70">Answer four quick questions to get your personal top 5.</p>
+        <p className="mt-1 text-sm text-on-ink/70">Answer five quick questions to get your personal top 5, new or used.</p>
       </div>
       <Link
         href="/quiz"

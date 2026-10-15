@@ -1,4 +1,5 @@
-import { cars, type Car } from "./cars";
+import { allCars, cars, type Car, type UkCar } from "./cars";
+import { COUNTRIES, formatMoney, formatMoneyRange, miles, newPrice, usedEstimates, type Country } from "./market";
 import { formatDistance, formatEfficiency, formatGbp, formatGbpPerMile, formatMiPerKwh, KM_PER_MILE } from "./format";
 
 /**
@@ -7,7 +8,7 @@ import { formatDistance, formatEfficiency, formatGbp, formatGbpPerMile, formatMi
  * EV Database's car pages are spec tables rather than reviews. It sticks to facts and comparisons.
  */
 
-export const getCarBySlug = (slug: string) => cars.find((c) => c.slug === slug);
+export const getCarBySlug = (slug: string) => allCars.find((c) => c.slug === slug);
 
 // ---------- Wording ----------
 
@@ -21,6 +22,7 @@ const BODY_NOUN: Record<string, [singular: string, plural: string]> = {
   SPV: ["van-based people carrier", "van-based people carriers"],
   Cabrio: ["convertible", "convertibles"],
   Coupe: ["coupé", "coupés"],
+  Pickup: ["pickup", "pickups"],
 };
 export const bodyNoun = (body: string) => BODY_NOUN[body]?.[0] ?? body.toLowerCase();
 export const bodyPlural = (body: string) => BODY_NOUN[body]?.[1] ?? `${body.toLowerCase()}s`;
@@ -66,7 +68,7 @@ const median = (xs: number[]) => {
 
 const peersShorter = (car: Car, peers: Car[]) => peers.some((c) => c.rangeKm < car.rangeKm);
 
-const pricePerMile = (c: Car) => c.priceGbp / (c.rangeKm / KM_PER_MILE);
+const pricePerMile = (c: Car & { priceGbp: number }) => c.priceGbp / (c.rangeKm / KM_PER_MILE);
 
 // ---------- Comparisons ----------
 
@@ -102,20 +104,26 @@ export function carStandings(car: Car) {
 
 /** Other versions of the same model, longest range first. */
 export const otherVersions = (car: Car) =>
-  cars.filter((c) => c.family === car.family && c.id !== car.id).sort((a, b) => b.rangeKm - a.rangeKm);
+  allCars
+    .filter((c) => c.family === car.family && c.id !== car.id)
+    // Newest first, then longest range.
+    .sort((a, b) => (b.yearTo ?? 9999) - (a.yearTo ?? 9999) || b.yearFrom - a.yearFrom || b.rangeKm - a.rangeKm);
 
 /**
  * Alternatives worth a look: same body style, a different model, priced within about 20% either way,
  * closest in price first; one version per model.
  */
-export function similarCars(car: Car, count = 3): Car[] {
+export function similarCars(car: Car, count = 3): UkCar[] {
+  // Only for cars on sale new in the UK: the comparison is with other new cars at the same price.
+  const price = car.status === "Available" ? car.priceGbp : null;
+  if (price === null) return [];
   const candidates = cars
-    .filter((c) => c.body === car.body && c.family !== car.family && Math.abs(c.priceGbp - car.priceGbp) <= car.priceGbp * 0.2)
+    .filter((c) => c.body === car.body && c.family !== car.family && Math.abs(c.priceGbp - price) <= price * 0.2)
     .sort((a, b) => b.rangeKm - a.rangeKm);
-  const byFamily = new Map<string, Car>();
+  const byFamily = new Map<string, UkCar>();
   for (const c of candidates) if (!byFamily.has(c.family)) byFamily.set(c.family, c); // longest-range version of each model
   return [...byFamily.values()]
-    .sort((a, b) => Math.abs(a.priceGbp - car.priceGbp) - Math.abs(b.priceGbp - car.priceGbp))
+    .sort((a, b) => Math.abs(a.priceGbp - price) - Math.abs(b.priceGbp - price))
     .slice(0, count)
     .sort((a, b) => b.rangeKm - a.rangeKm);
 }
@@ -141,8 +149,7 @@ export function carSummary(car: Car): string[] {
   const total = cars.length;
 
   const intro =
-    `The ${name} is a ${car.seats}-seat ${bodyNoun(car.body)} with ${driveLabel(car.drive).toLowerCase()}, ` +
-    `on sale in the UK from ${formatGbp(car.priceGbp)}. ` +
+    `The ${name} is a ${car.seats}-seat ${bodyNoun(car.body)} with ${driveLabel(car.drive).toLowerCase()}, ${saleStatus(car)}. ` +
     `It accelerates from 0 to 62 mph in ${car.accelS.toFixed(1)} seconds, ${accelCompare(car)}.`;
 
   const tied = cars.filter((c) => c.rangeKm === car.rangeKm).length > 1;
@@ -160,7 +167,9 @@ export function carSummary(car: Car): string[] {
             : `That is longer than ${s.rangeBeatsPct}% of the ${total} electric cars on sale in the UK`;
   const b = s.rangeInBody;
   const inBody =
-    b.of === 1
+    b.of === 0
+      ? `no ${bodyPlural(car.body)} are on sale new in the UK to compare it with`
+      : b.of === 1
       ? `it is the only ${bodyNoun(car.body)} listed`
       : b.rank === 1
         ? `the longest of ${b.of} ${bodyPlural(car.body)}`
@@ -193,13 +202,54 @@ export function carSummary(car: Car): string[] {
     features += " The battery uses NCM chemistry, which stores more energy for its weight than LFP.";
   }
 
-  const ppm = pricePerMile(car);
-  const valueDiff = (ppm - s.medianPricePerMileInBody) / s.medianPricePerMileInBody;
-  const valueCompare =
-    Math.abs(valueDiff) < 0.05 ? "close to" : valueDiff < 0 ? "lower than" : "higher than";
-  const value =
-    `Its UK starting price works out at ${formatGbpPerMile(car.priceGbp, car.rangeKm)} per mile of real-world range, ` +
-    `${valueCompare} the median for ${bodyPlural(car.body)} (${formatGbp(s.medianPricePerMileInBody)} per mile).`;
+  const paragraphs = [intro + " " + range, efficiency, features];
 
-  return [intro + " " + range, efficiency, features, value];
+  // Value: price per mile of range against similar cars on sale new in the UK.
+  if (car.status === "Available" && car.priceGbp !== null) {
+    const ppm = pricePerMile({ ...car, priceGbp: car.priceGbp });
+    const valueDiff = (ppm - s.medianPricePerMileInBody) / s.medianPricePerMileInBody;
+    const valueCompare = Math.abs(valueDiff) < 0.05 ? "close to" : valueDiff < 0 ? "lower than" : "higher than";
+    paragraphs.push(
+      `Its UK starting price works out at ${formatGbpPerMile(car.priceGbp, car.rangeKm)} per mile of real-world range, ` +
+        `${valueCompare} the median for ${bodyPlural(car.body)} (${formatGbp(s.medianPricePerMileInBody)} per mile).`,
+    );
+  }
+
+  // Second-hand: estimated prices for the oldest and newest examples, and range after battery wear.
+  const country = homeCountry(car);
+  const used = country ? usedEstimates(car, country) : [];
+  if (country && used.length) {
+    const newest = used[0];
+    const oldest = used[used.length - 1];
+    const prices =
+      used.length === 1
+        ? `a ${newest.year} example is estimated at ${formatMoneyRange(newest.low, newest.high, country)}`
+        : `a ${oldest.year} example is estimated at ${formatMoneyRange(oldest.low, oldest.high, country)} and a ${newest.year} one at ${formatMoneyRange(newest.low, newest.high, country)}`;
+    paragraphs.push(
+      `Second-hand${country === "uk" ? "" : ` in ${COUNTRIES[country].label}`}, ${prices}, based on typical EV depreciation. ` +
+        `After typical battery wear, a ${oldest.year} car should still manage about ${miles(oldest.rangeTodayKm)} miles of real-world range. ` +
+        `These are estimates, not valuations: check real prices before you buy.`,
+    );
+  }
+
+  return paragraphs;
+}
+
+/** The country whose prices a car page uses: the UK if it was sold here, otherwise Germany, then the Netherlands. */
+export function homeCountry(car: Car): Country | null {
+  return (["uk", "de", "nl"] as const).find((c) => newPrice(car, c) !== null) ?? null;
+}
+
+/** "on sale in the UK from £X", "sold new from 2019 to 2022 (£X in the UK)", "due on sale soon" … */
+function saleStatus(car: Car): string {
+  const where = (["uk", "de", "nl"] as const)
+    .filter((c) => newPrice(car, c) !== null)
+    .map((c) => `${formatMoney(newPrice(car, c)!, c)} in ${c === "uk" ? "the UK" : c === "nl" ? "the Netherlands" : COUNTRIES[c].label}`);
+  if (car.status === "Upcoming") return `due on sale soon${where.length ? ` (expected at ${where[0]})` : ""}`;
+  if (car.status === "Discontinued") {
+    const years = car.yearTo && car.yearTo !== car.yearFrom ? `from ${car.yearFrom} to ${car.yearTo}` : `in ${car.yearFrom}`;
+    return `sold new ${years}${where.length ? `, when it cost ${where[0]}` : ""}, and now only available second-hand`;
+  }
+  if (car.priceGbp !== null) return `on sale in the UK from ${formatGbp(car.priceGbp)}`;
+  return `not sold in the UK, but on sale from ${where.join(" and ")}`;
 }
