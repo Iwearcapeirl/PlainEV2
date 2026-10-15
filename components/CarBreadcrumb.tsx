@@ -36,7 +36,7 @@ export default function CarBreadcrumb({ current }: { current: string }) {
           href={from.href}
           className="inline-flex items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-sm font-semibold shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1.5px_var(--foreground)]"
         >
-          <span aria-hidden>←</span> {from.href.startsWith("/results") ? "Back to your results" : "Back to the ranking"}
+          <span aria-hidden>←</span> {backLabel(from.href)}
         </Link>
       )}
     </div>
@@ -44,3 +44,11 @@ export default function CarBreadcrumb({ current }: { current: string }) {
 }
 
 const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** "Back to your results", "Back to all cars", "Back to the comparison" or "Back to the ranking". */
+function backLabel(href: string): string {
+  if (href.startsWith("/results")) return "Back to your results";
+  if (href.startsWith("/cars")) return "Back to all cars";
+  if (href.startsWith("/compare")) return "Back to the comparison";
+  return "Back to the ranking";
+}

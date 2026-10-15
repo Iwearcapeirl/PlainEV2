@@ -8,6 +8,7 @@ import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
+import { compareHref } from "@/lib/compare";
 import { photoSubject } from "@/lib/photo";
 import {
   bodyLabel,
@@ -216,6 +217,12 @@ export default async function CarPage({ params }: Props) {
               {listing.label} <span aria-hidden>↗</span>
             </a>
           )}
+          <Link
+            href={compareHref([car.slug], country)}
+            className={`${listing ? "mt-2.5" : "mt-5"} flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 text-center text-sm font-semibold shadow-[inset_0_0_0_1px_var(--line)] hover:shadow-[inset_0_0_0_1.5px_var(--foreground)]`}
+          >
+            Compare with up to 2 others <span aria-hidden>→</span>
+          </Link>
         </header>
       </div>
 
