@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { ImageCredit } from "@/lib/cars";
+import { photoSubject } from "@/lib/photo";
 
 /**
  * Car photo in a fixed frame (no layout shift), lazy-loaded by default.
@@ -76,11 +77,6 @@ export default function CarImage({
       )}
     </figure>
   );
-}
-
-/** What the photo shows, for alt text: the note's subject when it isn't this exact car, otherwise the model. */
-export function photoSubject(credit: ImageCredit): string {
-  return credit.note ? credit.note.replace(/^Photo shows /, "").replace(/\.$/, "") : credit.subject;
 }
 
 function Placeholder({ make, model }: { make: string; model: string }) {

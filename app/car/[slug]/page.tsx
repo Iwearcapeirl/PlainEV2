@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import CarBreadcrumb from "@/components/CarBreadcrumb";
-import CarImage, { photoSubject } from "@/components/CarImage";
+import CarImage from "@/components/CarImage";
 import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
+import { photoSubject } from "@/lib/photo";
 import {
   bodyLabel,
   bodyPlural,
