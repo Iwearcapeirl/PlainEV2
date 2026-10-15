@@ -6,7 +6,7 @@ import {
   SORT_FIELDS,
   defaultValue,
   fieldByKey,
-  isRefined,
+  isSet,
   type CustomFilter,
   type Field,
   type Refinement,
@@ -23,14 +23,26 @@ export default function RefinePanel({
   value,
   onChange,
   scope,
+  intro,
+  defaultSortLabel = "Best match",
+  hidden = [],
 }: {
   value: Refinement;
   onChange: (next: Refinement) => void;
   /** How many cars the filters start from (those matching the reader's answers). */
   scope: number;
+  /** Replaces the line under the heading. */
+  intro?: string;
+  /** Name of the default order in the sort menu. */
+  defaultSortLabel?: string;
+  /** Filter keys the page sets with its own controls: not listed or offered here, and kept by "Clear all". */
+  hidden?: string[];
 }) {
   const id = useId();
   const used = new Set(value.filters.map((f) => f.key));
+  const isHidden = (key: string) => hidden.includes(key);
+  const visible = value.filters.filter((f) => !isHidden(f.key));
+  const refinedHere = value.sort !== null || visible.some(isSet);
   const sortField = value.sort ? fieldByKey(value.sort) : undefined;
   const words = sortField && sortField.kind !== "number" ? (["A to Z", "Z to A"] as const) : (["Low to high", "High to low"] as const);
 
@@ -47,10 +59,10 @@ export default function RefinePanel({
         <h2 id={`${id}-title`} className="font-wide text-lg font-semibold">
           Filter and sort
         </h2>
-        {isRefined(value) && (
+        {refinedHere && (
           <button
             type="button"
-            onClick={() => onChange({ filters: [], sort: null, dir: "asc" })}
+            onClick={() => onChange({ filters: value.filters.filter((f) => isHidden(f.key)), sort: null, dir: "asc" })}
             className="text-sm font-medium text-muted underline underline-offset-4 hover:text-foreground"
           >
             Clear all
@@ -58,7 +70,7 @@ export default function RefinePanel({
         )}
       </div>
       <p className="mt-1 text-sm text-muted">
-        Narrow down the {scope} {scope === 1 ? "car" : "cars"} that match your answers, by anything in our data.
+        {intro ?? `Narrow down the ${scope} ${scope === 1 ? "car" : "cars"} that match your answers, by anything in our data.`}
       </p>
 
       {/* Sort */}
@@ -72,7 +84,7 @@ export default function RefinePanel({
           onChange={(e) => onChange({ ...value, sort: e.target.value || null })}
           className={`${control} w-full sm:w-auto`}
         >
-          <option value="">Best match</option>
+          <option value="">{defaultSortLabel}</option>
           {SORT_FIELDS.map((f) => (
             <option key={f.key} value={f.key}>
               {f.label}
@@ -100,18 +112,18 @@ export default function RefinePanel({
       </div>
 
       {/* Filters */}
-      {value.filters.length > 0 && (
+      {visible.length > 0 && (
         <ul className="mt-5 grid gap-2.5 border-t border-line pt-5" aria-label="Your filters">
           {value.filters.map((f, i) => {
             const field = fieldByKey(f.key);
-            return field ? (
+            return field && !isHidden(f.key) ? (
               <FilterRow key={f.key} field={field} filter={f} onChange={(next) => setFilter(i, next)} onRemove={() => removeFilter(i)} />
             ) : null;
           })}
         </ul>
       )}
 
-      <div className={value.filters.length > 0 ? "mt-4" : "mt-5 border-t border-line pt-5"}>
+      <div className={visible.length > 0 ? "mt-4" : "mt-5 border-t border-line pt-5"}>
         <label htmlFor={`${id}-add`} className="sr-only">
           Add a filter
         </label>
@@ -122,7 +134,7 @@ export default function RefinePanel({
           className={`${control} w-full font-semibold sm:w-auto`}
         >
           <option value="">+ Add a filter</option>
-          {FIELDS.filter((f) => !used.has(f.key)).map((f) => (
+          {FIELDS.filter((f) => !used.has(f.key) && !isHidden(f.key)).map((f) => (
             <option key={f.key} value={f.key}>
               {f.label}
             </option>

@@ -18,6 +18,7 @@ export default function CarImage({
   frameClass = "aspect-[16/9]",
   sizes = "(min-width: 640px) 500px, 100vw",
   alt,
+  caption = true,
 }: {
   src: string | null;
   credit: ImageCredit | null;
@@ -31,6 +32,8 @@ export default function CarImage({
   sizes?: string;
   /** Alt text (defaults to the model the photo shows). */
   alt?: string;
+  /** Show the credit (and any "Photo shows…" note) on the photo. Small thumbnails turn it off and print it nearby. */
+  caption?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const show = Boolean(src) && !failed;
@@ -61,7 +64,7 @@ export default function CarImage({
         <Placeholder make={make} model={model} />
       )}
 
-      {show && credit && (
+      {show && credit && caption && (
         <figcaption className="absolute inset-x-2 bottom-2 z-10 flex flex-col items-end gap-1 text-[10px] leading-tight text-on-ink/90">
           {credit.note && <span className="max-w-full rounded bg-ink/80 px-1.5 py-0.5 text-right font-medium text-on-ink">{credit.note}</span>}
           <span className="max-w-[85%] truncate rounded bg-ink/70 px-1.5 py-0.5">

@@ -26,14 +26,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en-GB" className={archivo.variable}>
       <body className="min-h-dvh font-sans antialiased">
         <header className="bg-ink text-on-ink">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3.5 sm:gap-3 sm:px-6">
             <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${SITE_NAME} home`}>
               <Logo />
-              <span className="font-wide whitespace-nowrap text-[15px] font-semibold">{SITE_NAME}</span>
+              <span className="font-wide whitespace-nowrap text-[15px] font-semibold max-[439px]:sr-only">{SITE_NAME}</span>
             </Link>
             <nav aria-label="Main" className="flex items-center gap-1 text-sm sm:gap-2">
-              <Link href="/best" className="whitespace-nowrap rounded-lg px-2 py-2 font-medium text-on-ink/80 hover:text-on-ink sm:px-3">
+              <Link href="/best" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium text-on-ink/80 hover:text-on-ink sm:px-3">
                 Rankings
+              </Link>
+              <Link href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium text-on-ink/80 hover:text-on-ink sm:px-3">
+                All cars
               </Link>
               <Link
                 href="/quiz"
@@ -55,6 +58,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <ul className="mt-3 grid gap-2">
                   <li><Link href="/" className="text-muted hover:text-foreground">Home</Link></li>
                   <li><Link href="/quiz" className="text-muted hover:text-foreground">Find your match</Link></li>
+                  <li><Link href="/cars" className="text-muted hover:text-foreground">All cars</Link></li>
                   <li><Link href="/best" className="text-muted hover:text-foreground">All rankings</Link></li>
                 </ul>
               </div>
