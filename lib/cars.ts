@@ -9,6 +9,8 @@ export interface ImageCredit {
   source: string;
   /** The model the photo shows (may be a different trim or year from the exact car). */
   subject: string;
+  /** Set when the photo isn't of this exact car, e.g. "Photo shows the Bentley Bentayga, not this car." */
+  note?: string;
 }
 
 /** A freely licensed interior photo from Wikimedia Commons. `subject` says what the photo shows. */

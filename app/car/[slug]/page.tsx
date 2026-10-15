@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import CarBreadcrumb from "@/components/CarBreadcrumb";
-import CarImage from "@/components/CarImage";
+import CarImage, { photoSubject } from "@/components/CarImage";
 import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
@@ -134,7 +134,7 @@ export default async function CarPage({ params }: Props) {
           make={car.make}
           model={car.model}
           priority
-          alt={car.imageCredit ? `${car.imageCredit.subject}, exterior` : undefined}
+          alt={car.imageCredit ? `${photoSubject(car.imageCredit)}, exterior` : undefined}
           frameClass="aspect-[16/10] rounded-2xl shadow-[0_0_0_1px_var(--line)] lg:aspect-auto lg:h-full lg:min-h-[26rem]"
           sizes="(min-width: 1024px) 620px, 100vw"
         />
@@ -412,7 +412,7 @@ export default async function CarPage({ params }: Props) {
                 .filter((c): c is ImageCredit & { what: string } => Boolean(c))
                 .map((c) => (
                   <li key={c.source}>
-                    {c.what}: {c.subject}, by{" "}
+                    {c.what}: {photoSubject(c)}, by{" "}
                     <a href={c.source} target="_blank" rel="noopener noreferrer" className="underline decoration-on-ink/30 underline-offset-2 hover:text-on-ink">
                       {c.author}
                     </a>{" "}

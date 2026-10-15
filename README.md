@@ -110,7 +110,7 @@ The data is stored in km and Wh/km. Everything readers see leads with UK units a
 
 ## Car photos
 
-Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in `data/cars.json`). 763 of the 1,493 cars have one; the rest show a neutral placeholder. Older generations of a model get the placeholder, because the current model's photo would show the wrong car.
+Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in `data/cars.json`). Every one of the 1,493 cars has one. Older generations have their own photos (`scripts/more_photos.py`). Where no free photo of the exact car exists, a close stand-in is used and labelled on the photo, e.g. "Photo shows the Bentley Bentayga, not this car." (`imageCredit.note`; 126 cars). The placeholder only appears if an image fails to load.
 
 - **Licensing:** every photo is CC BY, CC BY-SA or CC0. The author and licence are credited on each photo, with links to the file and the licence, which is what these licences require. EV Database's own images are **not** used, because their terms forbid hotlinking or reusing them.
 - **Accuracy:** photos are matched by model family and checked by eye. They show the right model but not always the exact trim or year. Families with no correct photo are left blank rather than shown a look-alike.

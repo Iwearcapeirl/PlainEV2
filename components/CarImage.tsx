@@ -48,7 +48,7 @@ export default function CarImage({
           sizes={sizes}
           width={960}
           height={540}
-          alt={alt ?? (credit ? credit.subject : `${make} ${model}`)}
+          alt={alt ?? (credit ? photoSubject(credit) : `${make} ${model}`)}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           fetchPriority={priority ? "high" : "auto"}
@@ -61,18 +61,26 @@ export default function CarImage({
       )}
 
       {show && credit && (
-        <figcaption className="absolute bottom-2 right-2 z-10 max-w-[85%] truncate rounded bg-ink/70 px-1.5 py-0.5 text-[10px] leading-tight text-on-ink/90">
-          <a href={credit.source} target="_blank" rel="noopener noreferrer" className="hover:underline">
-            Photo: {credit.author}
-          </a>
-          {", "}
-          <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:underline">
-            {credit.license}
-          </a>
+        <figcaption className="absolute inset-x-2 bottom-2 z-10 flex flex-col items-end gap-1 text-[10px] leading-tight text-on-ink/90">
+          {credit.note && <span className="max-w-full rounded bg-ink/80 px-1.5 py-0.5 text-right font-medium text-on-ink">{credit.note}</span>}
+          <span className="max-w-[85%] truncate rounded bg-ink/70 px-1.5 py-0.5">
+            <a href={credit.source} target="_blank" rel="noopener noreferrer" className="hover:underline">
+              Photo: {credit.author}
+            </a>
+            {", "}
+            <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:underline">
+              {credit.license}
+            </a>
+          </span>
         </figcaption>
       )}
     </figure>
   );
+}
+
+/** What the photo shows, for alt text: the note's subject when it isn't this exact car, otherwise the model. */
+export function photoSubject(credit: ImageCredit): string {
+  return credit.note ? credit.note.replace(/^Photo shows /, "").replace(/\.$/, "") : credit.subject;
 }
 
 function Placeholder({ make, model }: { make: string; model: string }) {

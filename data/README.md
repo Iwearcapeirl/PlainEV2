@@ -30,7 +30,7 @@ This file lists every electric car in the spreadsheet: 1,493 cars (661 on sale, 
 
 ### Photos (`image`, `imageCredit`)
 
-- `image` is a 960px-wide photo URL from **Wikimedia Commons**, or `null` when no suitable free photo exists. 763 cars have one. Cars no longer sold only reuse their model's photo when they are the same generation (on sale within a year of the current versions' launch, or a model-year update of a version still sold); older generations get none.
+- `image` is a 960px-wide photo URL from **Wikimedia Commons**, or `null` when no suitable free photo exists. Every car has one. Cars no longer sold only reuse their model's current photo when they are the same generation; older generations and models with no photo in `photos.py` get one from `scripts/more_photos.py` (rules by family, model name and year). When the photo isn't of this exact car (a twin, a concept, the previous generation, or as a last resort a similar car from the same make), `imageCredit.note` says what it shows, and the site prints it on the photo.
 - `imageCredit` holds `author`, `license`, `licenseUrl`, `source` (the Commons file page) and `subject` (the model the photo shows). Every photo is CC BY, CC BY-SA or CC0. The site shows the author and licence on each photo, which is the attribution these licences require.
 - Photos are matched by **model family**, not by exact trim. A photo of a Kia EV4 GT-Line is used for every EV4. Every photo was checked by eye. 17 model families (36 cars) have no photo because no freely licensed picture of the correct badge, body style or generation could be found.
 - **EV Database images are not used.** Their data-services page says: "Hot linking to, or direct use of, any images on EV Database's servers is not allowed".

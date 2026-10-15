@@ -15,6 +15,7 @@ import openpyxl
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from families import family_of
 from interiors import INTERIORS, SHOWN_AS
+from more_photos import NEW_PHOTOS, RULES
 from photos import FAMILY_PHOTOS, PHOTOS, REJECT_FAMILIES
 
 
@@ -150,6 +151,33 @@ for c in cars:
     c["family"] = fam
     c["variant"] = variant_name(c["Model"])
     stats[c["Status"]] += 1
+
+# Cars still without a photo: older generations and models the lists above don't cover (more_photos.py). A photo
+# that isn't of this exact car carries a note, shown under it on the site.
+family_photo = {}
+for c in cars:
+    if c["image"] and c["family"] not in family_photo:
+        family_photo[c["family"]] = (c["image"], c["imageCredit"])
+for c in cars:
+    if c["image"]:
+        continue
+    rule = next((r for r in RULES if r[0] == c["family"] and (r[1] is None or r[1](c))), None)
+    if not rule:
+        stats["still no photo"] += 1
+        continue
+    _, _, key, note = rule
+    if key.startswith("FAMILY"):
+        src = c["family"] if key == "FAMILY" else key.split(":", 1)[1]
+        image, credit = family_photo[src]
+        credit = dict(credit)
+    else:
+        f, author, lic, licurl = NEW_PHOTOS[key]
+        image = thumb(f)
+        credit = {"author": author, "license": lic, "licenseUrl": licurl, "source": page(f), "subject": c["family"]}
+    if note:
+        credit["note"] = f"Photo shows {note}."
+    c["image"], c["imageCredit"] = image, credit
+    stats["stand-in photo" if note else "photo (other generation list)"] += 1
 
 # Longest real-world range first, then cheapest (UK price, then German), then ID.
 cars.sort(key=lambda c: (-c["Real range km"], c["Price UK GBP"] or c["Price Germany EUR"] or 0, c["ID"]))
