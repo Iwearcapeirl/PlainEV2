@@ -48,7 +48,7 @@ COLUMNS = [
     ("V2H", yes_no), ("V2G", yes_no), ("AC charge kW", num), ("Charge plug", lambda v: v or "Not listed"),
     ("Range estimated", yes_no), ("Efficiency estimated", yes_no), ("Weight kg", num), ("Battery estimated", yes_no),
     ("Towing kg", num), ("Cargo L", num), ("Price/km estimated", yes_no), ("Price Germany EUR", num),
-    ("Price Netherlands EUR", num), ("URL", str),
+    ("Price Netherlands EUR", num),
 ]
 
 # Model-year and generation tags that don't make a different car: "(MY24-27)", "(MY22)".
@@ -187,10 +187,10 @@ print(dict(stats))
 print(len(cars), "cars,", len({c["family"] for c in cars}), "families,", len({c["image"] for c in cars if c["image"]}), "distinct photos")
 
 # Compact copy for the browser (quiz, search, results): columns once, rows as arrays, photo credits listed once.
-# Interior photos and source links are only needed on car pages, so they go in a separate file the server reads.
+# Interior photos are only needed on car pages, so they go in a separate file the server reads.
 min_out = os.path.join(os.path.dirname(out), "cars.min.json")
 extras_out = os.path.join(os.path.dirname(out), "car-extras.json")
-SERVER_ONLY = {"interiors", "URL", "Full name"}
+SERVER_ONLY = {"interiors", "Full name"}
 columns = [k for k in cars[0] if k not in SERVER_ONLY]
 credits, credit_index, rows = [], {}, []
 for c in cars:
@@ -206,5 +206,5 @@ for c in cars:
         row.append(v)
     rows.append(row)
 json.dump({"columns": columns, "credits": credits, "rows": rows}, open(min_out, "w"), ensure_ascii=False, separators=(",", ":"))
-json.dump({str(c["ID"]): {"url": c["URL"], "interiors": c["interiors"]} for c in cars}, open(extras_out, "w"), ensure_ascii=False, separators=(",", ":"))
+json.dump({str(c["ID"]): {"interiors": c["interiors"]} for c in cars}, open(extras_out, "w"), ensure_ascii=False, separators=(",", ":"))
 print("wrote", min_out, os.path.getsize(min_out) // 1024, "KB and", extras_out, os.path.getsize(extras_out) // 1024, "KB")

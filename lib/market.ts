@@ -1,3 +1,4 @@
+import autotrader from "@/data/autotrader.json";
 import type { Car } from "./cars";
 import { KM_PER_MILE } from "./format";
 
@@ -199,27 +200,46 @@ export function groupOffer(g: ResultGroup, country: Country, condition: Conditio
   };
 }
 
-// ---------- "Find this car for sale" ----------
+// ---------- "Search for this car" ----------
+
 
 const urlSlug = (s: string) =>
   s
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9.]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
 /**
- * A search on a listings site for second-hand examples. AutoScout24 (Germany, the Netherlands) is searched by make
- * and model; it redirects names it doesn't know to the nearest model (e-Niro → Niro). AutoTrader (UK) is searched by
- * make only, for electric cars, because its model names couldn't be checked against ours.
+ * AutoTrader's names for our makes and models (data/autotrader.json, made by checking each search on AutoTrader:
+ * a model name is only listed if AutoTrader's search for it, filtered to electric cars, returned cars).
+ * Models not listed fall back to every electric car of that make.
  */
-export function listingSearch(c: Car, country: Country): { site: string; url: string; label: string } {
+const AT = autotrader as { makes: Record<string, string>; models: Record<string, string> };
+
+export interface ListingSearch {
+  site: "AutoTrader" | "AutoScout24";
+  url: string;
+  label: string;
+  /** True when the search is for this model; false when it's every electric car of the make. */
+  exact: boolean;
+}
+
+/**
+ * A search for this car on a listings site (new and used): AutoTrader in the UK, AutoScout24 in Germany and the
+ * Netherlands. Visitors enter their own postcode on AutoTrader.
+ */
+export function listingSearch(c: Car, country: Country): ListingSearch {
   if (country === "uk") {
+    const make = AT.makes[c.family] ?? AT.makes[c.make] ?? c.make;
+    const model = AT.models[c.family];
+    const q = new URLSearchParams({ make, ...(model ? { model } : {}), "fuel-type": "Electric" });
     return {
       site: "AutoTrader",
-      url: `https://www.autotrader.co.uk/car-search?make=${encodeURIComponent(c.make)}&fuel-type=Electric`,
-      label: `Used electric ${c.make}s on AutoTrader`,
+      url: `https://www.autotrader.co.uk/car-search?${q}`,
+      label: model ? "Search for this car on AutoTrader" : `Search for ${make} electric cars on AutoTrader`,
+      exact: Boolean(model),
     };
   }
   const model = c.family.startsWith(c.make + " ") ? c.family.slice(c.make.length + 1) : c.variant.split(" ")[0];
@@ -227,6 +247,7 @@ export function listingSearch(c: Car, country: Country): { site: string; url: st
   return {
     site: "AutoScout24",
     url: `https://www.${domain}/lst/${urlSlug(c.make)}/${urlSlug(model)}?fuel=E`,
-    label: `Used ${c.make} ${model} on AutoScout24`,
+    label: "Search for this car on AutoScout24",
+    exact: true,
   };
 }

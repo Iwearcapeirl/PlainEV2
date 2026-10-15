@@ -106,12 +106,13 @@ export default async function CarPage({ params }: Props) {
   if (!car) notFound();
 
   const name = `${car.make} ${car.model}`;
-  const { url, interiors } = carExtras(car.id);
+  const { interiors } = carExtras(car.id);
   const country = homeCountry(car);
   const price = country ? newPrice(car, country) : null;
   const usedTable = country ? usedEstimates(car, country) : [];
   const cheapestUsed = usedTable.length ? usedTable[usedTable.length - 1] : null;
-  const listing = country && usedTable.length ? listingSearch(car, country) : null;
+  // Everything except coming-soon cars (nothing to buy yet) gets a search on a listings site, new and used.
+  const listing = country && car.status !== "Upcoming" ? listingSearch(car, country) : null;
   const standings = carStandings(car);
   const summary = carSummary(car);
   const versions = otherVersions(car);
@@ -212,17 +213,9 @@ export default async function CarPage({ params }: Props) {
               rel="noopener noreferrer"
               className="mt-5 flex items-center justify-center gap-1.5 rounded-xl bg-signal px-4 py-3 text-center text-sm font-semibold text-signal-ink hover:brightness-95"
             >
-              Find one for sale: {listing.label} <span aria-hidden>↗</span>
+              {listing.label} <span aria-hidden>↗</span>
             </a>
           )}
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${listing ? "mt-2.5" : "mt-5"} flex items-center justify-center gap-1.5 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-on-ink hover:bg-ink/90`}
-          >
-            Full data on EV Database <span aria-hidden>↗</span>
-          </a>
         </header>
       </div>
 
@@ -285,7 +278,7 @@ export default async function CarPage({ params }: Props) {
           {listing && (
             <p className="mt-3 text-sm">
               <a href={listing.url} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-signal decoration-2 underline-offset-4">
-                Check real prices: {listing.label} ↗
+                Check real prices on {listing.site} ↗
               </a>
             </p>
           )}

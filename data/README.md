@@ -4,8 +4,8 @@
 
 This file lists every electric car in the spreadsheet: 1,493 cars (661 on sale, 823 no longer sold new, 9 coming soon), sorted by real-world range from longest to shortest. It is built by `scripts/build.py`, which also writes:
 
-- `cars.min.json`: the same cars for the browser, as `columns` + `rows` arrays with photo credits listed once, and without `interiors`, `URL` and `Full name`.
-- `car-extras.json`: `{ID: {url, interiors}}`, read only by car pages on the server.
+- `cars.min.json`: the same cars for the browser, as `columns` + `rows` arrays with photo credits listed once, and without `interiors` and `Full name`.
+- `car-extras.json`: `{ID: {interiors}}`, read only by car pages on the server.
 
 **Source:** `ev-database-cars.xlsx`, "All cars" sheet. The data was taken from [EV Database](https://ev-database.org/) on 9 October 2026, using the site's overview listing rather than each car's full spec page.
 
@@ -26,7 +26,7 @@ This file lists every electric car in the spreadsheet: 1,493 cars (661 on sale, 
 - Every other column from the sheet's "All cars" tab is also included, under its original name: `Status`, `Availability`, `Available from` / `Available to` (ISO dates; `Available to` is null unless an end of sales is announced), `Year from` / `Year to`, `Segment` (A city car to F luxury, N van-based people carrier, S sports car), `Towbar possible`, `Euro NCAP stars` (null when not tested), `V2H`, `V2G`, `AC charge kW`, `Charge plug`, `Weight kg`, `Towing kg` (0 = not approved for towing), `Cargo L` (boot space), `Price Germany EUR` and `Price Netherlands EUR` (null when not listed), and the four "estimated" flags (`Range estimated`, `Efficiency estimated`, `Battery estimated`, `Price/km estimated`). Yes/No columns are true/false.
 - `0-100 km/h s` is the 0–100 km/h time in seconds, added later from the same sheet's `0-100 km/h s` column. Every car has one. The site shows it as 0–62 mph, which is the same measure.
 - `Price per km EUR` is EV Database's value-for-money figure: the price in EUR for each km of real range. Lower is better.
-- `URL` links to the car's page on EV Database.
+- The sheet's `URL` column (EV Database page links) is not copied into the site's data.
 
 ### Photos (`image`, `imageCredit`)
 
