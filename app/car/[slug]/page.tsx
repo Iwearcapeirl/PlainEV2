@@ -453,6 +453,8 @@ export default async function CarPage({ params }: Props) {
         </section>
       )}
 
+      <AdSlot slot="car-bottom" className="mt-12" />
+
       {/* ---------- Alternatives ---------- */}
       {similar.length > 0 && (
         <section aria-labelledby="similar-title" className="mt-12">

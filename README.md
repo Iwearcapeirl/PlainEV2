@@ -125,7 +125,10 @@ Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in
 
 | Slot | Where |
 |---|---|
-| `results-top` | Top of the quiz results page |
+| `results-mid` | Results page, below the number 1 match (before "More good matches") |
+| `car-mid` | Car pages, after the summary and "How it compares", before the full specs |
+| `car-bottom` | Car pages, before "Similar cars" |
+| `cars-list` | All cars list, after the 10th car and then every 20 cars |
 | `ranking-top` | Ranking pages, between the intro and the list |
 | `ranking-mid` | Ranking pages, between car 5 and car 6 |
 | `ranking-bottom` | Ranking pages, between the closing quiz link and "More rankings" |

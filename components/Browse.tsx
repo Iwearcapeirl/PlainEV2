@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
+import AdSlot from "@/components/AdSlot";
 import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
 import CountrySwitch from "@/components/CountrySwitch";
@@ -188,11 +189,17 @@ export default function Browse() {
         {list.length > 0 ? (
           <>
             <ol className="mt-4 grid gap-3">
-              {list.slice(0, shown).map((g) => (
+              {list.slice(0, shown).flatMap((g, i) => [
                 <li key={g.key}>
                   <Row group={g} answers={answers} />
-                </li>
-              ))}
+                </li>,
+                // An ad after the 10th car, then every 20 cars, never after the last row shown.
+                (i + 1 - 10) % 20 === 0 && i + 1 >= 10 && i + 1 < Math.min(shown, list.length) ? (
+                  <li key={`ad-${i}`}>
+                    <AdSlot slot="cars-list" />
+                  </li>
+                ) : null,
+              ])}
             </ol>
             {list.length > shown && (
               <button

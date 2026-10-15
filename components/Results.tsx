@@ -118,8 +118,6 @@ export default function Results() {
   return (
     <>
       <section aria-labelledby="results-title" className="mx-auto max-w-3xl">
-        <AdSlot slot="results-top" className="mb-8" />
-
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 id="results-title" className="font-wide text-3xl font-semibold leading-tight sm:text-4xl">
@@ -220,6 +218,7 @@ export default function Results() {
               <TopMatch group={best} market={market(best)} total={total} answers={answers} />
             </li>
           </ol>
+          <AdSlot slot="results-mid" className="mt-10 max-w-3xl" />
           {more.length > 0 && (
             <section aria-labelledby="more-title" className="mx-auto max-w-3xl pt-[clamp(2.5rem,6vw,4rem)]">
               <h2 id="more-title" className="font-wide text-2xl font-semibold">
