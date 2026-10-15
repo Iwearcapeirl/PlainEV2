@@ -80,6 +80,12 @@ export default function HomePage() {
             >
               Browse rankings
             </Link>
+            <Link
+              href="/cars"
+              className="rounded-xl px-6 py-3.5 text-center text-[15px] font-semibold text-on-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--on-ink)_35%,transparent)] transition-shadow duration-150 hover:shadow-[inset_0_0_0_1.5px_var(--on-ink)]"
+            >
+              Browse all cars
+            </Link>
           </div>
         </div>
       </section>
