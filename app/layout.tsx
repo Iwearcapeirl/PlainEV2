@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/next";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
 import { ADSENSE_CLIENT, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -103,6 +104,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </div>
         </footer>
+        {/* Vercel Analytics: cookieless page-view counts, shown in the Vercel dashboard. */}
+        <Analytics />
       </body>
     </html>
   );
