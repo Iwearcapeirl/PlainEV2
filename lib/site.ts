@@ -6,6 +6,11 @@ export const UPDATED_ISO = "2026-10-09";
 
 /**
  * Public site URL, used for canonical links, the sitemap and robots.txt.
- * Set NEXT_PUBLIC_SITE_URL (e.g. https://plainev.co.uk) in production.
+ * Defaults to https://plainev.com in production; NEXT_PUBLIC_SITE_URL overrides it.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.NODE_ENV === "production" ? "https://plainev.com" : "http://localhost:3000")
+).replace(/\/+$/, "");
+
+/** Google AdSense publisher ID (public). Used by the AdSense script in app/layout.tsx; must match public/ads.txt. */
+export const ADSENSE_CLIENT = "ca-pub-5208891643538099";

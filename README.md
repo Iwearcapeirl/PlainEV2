@@ -133,13 +133,13 @@ Each card shows a photo from **Wikimedia Commons** (`image` and `imageCredit` in
 | `ranking-mid` | Ranking pages, between car 5 and car 6 |
 | `ranking-bottom` | Ranking pages, between the closing quiz link and "More rankings" |
 
-To go live, load the AdSense script once in `app/layout.tsx` and put your `<ins className="adsbygoogle">` unit inside `AdSlot`, keyed by `slot`.
+The AdSense script (publisher `ca-pub-5208891643538099`, `ADSENSE_CLIENT` in `lib/site.ts`) is loaded in the `<head>` of every page by `app/layout.tsx`, and `public/ads.txt` declares the same publisher. To show ads in the slots, put your `<ins className="adsbygoogle">` unit inside `AdSlot`, keyed by `slot` (or turn on Auto ads in AdSense).
 
 ## SEO
 
 - `app/sitemap.ts` → `/sitemap.xml`: the homepage, `/quiz`, `/best` and every ranking page.
 - `app/robots.ts` → `/robots.txt`: allows everything except `/results`, and points to the sitemap.
-- Set `NEXT_PUBLIC_SITE_URL` (e.g. `https://yourdomain.co.uk`) in production. The sitemap, robots.txt and canonical links all use it.
+- The site URL defaults to `https://plainev.com` in production (set `NEXT_PUBLIC_SITE_URL` to override). The sitemap, robots.txt and canonical links all use it.
 - The header links to the quiz and rankings. The footer links to the homepage, the quiz, `/best` and every ranking page.
 
 ## Structure

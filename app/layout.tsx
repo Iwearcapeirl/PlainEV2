@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import Link from "next/link";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { ADSENSE_CLIENT, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // One variable family; the width axis gives the expanded display style used for headings and figures.
@@ -24,6 +24,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-GB" className={archivo.variable}>
+      <head>
+        {/* Google AdSense: verifies the site and loads ads into the AdSlot spaces. Plain async tag so it sits in <head>, as AdSense asks. */}
+        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
+      </head>
       <body className="min-h-dvh font-sans antialiased">
         <header className="bg-ink text-on-ink">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3.5 sm:gap-3 sm:px-6">
