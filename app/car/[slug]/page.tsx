@@ -128,7 +128,7 @@ export default async function CarPage({ params }: Props) {
       <CarBreadcrumb current={name} />
 
       {/* ---------- Hero: photo + key facts ---------- */}
-      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem]">
+      <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
         <CarImage
           src={car.image}
           credit={car.imageCredit}
@@ -136,7 +136,7 @@ export default async function CarPage({ params }: Props) {
           model={car.model}
           priority
           alt={car.imageCredit ? `${photoSubject(car.imageCredit)}, exterior` : undefined}
-          frameClass="aspect-[16/10] rounded-2xl shadow-[0_0_0_1px_var(--line)] lg:aspect-auto lg:h-full lg:min-h-[26rem]"
+          frameClass="aspect-[16/10] rounded-2xl shadow-[0_0_0_1px_var(--line)]"
           sizes="(min-width: 1024px) 620px, 100vw"
         />
 

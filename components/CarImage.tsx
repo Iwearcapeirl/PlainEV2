@@ -5,7 +5,8 @@ import type { ImageCredit } from "@/lib/cars";
 import { photoSubject } from "@/lib/photo";
 
 /**
- * Car photo in a fixed frame (no layout shift), lazy-loaded by default.
+ * Car photo in a fixed frame (no layout shift), lazy-loaded by default. The whole photo is always shown (never
+ * cropped); if its shape differs from the frame, the spare space is filled with a blurred copy of the same photo.
  * Images are Wikimedia Commons thumbnails: small screens get the 500px version (~60 KB), larger ones the 960px one.
  * If there is no photo, or it fails to load, a placeholder with the make is shown instead.
  */
@@ -45,6 +46,19 @@ export default function CarImage({
   return (
     <figure className={`relative overflow-hidden bg-accent-soft ${frameClass}`}>
       {show ? (
+        <>
+        {/* Soft, blurred copy of the same photo filling any space the photo itself doesn't (same file, so no extra download). */}
+        <img
+          aria-hidden
+          alt=""
+          src={src!}
+          srcSet={`${src!.replace("/960px-", "/500px-")} 500w, ${src} 960w`}
+          sizes={sizes}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 h-full w-full scale-110 object-cover opacity-80 blur-xl brightness-90"
+        />
         <img
           ref={checkLoaded}
           src={src!}
@@ -58,8 +72,9 @@ export default function CarImage({
           fetchPriority={priority ? "high" : "auto"}
           referrerPolicy="no-referrer"
           onError={() => setFailed(true)}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-contain"
         />
+        </>
       ) : (
         <Placeholder make={make} model={model} />
       )}
