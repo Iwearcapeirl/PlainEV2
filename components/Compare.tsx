@@ -4,16 +4,15 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import CarImage from "@/components/CarImage";
+import CompareRows, { COLS } from "@/components/CompareTable";
 import { saveReturnTo } from "@/components/CarLink";
 import CountrySwitch from "@/components/CountrySwitch";
 import { carHref, type Car } from "@/lib/cars";
 import { homeCountry } from "@/lib/carProfile";
-import { compareHref, compareTable, MAX_COMPARE, searchCars, slotsFromParam, statusText, yearsText, type Cell } from "@/lib/compare";
+import { compareHref, compareTable, MAX_COMPARE, searchCars, slotsFromParam, statusText, yearsText } from "@/lib/compare";
 import { COUNTRY_IDS, type Country } from "@/lib/market";
 import { photoSubject } from "@/lib/photo";
 
-/** The columns of the slots and the table: a label column on wider screens, then one per car. */
-const COLS = "grid grid-cols-3 gap-x-2 sm:grid-cols-[11rem_repeat(3,minmax(0,1fr))] sm:gap-x-3 lg:grid-cols-[13rem_repeat(3,minmax(0,1fr))]";
 
 /** A small Wikimedia thumbnail (120px wide) for the search list and the pinned header. */
 const smallPhoto = (src: string) => src.replace("/960px-", "/120px-");
@@ -109,21 +108,7 @@ export default function Compare() {
             ))}
           </div>
 
-          {table.groups.map((g) => (
-            <div key={g.title} className="mt-6">
-              <h2 className="font-wide text-lg font-semibold">{g.title}</h2>
-              <dl className="mt-2">
-                {g.rows.map((r) => (
-                  <div key={r.key} className={`${COLS} border-t border-line py-1.5 sm:py-2`}>
-                    <dt className="col-span-3 pt-1 text-xs font-medium text-muted sm:col-span-1 sm:pt-1.5 sm:text-sm">{r.label}</dt>
-                    {r.cells.map((cell, i) => (
-                      <Value key={i} cell={cell} win={r.wins[i]} />
-                    ))}
-                  </div>
-                ))}
-              </dl>
-            </div>
-          ))}
+          <CompareRows table={table} />
 
           <div className="mt-8 grid gap-2 text-xs text-muted">
             <p>
@@ -154,26 +139,6 @@ export default function Compare() {
         </section>
       )}
     </div>
-  );
-}
-
-function Value({ cell, win }: { cell: Cell | null; win: boolean }) {
-  if (!cell) return <dd aria-hidden />;
-  return (
-    <dd
-      className={`min-w-0 rounded-md px-1.5 py-1 sm:px-2 ${win ? "bg-win shadow-[inset_0_0_0_1px_var(--route)]" : ""}`}
-    >
-      <span className="flex items-start gap-1 text-[13px] font-semibold leading-snug tabular-nums break-words sm:text-[15px]">
-        {win && (
-          <span aria-hidden className="text-route">
-            ✓
-          </span>
-        )}
-        <span className="min-w-0">{cell.text}</span>
-        {win && <span className="sr-only"> (best)</span>}
-      </span>
-      {cell.sub && <span className="block text-[11px] leading-snug text-muted sm:text-xs">{cell.sub}</span>}
-    </dd>
   );
 }
 

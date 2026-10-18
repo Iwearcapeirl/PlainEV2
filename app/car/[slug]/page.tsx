@@ -9,6 +9,7 @@ import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import { compareHref } from "@/lib/compare";
+import { vsPagesFor, vsTitle } from "@/lib/rivals";
 import { formatBattery, formatTerm, TRANSFER_LABEL, usedWarrantyLeft, WARRANTY_CHECKED, warrantyOf } from "@/lib/warranty";
 import { photoSubject } from "@/lib/photo";
 import {
@@ -100,7 +101,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: carHref(car) },
-    openGraph: { title, description, type: "article", images: car.image ? [{ url: car.image }] : undefined },
+    openGraph: { title, description, type: "article", images: [{ url: `/api/og/car/${car.slug}`, width: 1200, height: 630 }] },
+    twitter: { card: "summary_large_image" },
   };
 }
 
@@ -120,6 +122,7 @@ export default async function CarPage({ params }: Props) {
   const summary = carSummary(car);
   const versions = otherVersions(car);
   const similar = similarCars(car);
+  const rivals = vsPagesFor(car.family);
 
   return (
     <article className="mx-auto max-w-5xl">
@@ -480,6 +483,25 @@ export default async function CarPage({ params }: Props) {
       )}
 
       <AdSlot slot="car-bottom" className="mt-12" />
+
+      {/* ---------- Head-to-head pages with its rivals ---------- */}
+      {rivals.length > 0 && (
+        <section aria-labelledby="rivals-title" className="mt-12">
+          <SectionTitle id="rivals-title">Compare with rivals</SectionTitle>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {rivals.map((p) => (
+              <li key={p.slug}>
+                <Link
+                  href={`/vs/${p.slug}`}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-card px-4 py-3.5 text-[15px] font-semibold shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1.5px_var(--foreground)]"
+                >
+                  {vsTitle(p)} <span aria-hidden>→</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* ---------- Alternatives ---------- */}
       {similar.length > 0 && (

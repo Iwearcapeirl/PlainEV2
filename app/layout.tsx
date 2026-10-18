@@ -3,7 +3,7 @@ import { Archivo } from "next/font/google";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
-import { ADSENSE_CLIENT, SITE_NAME, SITE_URL } from "@/lib/site";
+import { ADSENSE_CLIENT, SITE_NAME, SITE_URL, UPDATED_ISO } from "@/lib/site";
 import "./globals.css";
 
 // One variable family; the width axis gives the expanded display style used for headings and figures.
@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
   description: "Electric cars on sale in the UK, ranked by real-world range rather than WLTP.",
+  // Default share image for pages that don't set their own (car, vs and ranking pages do).
+  openGraph: { siteName: SITE_NAME, type: "website", images: [{ url: "/api/og/site/home", width: 1200, height: 630 }] },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
@@ -94,7 +97,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </nav>
             <div className="mt-10 grid max-w-3xl gap-2 border-t border-line pt-6 text-xs leading-relaxed text-muted">
               <p>
-                Data extracted 9 October 2026. Range is real-world range, not WLTP.
+                Data extracted {new Date(UPDATED_ISO).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}. Range is real-world range, not WLTP.
                 UK prices are starting prices including VAT.
               </p>
               <p>
