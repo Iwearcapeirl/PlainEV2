@@ -1,5 +1,6 @@
 import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
+import { CompareTick } from "@/components/ComparePicks";
 import RangeBar from "@/components/RangeBar";
 import { carHref, type Car } from "@/lib/cars";
 import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
@@ -136,6 +137,8 @@ export default function CarCard({
             {market?.budgetFit && (
               <p className="mt-1.5 text-xs font-semibold text-route">{budgetFitText(market.budgetFit, market.country)}</p>
             )}
+            {/* Results only (ranking pages have no market): pick cars for the compare bar. */}
+            {market && <CompareTick car={car} className="-ml-1.5 mt-1" />}
           </div>
           {market ? (
             <PriceBlock market={market} featured={featured} />

@@ -7,6 +7,7 @@ import AdSlot from "@/components/AdSlot";
 import CarCard, { type CardMarket } from "@/components/CarCard";
 import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
+import { CompareBar, CompareTick } from "@/components/ComparePicks";
 import RangeBar from "@/components/RangeBar";
 import CountrySwitch from "@/components/CountrySwitch";
 import RefinePanel from "@/components/RefinePanel";
@@ -249,6 +250,7 @@ export default function Results() {
           <Loosen title="Try loosening one answer" relaxations={relaxations} href={relaxHref} onPick={tryRelaxation} />
         </div>
       )}
+      <CompareBar country={answers.country} />
     </>
   );
 }
@@ -339,6 +341,7 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
           <span>{market.years}</span>
         </p>
         {market.budgetFit && <p className="mt-2 text-sm font-semibold text-signal">{budgetFitText(market.budgetFit, country)}</p>}
+        <CompareTick car={car} tone="dark" className="-ml-1.5 mt-2" />
 
         <div className="mt-6">
           <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />

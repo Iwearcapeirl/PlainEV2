@@ -5,6 +5,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 import AdSlot from "@/components/AdSlot";
 import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
+import { CompareBar, CompareTick } from "@/components/ComparePicks";
 import CountrySwitch from "@/components/CountrySwitch";
 import RefinePanel from "@/components/RefinePanel";
 import { allCars, carHref } from "@/lib/cars";
@@ -216,6 +217,7 @@ export default function Browse() {
           <NoMatches relaxations={relaxations} onPick={(r) => update(r.answers, r.refinement)} onClear={clearAll} />
         )}
       </section>
+      <CompareBar country={answers.country} />
     </div>
   );
 }
@@ -252,6 +254,7 @@ function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
           <span>{yearsLabel(group)}</span>
         </p>
         {fit && <p className="mt-1 text-xs font-semibold text-route">{budgetFitText(fit, answers.country)}</p>}
+        <CompareTick car={car} className="-ml-1.5 mt-1" />
       </div>
 
       <dl className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm min-[420px]:grid-cols-4 sm:col-span-1 sm:grid-cols-2 sm:pr-2 md:grid-cols-4">
