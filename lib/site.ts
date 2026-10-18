@@ -2,7 +2,7 @@
 export const SITE_NAME = "PlainEV";
 export const DATA_YEAR = 2026;
 export const UPDATED_LABEL = "October 2026";
-export const UPDATED_ISO = "2026-10-09";
+export const UPDATED_ISO = "2026-10-18";
 
 /**
  * Public site URL, used for canonical links, the sitemap and robots.txt.

@@ -67,6 +67,12 @@ interface RawCar {
   "Price Netherlands EUR": number | null;
   "Price per km EUR": number;
   "Price UK GBP": number | null;
+  "Length mm": number | null;
+  "Width mm": number | null;
+  "Width with mirrors mm": number | null;
+  "Height mm": number | null;
+  "Wheelbase mm": number | null;
+  "Max payload kg": number | null;
   image: string | null;
   imageCredit: ImageCredit | null;
   family: string;
@@ -127,6 +133,14 @@ export interface Car {
   pricePerKmEur: number;
   /** UK price new (current, or last price when it was sold new); null when it was never sold in the UK. */
   priceGbp: number | null;
+  /** Exterior size in mm (null when EV Database doesn't list it). Width is without mirrors. */
+  lengthMm: number | null;
+  widthMm: number | null;
+  widthMirrorsMm: number | null;
+  heightMm: number | null;
+  wheelbaseMm: number | null;
+  /** Most it can carry (people and luggage), in kg. */
+  payloadKg: number | null;
   /** 960px-wide Wikimedia thumbnail, or null when no suitable free photo exists. */
   image: string | null;
   imageCredit: ImageCredit | null;
@@ -180,6 +194,12 @@ function toCar(r: RawCar): Car {
     priceNlEur: r["Price Netherlands EUR"],
     pricePerKmEur: r["Price per km EUR"],
     priceGbp: r["Price UK GBP"],
+    lengthMm: r["Length mm"] ?? null,
+    widthMm: r["Width mm"] ?? null,
+    widthMirrorsMm: r["Width with mirrors mm"] ?? null,
+    heightMm: r["Height mm"] ?? null,
+    wheelbaseMm: r["Wheelbase mm"] ?? null,
+    payloadKg: r["Max payload kg"] ?? null,
     image: r.image,
     imageCredit: r.imageCredit,
     family: r.family,

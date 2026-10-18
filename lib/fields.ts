@@ -48,6 +48,9 @@ export interface TextField extends Base {
 }
 export type Field = NumberField | ChoiceField | BoolField | TextField;
 
+/** mm → metres to 2 decimals, matching what the car page shows ("4.64 m"). */
+const toMetres = (mm: number | null) => (mm === null ? null : Math.round(mm / 10) / 100);
+
 const choice = (key: string, label: string, get: (c: Car) => string, display: (v: string) => string = (v) => v): ChoiceField => ({
   key,
   label,
@@ -69,6 +72,11 @@ export const FIELDS: Field[] = [
   { key: "ac", label: "AC charging speed", kind: "number", unit: "kW", step: 1, get: (c) => c.acChargeKw, about: "home wallbox or destination charging" },
   { key: "boot", label: "Boot space", kind: "number", unit: "L", step: 10, get: (c) => c.cargoL, about: "litres" },
   { key: "towing", label: "Towing capacity", kind: "number", unit: "kg", step: 100, get: (c) => c.towingKg, about: "braked; 0 means not approved for towing" },
+  { key: "length", label: "Length", kind: "number", unit: "m", step: 0.05, get: (c) => toMetres(c.lengthMm), about: "metres, e.g. 4.5" },
+  { key: "width", label: "Width (without mirrors)", kind: "number", unit: "m", step: 0.05, get: (c) => toMetres(c.widthMm), about: "metres, body only" },
+  { key: "widthmirrors", label: "Width with mirrors", kind: "number", unit: "m", step: 0.05, get: (c) => toMetres(c.widthMirrorsMm), about: "metres, mirrors unfolded; listed for fewer cars" },
+  { key: "height", label: "Height", kind: "number", unit: "m", step: 0.05, get: (c) => toMetres(c.heightMm), about: "metres, e.g. under 1.6 for a low garage door" },
+  { key: "payload", label: "Max payload", kind: "number", unit: "kg", step: 50, get: (c) => c.payloadKg, about: "most weight of people and luggage it can carry" },
   { key: "weight", label: "Weight", kind: "number", unit: "kg", step: 50, get: (c) => c.weightKg },
   { key: "ncap", label: "Euro NCAP safety rating", kind: "number", unit: "stars", step: 1, get: (c) => c.ncapStars, about: "blank when not yet tested" },
   { key: "year", label: "Model year", kind: "number", unit: "", step: 1, grouping: false, get: (c) => c.yearFrom, about: "year the current version went on sale" },

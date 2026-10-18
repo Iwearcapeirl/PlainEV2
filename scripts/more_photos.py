@@ -165,6 +165,10 @@ NEW_PHOTOS = {
     "zeekr-x": ("2023_Zeekr_X_(front).jpg", "User3204", *SA4),
     "ego": ("E.wave_X_(Showcar).jpg", "Alexfisch79", *SA4),
     "firefly": ("Nio_Firefly_front_view_(June_20,_2025).jpg", "茅野ふたば", *SA4),
+    # October 2026 data update
+    "fiat-escudo": ("Fiat_E-Scudo_Fully_Charged_Europe_2022_1.jpg", "Jan Ainali", *SA4),
+    "smart-2": ("Smart_2_Concept_001.jpg", "JustAnotherCarDesigner", *CC0),
+    "opel-vivaro-c": ("Opel_Vivaro_C_(Facelift)_IMG_9943.jpg", "Alexander-93", *SA4),
 }
 
 
@@ -397,4 +401,14 @@ RULES = [
     ("Škoda CITIGOe", None, "skoda-citigo", None),
     ("Škoda Elroq", None, SAME, None),
     ("Škoda Enyaq", None, SAME, None),
+    # October 2026 data update. The Lancia Gamma's Commons photos (uploaded days after its launch by new accounts,
+    # uncategorised) look like press images likely to be removed, so it gets a labelled Lancia stand-in for now.
+    ("Ford e-Tourneo Courier", None, SAME, None),
+    ("Ford Explorer EV", model_has("Limited Edition"), SAME, None),
+    ("Ford e-Transit", model_has("Kombi"), "FAMILY:Ford e-Tourneo Custom", "the Ford Transit Custom, which shares this body"),
+    ("Fiat E-Scudo", None, "fiat-escudo", "the E-Scudo van, which shares this body"),
+    ("Opel Vivaro", None, "opel-vivaro-c", "the Vivaro van, which shares this body"),
+    ("Smart #2", None, "smart-2", "the Smart #2 concept car that previewed it"),
+    ("XPENG G9L", None, "xpeng-g9new", "the XPENG G9, not this car"),
+    ("Lancia Gamma", None, "lancia-ypsilon", "the Lancia Ypsilon, not this car"),
 ]

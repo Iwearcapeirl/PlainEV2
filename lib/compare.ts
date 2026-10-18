@@ -1,6 +1,6 @@
 import { allCars, type Car } from "./cars";
 import { bodyLabel, CHEMISTRY_LABEL, driveLabel, segmentLabel } from "./carProfile";
-import { formatAccel, formatKm, formatMi, formatMiPerKwh, formatWhPerKm, KM_PER_MILE } from "./format";
+import { feetInches, formatAccel, formatKm, formatMi, formatMiPerKwh, formatWhPerKm, KM_PER_MILE, metres } from "./format";
 import { COUNTRIES, formatMoney, newPrice, soldNew, usedFrom, type Country } from "./market";
 
 /**
@@ -43,6 +43,8 @@ const countryName = (c: Country) => (c === "uk" ? "the UK" : c === "nl" ? "the N
 const int = (n: number) => n.toLocaleString("en-GB");
 const yesNo = (b: boolean): Cell => ({ text: b ? "Yes" : "No", n: b ? 1 : 0 });
 const info = (text: string, sub?: string): Cell => ({ text, sub, n: null });
+/** Sizes are shown but never "win": bigger or smaller isn't better in itself. */
+const sizeCell = (mm: number | null): Cell => (mm === null ? { text: "–", n: null } : { text: metres(mm), sub: feetInches(mm), n: null });
 
 /** New price in the country, with what kind of price it is. */
 function priceNew(c: Car, country: Country): Cell {
@@ -131,11 +133,22 @@ export function compareGroups(country: Country): CompareGroup[] {
       ],
     },
     {
+      title: "Size",
+      rows: [
+        { key: "length", label: "Length", cell: (c) => sizeCell(c.lengthMm) },
+        { key: "width", label: "Width (without mirrors)", cell: (c) => sizeCell(c.widthMm) },
+        { key: "widthMirrors", label: "Width with mirrors", cell: (c) => sizeCell(c.widthMirrorsMm) },
+        { key: "height", label: "Height", cell: (c) => sizeCell(c.heightMm) },
+        { key: "wheelbase", label: "Wheelbase", cell: (c) => sizeCell(c.wheelbaseMm) },
+      ],
+    },
+    {
       title: "Practicality and safety",
       rows: [
         { key: "boot", label: "Boot space", better: "high", cell: (c) => ({ text: `${int(c.cargoL)} litres`, n: c.cargoL }) },
         { key: "towbar", label: "Towbar available", better: "yes", cell: (c) => yesNo(c.towbar) },
         { key: "towing", label: "Towing (braked)", better: "high", cell: (c) => (c.towingKg > 0 ? { text: `${int(c.towingKg)} kg`, n: c.towingKg } : { text: "Not approved", n: 0 }) },
+        { key: "payload", label: "Max payload", better: "high", cell: (c) => (c.payloadKg !== null ? { text: `${int(c.payloadKg)} kg`, sub: "people and luggage", n: c.payloadKg } : { text: "–", n: null }) },
         { key: "ncap", label: "Euro NCAP rating", better: "high", cell: (c) => (c.ncapStars !== null ? { text: `${c.ncapStars} stars`, n: c.ncapStars } : { text: "–", sub: "not tested yet", n: null }) },
       ],
     },

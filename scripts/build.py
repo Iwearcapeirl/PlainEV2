@@ -1,7 +1,7 @@
 """Build data/cars.json from the EV Database spreadsheet: every car (on sale, discontinued and upcoming), with
 Wikimedia Commons photos where a matching one has been checked.
 
-Usage: python3 scripts/build.py ev-database-cars.xlsx data/cars.json
+Usage: python3 scripts/build.py ev-database-cars.csv data/cars.json   (or the .xlsx export)
 
 Photos are matched by model family (families.py). Discontinued and upcoming cars only reuse a family's photos when
 they belong to the same generation as the cars on sale today: they must have gone on sale no more than a year
@@ -49,6 +49,9 @@ COLUMNS = [
     ("Range estimated", yes_no), ("Efficiency estimated", yes_no), ("Weight kg", num), ("Battery estimated", yes_no),
     ("Towing kg", num), ("Cargo L", num), ("Price/km estimated", yes_no), ("Price Germany EUR", num),
     ("Price Netherlands EUR", num),
+    # Size and payload (newer exports only; null when missing).
+    ("Length mm", num), ("Width mm", num), ("Width with mirrors mm", num), ("Height mm", num), ("Wheelbase mm", num),
+    ("Max payload kg", num),
 ]
 
 # Model-year and generation tags that don't make a different car: "(MY24-27)", "(MY22)".
@@ -73,16 +76,26 @@ def base_name(make: str, model: str) -> str:
 
 
 src, out = sys.argv[1], sys.argv[2]
-wb = openpyxl.load_workbook(src, read_only=True, data_only=True)
-rows = list(wb["All cars"].iter_rows(values_only=True))
-head = rows[0]
-raw = [dict(zip(head, r)) for r in rows[1:]]
+if src.endswith(".csv"):
+    import csv
+    raw = [{k: (v if v != "" else None) for k, v in r.items()} for r in csv.DictReader(open(src, encoding="utf-8-sig"))]
+else:
+    wb = openpyxl.load_workbook(src, read_only=True, data_only=True)
+    rows = list(wb["All cars"].iter_rows(values_only=True))
+    head = rows[0]
+    raw = [dict(zip(head, r)) for r in rows[1:]]
+# Newer exports label the listing weight and boot space "(listing)", next to the EU unladen weight and other
+# cargo volumes; the site keeps using the listing figures, as before.
+for r in raw:
+    for col in ("Weight kg", "Cargo L"):
+        if col not in r:
+            r[col] = r.get(f"{col} (listing)")
 
 cars = []
 for r in raw:
     c = {"ID": int(r["ID"])}
     for col, conv in COLUMNS:
-        c[col] = conv(r[col])
+        c[col] = conv(r.get(col))
     c["Full name"] = f"{c['Make']} {c['Model']}"  # the sheet's own Full name column holds chemistry codes
     cars.append(c)
 

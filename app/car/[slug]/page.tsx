@@ -34,6 +34,7 @@ import {
   formatKm,
   formatMi,
   formatMiPerKwh,
+  formatSize,
   formatWhPerKm,
 } from "@/lib/format";
 import {
@@ -370,12 +371,23 @@ export default async function CarPage({ params }: Props) {
             ]}
           />
           <SpecGroup
+            title="Size"
+            rows={[
+              ["Length", size(car.lengthMm)],
+              ["Width (without mirrors)", size(car.widthMm)],
+              ["Width with mirrors", size(car.widthMirrorsMm)],
+              ["Height", size(car.heightMm)],
+              ["Wheelbase", size(car.wheelbaseMm)],
+            ]}
+          />
+          <SpecGroup
             title="Practicality and safety"
             rows={[
               ["Boot space", `${car.cargoL.toLocaleString("en-GB")} litres`],
               ["Towbar available", yesNo(car.towbar)],
               ["Towing capacity (braked)", car.towingKg > 0 ? `${car.towingKg.toLocaleString("en-GB")} kg` : "Not approved for towing"],
               ["Euro NCAP rating", car.ncapStars !== null ? `${car.ncapStars} stars` : "Not yet tested"],
+              ["Max payload (people and luggage)", car.payloadKg !== null ? `${car.payloadKg.toLocaleString("en-GB")} kg` : "Not listed"],
             ]}
           />
           <SpecGroup
@@ -548,6 +560,9 @@ function Rank({ label, extra, s, scope }: { label: string; extra?: string; s: St
     </li>
   );
 }
+
+/** "4.64 m (15 ft 2 in)", or "Not listed". */
+const size = (mm: number | null) => (mm !== null ? formatSize(mm) : "Not listed");
 
 function SpecGroup({ title, rows }: { title: string; rows: [string, string][] }) {
   return (

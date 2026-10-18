@@ -2,12 +2,12 @@
 
 ## cars.json
 
-This file lists every electric car in the spreadsheet: 1,493 cars (661 on sale, 823 no longer sold new, 9 coming soon), sorted by real-world range from longest to shortest. It is built by `scripts/build.py`, which also writes:
+This file lists every electric car in the spreadsheet: 1,533 cars (687 on sale, 838 no longer sold new, 8 coming soon), sorted by real-world range from longest to shortest. It is built by `scripts/build.py`, which also writes:
 
 - `cars.min.json`: the same cars for the browser, as `columns` + `rows` arrays with photo credits listed once, and without `interiors` and `Full name`.
 - `car-extras.json`: `{ID: {interiors}}`, read only by car pages on the server.
 
-**Source:** `ev-database-cars.xlsx`, "All cars" sheet. The data was taken from [EV Database](https://ev-database.org/) on 9 October 2026, using the site's overview listing rather than each car's full spec page.
+**Source:** `ev-database-cars.csv` (October 2026 export, with dimensions; earlier exports were `ev-database-cars.xlsx`, "All cars" sheet). The data was taken from [EV Database](https://ev-database.org/) on 18 October 2026, using the site's overview listing rather than each car's full spec page.
 
 **Range is EV Database's real-world range, not WLTP.** `Real range km` is EV Database's estimate of range in mixed real-world driving. It is usually well below the official WLTP figure. `Efficiency Wh/km` uses the same standardised conditions.
 

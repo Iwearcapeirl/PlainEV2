@@ -41,3 +41,15 @@ export const formatGbpPerKm = (priceGbp: number, rangeKm: number) => gbp.format(
 
 /** "5.1 s" — 0–62 mph time (0–100 km/h is the same measure, so the figure is identical). */
 export const formatAccel = (s: number) => `${oneDp.format(s)} s`;
+
+/** mm → feet and inches, rounded to the nearest inch: 4635 → "15 ft 2 in". */
+export function feetInches(mm: number): string {
+  const totalIn = Math.round(mm / 25.4);
+  const ft = Math.floor(totalIn / 12);
+  const inch = totalIn % 12;
+  return inch ? `${ft} ft ${inch} in` : `${ft} ft`;
+}
+/** mm → metres to 2 decimals: 4635 → "4.64 m" (rounded half up, as the filter compares). */
+export const metres = (mm: number) => `${(Math.round(mm / 10) / 100).toFixed(2)} m`;
+/** "4.64 m (15 ft 2 in)" */
+export const formatSize = (mm: number) => `${metres(mm)} (${feetInches(mm)})`;
