@@ -10,7 +10,9 @@ import {
   type CustomFilter,
   type Field,
   type Refinement,
+  unitOf,
 } from "@/lib/fields";
+import type { Country } from "@/lib/market";
 
 const control =
   "rounded-lg bg-card px-3 py-2 text-[15px] text-foreground shadow-[inset_0_0_0_1px_var(--line)] focus:shadow-[inset_0_0_0_2px_var(--ink)] focus:outline-none";
@@ -26,6 +28,7 @@ export default function RefinePanel({
   intro,
   defaultSortLabel = "Best match",
   hidden = [],
+  country = "uk",
 }: {
   value: Refinement;
   onChange: (next: Refinement) => void;
@@ -37,6 +40,8 @@ export default function RefinePanel({
   defaultSortLabel?: string;
   /** Filter keys the page sets with its own controls: not listed or offered here, and kept by "Clear all". */
   hidden?: string[];
+  /** The buyer's country, for prices shown in their currency. */
+  country?: Country;
 }) {
   const id = useId();
   const used = new Set(value.filters.map((f) => f.key));
@@ -117,7 +122,7 @@ export default function RefinePanel({
           {value.filters.map((f, i) => {
             const field = fieldByKey(f.key);
             return field && !isHidden(f.key) ? (
-              <FilterRow key={f.key} field={field} filter={f} onChange={(next) => setFilter(i, next)} onRemove={() => removeFilter(i)} />
+              <FilterRow key={f.key} field={field} filter={f} country={country} onChange={(next) => setFilter(i, next)} onRemove={() => removeFilter(i)} />
             ) : null;
           })}
         </ul>
@@ -148,11 +153,13 @@ export default function RefinePanel({
 function FilterRow({
   field,
   filter,
+  country,
   onChange,
   onRemove,
 }: {
   field: Field;
   filter: CustomFilter;
+  country: Country;
   onChange: (next: CustomFilter) => void;
   onRemove: () => void;
 }) {
@@ -166,7 +173,7 @@ function FilterRow({
       </span>
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-        {field.kind === "number" && <NumberRange field={field} value={filter.value} onChange={set} labelledBy={`${id}-label`} />}
+        {field.kind === "number" && <NumberRange field={field} value={filter.value} onChange={set} labelledBy={`${id}-label`} unit={unitOf(field, country)} />}
 
         {field.kind === "choice" && (
           <select aria-labelledby={`${id}-label`} value={filter.value} onChange={(e) => set(e.target.value)} className={`${control} min-w-0 flex-1 sm:flex-none`}>
@@ -224,14 +231,14 @@ function FilterRow({
 }
 
 /** Min and max inputs; either may be left empty. Stored as "min~max". */
-function NumberRange({ field, value, onChange, labelledBy }: { field: Field & { kind: "number" }; value: string; onChange: (v: string) => void; labelledBy: string }) {
+function NumberRange({ field, value, onChange, labelledBy, unit }: { field: Field & { kind: "number" }; value: string; onChange: (v: string) => void; labelledBy: string; unit: string }) {
   const [lo = "", hi = ""] = value.split("~");
   const input = (side: "min" | "max", v: string) => (
     <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:flex-none">
       <span className="sr-only" id={`${labelledBy}-${side}`}>
         {side === "min" ? "Minimum" : "Maximum"}
       </span>
-      {field.prefix && <span className="text-sm text-muted">{field.unit}</span>}
+      {field.prefix && <span className="text-sm text-muted">{unit}</span>}
       <input
         type="number"
         inputMode="decimal"
@@ -243,7 +250,7 @@ function NumberRange({ field, value, onChange, labelledBy }: { field: Field & { 
         onChange={(e) => onChange(side === "min" ? `${e.target.value}~${hi}` : `${lo}~${e.target.value}`)}
         className={`${control} w-full min-w-0 tabular-nums sm:w-28`}
       />
-      {!field.prefix && <span className="text-sm text-muted">{field.unit}</span>}
+      {!field.prefix && <span className="text-sm text-muted">{unit}</span>}
     </label>
   );
   return (

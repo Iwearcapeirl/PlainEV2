@@ -17,6 +17,8 @@ import {
   CONDITIONS,
   formatMoney,
   groupOffer,
+  budgetFitText,
+  usedBudgetFit,
   groupResults,
   miles,
   onePerModel,
@@ -26,7 +28,7 @@ import {
 } from "@/lib/market";
 import { describe, fieldByKey, isRefined, isSet, refine, refinementFromParams, writeRefinement, type Refinement } from "@/lib/fields";
 import { matchedFilters, matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
-import { activeFilters, answersFromParams, answersToQuery, priorityOf, type Answers } from "@/lib/quiz";
+import { activeFilters, answersFromParams, answersToQuery, budgetMax, priorityOf, type Answers } from "@/lib/quiz";
 
 /** How many cars a refined list shows at first, and how many more each "Show more" adds. */
 const PAGE = 10;
@@ -46,6 +48,7 @@ export default function Results() {
     offer: groupOffer(g, answers.country, answers.condition),
     title: g.car.variant,
     years: yearsLabel(g),
+    budgetFit: usedBudgetFit(g, answers.country, answers.condition, budgetMax(answers.budget)),
   });
   const where = `${answers.condition === "both" ? "new and used" : answers.condition === "new" ? "new" : "used"}, ${
     answers.country === "uk" ? "in the UK" : answers.country === "nl" ? "in the Netherlands" : `in ${COUNTRIES[answers.country].label}`
@@ -54,7 +57,7 @@ export default function Results() {
   const filters = activeFilters(answers);
   // Extra filters from the URL (set by a search or the "Filter and sort" panel) count as answers too.
   const urlRefinement = refinementFromParams(params);
-  const extraChips = urlRefinement.filters.filter(isSet).map(describe);
+  const extraChips = urlRefinement.filters.filter(isSet).map((f) => describe(f, answers.country));
   const urlSort = urlRefinement.sort ? fieldByKey(urlRefinement.sort) : undefined;
   const summary = [
     ...(answers.country !== "uk" ? [`Buying in ${COUNTRIES[answers.country].label}`] : []),
@@ -84,7 +87,7 @@ export default function Results() {
   }, [refinement]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refined = isRefined(refinement);
-  const list = useMemo(() => (refined ? groupResults(refine(ranked, refinement)) : []), [refined, ranked, refinement]);
+  const list = useMemo(() => (refined ? groupResults(refine(ranked, refinement, answers.country)) : []), [refined, ranked, refinement]);
   // Nothing to show (from the answers alone, or after extra filters): suggest one change that brings cars back.
   const empty = total === 0 || (refined && list.length === 0);
   const relaxations = useMemo(() => (empty ? relaxSearch(allCars, answers, refinement) : []), [empty, answers, refinement]);
@@ -112,7 +115,7 @@ export default function Results() {
   const sortWords = sortField?.kind === "number" ? (refinement.dir === "asc" ? "low to high" : "high to low") : refinement.dir === "asc" ? "A to Z" : "Z to A";
   const listSummary = [
     sortField ? `Sorted by ${sortField.label[0].toLowerCase()}${sortField.label.slice(1)}, ${sortWords}` : "Sorted by best match",
-    ...refinement.filters.filter(isSet).map(describe),
+    ...refinement.filters.filter(isSet).map((f) => describe(f, answers.country)),
   ];
 
   return (
@@ -163,7 +166,7 @@ export default function Results() {
 
       {total > 0 && (
         <div className="mx-auto mt-8 max-w-3xl">
-          <RefinePanel value={refinement} onChange={change} scope={total} />
+          <RefinePanel value={refinement} onChange={change} scope={total} country={answers.country} />
         </div>
       )}
 
@@ -335,6 +338,7 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
           {o.used && <span className="rounded bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-ink">Used</span>}
           <span>{market.years}</span>
         </p>
+        {market.budgetFit && <p className="mt-2 text-sm font-semibold text-signal">{budgetFitText(market.budgetFit, country)}</p>}
 
         <div className="mt-6">
           <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />
@@ -348,8 +352,8 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
         <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm">
           {o.newPrice !== null && (
             <div>
-              <dt className="text-on-ink/70">New from</dt>
-              <dd className="font-wide text-lg font-semibold tabular-nums">{formatMoney(o.newPrice, country)}</dd>
+              <dt className="text-on-ink/70">{market.budgetFit ? "New from (over budget)" : "New from"}</dt>
+              <dd className={`font-wide text-lg font-semibold tabular-nums ${market.budgetFit ? "text-on-ink/70" : ""}`}>{formatMoney(o.newPrice, country)}</dd>
             </div>
           )}
           {o.used && (

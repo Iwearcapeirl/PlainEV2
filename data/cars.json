@@ -48459,7 +48459,7 @@
   {
     "ID": 3582,
     "Make": "Geely",
-    "Model": "E5 Pro+",
+    "Model": "EX5 Pro+",
     "Body": "SUV",
     "Drive": "Front Wheel Drive",
     "Seats": 5,
@@ -48496,18 +48496,18 @@
     "Price/km estimated": true,
     "Price Germany EUR": 39990,
     "Price Netherlands EUR": 39990,
-    "Full name": "Geely E5 Pro+",
+    "Full name": "Geely EX5 Pro+",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Geely_Galaxy_E5_003_%28cropped%29.jpg/960px-Geely_Galaxy_E5_003_%28cropped%29.jpg",
     "imageCredit": {
       "author": "JustAnotherCarDesigner",
       "license": "CC0",
       "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
       "source": "https://commons.wikimedia.org/wiki/File:Geely_Galaxy_E5_003_%28cropped%29.jpg",
-      "subject": "Geely E5"
+      "subject": "Geely EX5"
     },
     "interiors": [],
-    "family": "Geely E5",
-    "variant": "E5 Pro+"
+    "family": "Geely EX5",
+    "variant": "EX5 Pro+"
   },
   {
     "ID": 1478,
@@ -51264,7 +51264,7 @@
   {
     "ID": 3583,
     "Make": "Geely",
-    "Model": "E5 Max+",
+    "Model": "EX5 Ultra",
     "Body": "SUV",
     "Drive": "Front Wheel Drive",
     "Seats": 5,
@@ -51301,18 +51301,18 @@
     "Price/km estimated": true,
     "Price Germany EUR": 42990,
     "Price Netherlands EUR": 41990,
-    "Full name": "Geely E5 Max+",
+    "Full name": "Geely EX5 Ultra",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Geely_Galaxy_E5_003_%28cropped%29.jpg/960px-Geely_Galaxy_E5_003_%28cropped%29.jpg",
     "imageCredit": {
       "author": "JustAnotherCarDesigner",
       "license": "CC0",
       "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
       "source": "https://commons.wikimedia.org/wiki/File:Geely_Galaxy_E5_003_%28cropped%29.jpg",
-      "subject": "Geely E5"
+      "subject": "Geely EX5"
     },
     "interiors": [],
-    "family": "Geely E5",
-    "variant": "E5 Max+"
+    "family": "Geely EX5",
+    "variant": "EX5 Ultra"
   },
   {
     "ID": 3262,
@@ -60241,7 +60241,7 @@
   {
     "ID": 3308,
     "Make": "Geely",
-    "Model": "E5 Pro",
+    "Model": "EX5 SE",
     "Body": "SUV",
     "Drive": "Front Wheel Drive",
     "Seats": 5,
@@ -60278,18 +60278,18 @@
     "Price/km estimated": true,
     "Price Germany EUR": 37990,
     "Price Netherlands EUR": 37990,
-    "Full name": "Geely E5 Pro",
+    "Full name": "Geely EX5 SE",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Geely_Galaxy_E5_003_%28cropped%29.jpg/960px-Geely_Galaxy_E5_003_%28cropped%29.jpg",
     "imageCredit": {
       "author": "JustAnotherCarDesigner",
       "license": "CC0",
       "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
       "source": "https://commons.wikimedia.org/wiki/File:Geely_Galaxy_E5_003_%28cropped%29.jpg",
-      "subject": "Geely E5"
+      "subject": "Geely EX5"
     },
     "interiors": [],
-    "family": "Geely E5",
-    "variant": "E5 Pro"
+    "family": "Geely EX5",
+    "variant": "EX5 SE"
   },
   {
     "ID": 3046,
@@ -65014,7 +65014,7 @@
     "ID": 2231,
     "Make": "Hyundai",
     "Model": "INSTER Long Range",
-    "Body": "SUV",
+    "Body": "Hatchback",
     "Drive": "Front Wheel Drive",
     "Seats": 4,
     "Heat pump": true,
@@ -67742,7 +67742,7 @@
   {
     "ID": 3701,
     "Make": "Geely",
-    "Model": "E2 47 kWh",
+    "Model": "EX2 47 kWh",
     "Body": "SUV",
     "Drive": "Rear Wheel Drive",
     "Seats": 5,
@@ -67779,14 +67779,14 @@
     "Price/km estimated": true,
     "Price Germany EUR": 23990,
     "Price Netherlands EUR": 24990,
-    "Full name": "Geely E2 47 kWh",
+    "Full name": "Geely EX2 47 kWh",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/2025_Geely_Xingyuan%2C_front_7.28.25.jpg/960px-2025_Geely_Xingyuan%2C_front_7.28.25.jpg",
     "imageCredit": {
       "author": "Kevauto",
       "license": "CC BY-SA 4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
       "source": "https://commons.wikimedia.org/wiki/File:2025_Geely_Xingyuan%2C_front_7.28.25.jpg",
-      "subject": "Geely E2"
+      "subject": "Geely EX2"
     },
     "interiors": [
       {
@@ -67800,8 +67800,8 @@
         "subject": "Geely Xingyuan"
       }
     ],
-    "family": "Geely E2",
-    "variant": "E2 47 kWh"
+    "family": "Geely EX2",
+    "variant": "EX2 47 kWh"
   },
   {
     "ID": 3073,
@@ -73391,7 +73391,7 @@
     "ID": 2230,
     "Make": "Hyundai",
     "Model": "INSTER Standard Range",
-    "Body": "SUV",
+    "Body": "Hatchback",
     "Drive": "Front Wheel Drive",
     "Seats": 4,
     "Heat pump": true,
@@ -78439,7 +78439,7 @@
   {
     "ID": 3700,
     "Make": "Geely",
-    "Model": "E2 35 kWh",
+    "Model": "EX2 35 kWh",
     "Body": "SUV",
     "Drive": "Rear Wheel Drive",
     "Seats": 5,
@@ -78476,14 +78476,14 @@
     "Price/km estimated": true,
     "Price Germany EUR": 19990,
     "Price Netherlands EUR": 22990,
-    "Full name": "Geely E2 35 kWh",
+    "Full name": "Geely EX2 35 kWh",
     "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/2025_Geely_Xingyuan%2C_front_7.28.25.jpg/960px-2025_Geely_Xingyuan%2C_front_7.28.25.jpg",
     "imageCredit": {
       "author": "Kevauto",
       "license": "CC BY-SA 4.0",
       "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
       "source": "https://commons.wikimedia.org/wiki/File:2025_Geely_Xingyuan%2C_front_7.28.25.jpg",
-      "subject": "Geely E2"
+      "subject": "Geely EX2"
     },
     "interiors": [
       {
@@ -78497,8 +78497,8 @@
         "subject": "Geely Xingyuan"
       }
     ],
-    "family": "Geely E2",
-    "variant": "E2 35 kWh"
+    "family": "Geely EX2",
+    "variant": "EX2 35 kWh"
   },
   {
     "ID": 2129,

@@ -1,6 +1,7 @@
 import { allCars } from "./cars";
 import { EMPTY_REFINEMENT, FIELDS, SORT_FIELDS, fieldByKey, isSet, type CustomFilter, type Refinement } from "./fields";
 import { milesToKm } from "./format";
+import { squash } from "./text";
 import { CONDITIONS, COUNTRY_IDS, type Condition, type Country } from "./market";
 import { DEFAULT_ANSWERS, FILTER_KEYS, FILTERS, PRIORITIES, type Answers, type FilterKey, type PriorityId } from "./quiz";
 
@@ -264,6 +265,23 @@ function makeFromText(input: string): string | null {
   return null;
 }
 
+/**
+ * Model names with a number in them ("ID.3", "EV6", "Model 3", "Ioniq 5"), as written in the data and squashed for
+ * matching. Names without a number are left out: too many are everyday words ("Spring", "Born", "Explorer").
+ */
+const MODEL_NAMES = [...new Set(allCars.map((c) => (c.family.startsWith(c.make + " ") ? c.family.slice(c.make.length + 1) : "")))]
+  .filter((m) => /\d/.test(m) && /[a-z]/i.test(m) && squash(m).length >= 2)
+  .map((name) => ({ name, key: squash(name) }));
+
+/** A model name in the text, written any way: "id3", "ID.3", "id 3", "model 3". */
+function modelFromText(input: string): string | null {
+  const words = input.split(/\s+/).map(squash).filter(Boolean);
+  const pieces = new Set([...words, ...words.slice(1).map((w, i) => words[i] + w)]);
+  // Longest first, so "ioniq 5 n" isn't read as "ioniq 5".
+  for (const m of [...MODEL_NAMES].sort((a, b) => b.key.length - a.key.length)) if (pieces.has(m.key)) return m.name;
+  return null;
+}
+
 /** Extra filters and sort from plain words, for when Claude can't be reached. */
 export function refinementFromText(input: string): Refinement {
   const t = input.toLowerCase();
@@ -278,6 +296,8 @@ export function refinementFromText(input: string): Refinement {
 
   const make = makeFromText(input);
   if (make) add("make", make);
+  const model = modelFromText(input);
+  if (model) add("name", model);
 
   // Towing
   if (/\btow(s|ing|bar)?\b|caravan|trailer|horse ?box/.test(t)) {

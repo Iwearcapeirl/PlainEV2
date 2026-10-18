@@ -3,7 +3,7 @@ import CarLink from "@/components/CarLink";
 import RangeBar from "@/components/RangeBar";
 import { carHref, type Car } from "@/lib/cars";
 import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
-import { formatMoney, miles, type Country, type Offer } from "@/lib/market";
+import { budgetFitText, formatMoney, miles, type BudgetFit, type Country, type Offer } from "@/lib/market";
 import type { FilterKey } from "@/lib/quiz";
 
 /** Results context: the buyer's country, what they could pay (new and/or used) and the merged version name. */
@@ -14,6 +14,8 @@ export interface CardMarket {
   title: string;
   /** e.g. "2019–2023" or "2021 on" */
   years: string;
+  /** Set when only used examples are within the buyer's budget (the new price is over it). */
+  budgetFit?: BudgetFit | null;
 }
 
 type Metric = "range" | "efficiency" | "value" | "acceleration";
@@ -131,6 +133,9 @@ export default function CarCard({
                 <span>{market.years}</span>
               </p>
             )}
+            {market?.budgetFit && (
+              <p className="mt-1.5 text-xs font-semibold text-route">{budgetFitText(market.budgetFit, market.country)}</p>
+            )}
           </div>
           {market ? (
             <PriceBlock market={market} featured={featured} />
@@ -220,13 +225,13 @@ function PriceBlock({ market, featured }: { market: CardMarket; featured: boolea
     <div className="shrink-0 text-right">
       {o.newPrice !== null && (
         <p>
-          <span className={big}>{formatMoney(o.newPrice, country)}</span>
-          <span className="block text-xs text-muted">new</span>
+          <span className={market.budgetFit ? "block text-[15px] font-semibold tabular-nums text-muted" : big}>{formatMoney(o.newPrice, country)}</span>
+          <span className="block text-xs text-muted">{market.budgetFit ? "new, over budget" : "new"}</span>
         </p>
       )}
       {o.used && (
         <p className={o.newPrice !== null ? "mt-1.5" : ""}>
-          <span className={o.newPrice !== null ? "block text-[15px] font-semibold tabular-nums" : big}>{formatMoney(o.used.low, country)}</span>
+          <span className={o.newPrice !== null && !market.budgetFit ? "block text-[15px] font-semibold tabular-nums" : big}>{formatMoney(o.used.low, country)}</span>
           <span className="block text-xs text-muted">used from, est.</span>
         </p>
       )}

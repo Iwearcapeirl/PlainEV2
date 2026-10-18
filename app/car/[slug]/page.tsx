@@ -194,6 +194,9 @@ export default async function CarPage({ params }: Props) {
 
           <div className="mt-6 border-t border-line pt-5">
             <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />
+            <p className="mt-2 text-xs text-muted">
+              Real-world estimate. Makers&rsquo; advertised (WLTP) ranges are usually 20–30% higher.
+            </p>
           </div>
 
           <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-line">

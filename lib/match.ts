@@ -118,7 +118,7 @@ const BUDGET_STEPS = ["under-10k", "10-15k", "15-20k", "under-30k", "30-40k", "4
 export function relaxSearch(all: Car[], a: Answers, r: Refinement): SearchRelaxation[] {
   // Counted as the results page shows them: versions of the same name across years are one result.
   const shown = (a2: Answers, r2: Refinement) =>
-    groupResults(refine(rankCars(all.filter((c) => matchesAnswers(c, a2)), a2.priority), r2)).length;
+    groupResults(refine(rankCars(all.filter((c) => matchesAnswers(c, a2)), a2.priority), r2, a2.country)).length;
   const out: SearchRelaxation[] = [];
   const push = (label: string, answers: Answers, refinement: Refinement) => {
     const count = shown(answers, refinement);
@@ -149,12 +149,12 @@ export function relaxSearch(all: Car[], a: Answers, r: Refinement): SearchRelaxa
     const others = set.filter((x) => x !== f);
     if (field.kind === "number") {
       // Cars that pass everything except this filter: how close do they get?
-      const pool = refine(rankCars(all.filter((c) => matchesAnswers(c, a)), a.priority), { ...r, filters: others });
-      const values = pool.map((c) => field.get(c)).filter((v): v is number => v !== null);
+      const pool = refine(rankCars(all.filter((c) => matchesAnswers(c, a)), a.priority), { ...r, filters: others }, a.country);
+      const values = pool.map((c) => field.get(c, a.country)).filter((v): v is number => v !== null);
       const [lo = "", hi = ""] = f.value.split("~");
       const swap = (value: string) => {
         const next: CustomFilter = { key: f.key, value };
-        push(`Change to “${describe(next)}”`, a, { ...r, filters: [...others, next] });
+        push(`Change to “${describe(next, a.country)}”`, a, { ...r, filters: [...others, next] });
       };
       if (lo !== "") {
         const below = values.filter((v) => v < Number(lo));
@@ -165,7 +165,7 @@ export function relaxSearch(all: Car[], a: Answers, r: Refinement): SearchRelaxa
         if (above.length) swap(`${lo}~${Math.min(...above)}`);
       }
     }
-    push(`Drop “${describe(f)}”`, a, { ...r, filters: others });
+    push(`Drop “${describe(f, a.country)}”`, a, { ...r, filters: others });
   }
 
   return out.sort((x, y) => x.count - y.count || x.label.localeCompare(y.label));

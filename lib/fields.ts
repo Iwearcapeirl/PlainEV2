@@ -1,6 +1,8 @@
 import { bodyLabel, driveLabel, segmentLabel } from "./carProfile";
 import { allCars, type Car } from "./cars";
+import { COUNTRIES, usedFrom, type Country } from "./market";
 import { KM_PER_MILE, kmToMiles, miPerKwh } from "./format";
+import { looseIncludes } from "./text";
 
 /**
  * Every field in the car data that a reader can filter or sort the results by, in the units the site shows
@@ -20,8 +22,13 @@ export interface NumberField extends Base {
   unit: string;
   prefix?: boolean;
   step: number;
-  /** null when the data has no value for this car (it then fails any min/max filter and sorts last). */
-  get: (c: Car) => number | null;
+  /**
+   * null when the data has no value for this car (it then fails any min/max filter and sorts last). `country` is
+   * the buyer's, for figures that depend on it (used prices).
+   */
+  get: (c: Car, country: Country) => number | null;
+  /** The unit is the buyer's currency (£ or €) rather than a fixed one. */
+  currency?: boolean;
   /** false for years, which shouldn't be written "2,026". */
   grouping?: boolean;
 }
@@ -51,6 +58,7 @@ const choice = (key: string, label: string, get: (c: Car) => string, display: (v
 
 export const FIELDS: Field[] = [
   { key: "price", label: "UK price when new", kind: "number", unit: "£", prefix: true, step: 1000, get: (c) => c.priceGbp },
+  { key: "usedprice", label: "Used price from (estimated)", kind: "number", unit: "£", prefix: true, currency: true, step: 1000, get: (c, country) => usedFrom(c, country)?.low ?? null, about: "cheapest estimated second-hand price (oldest model year) in the buyer's country and currency; blank for cars not yet sold" },
   { key: "range", label: "Real-world range", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.rangeKm) },
   { key: "onestop", label: "Range with one 15-min charge", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.oneStopKm) },
   { key: "efficiency", label: "Efficiency", kind: "number", unit: "mi/kWh", step: 0.1, get: (c) => Math.round(miPerKwh(c.whPerKm) * 10) / 10 },
@@ -95,6 +103,9 @@ export const fieldByKey = (key: string) => FIELDS.find((f) => f.key === key);
 /** Fields that can be sorted: everything except yes/no. */
 export const SORT_FIELDS = FIELDS.filter((f) => f.kind !== "bool");
 
+/** A number field's unit for this buyer: their currency symbol for prices that follow the country. */
+export const unitOf = (field: NumberField, country: Country = "uk") => (field.currency ? COUNTRIES[country].symbol : field.unit);
+
 // ---------- Filters ----------
 
 /**
@@ -138,13 +149,13 @@ export function isSet(f: CustomFilter): boolean {
   return true;
 }
 
-export function passes(car: Car, f: CustomFilter): boolean {
+export function passes(car: Car, f: CustomFilter, country: Country = "uk"): boolean {
   const field = fieldByKey(f.key);
   if (!field || !isSet(f)) return true;
   switch (field.kind) {
     case "number": {
       const [lo, hi] = parseRange(f.value);
-      const v = field.get(car);
+      const v = field.get(car, country);
       if (v === null) return false;
       return (lo === null || v >= lo) && (hi === null || v <= hi);
     }
@@ -153,17 +164,17 @@ export function passes(car: Car, f: CustomFilter): boolean {
     case "bool":
       return field.get(car) === (f.value === "yes");
     case "text":
-      return field.get(car).toLowerCase().includes(f.value.trim().toLowerCase());
+      return looseIncludes(field.get(car), f.value);
   }
 }
 
 /** Applies the custom filters, then the custom sort (ties keep the incoming "best match" order). */
-export function refine(ranked: Car[], r: Refinement): Car[] {
-  const out = ranked.filter((c) => r.filters.every((f) => passes(c, f)));
+export function refine(ranked: Car[], r: Refinement, country: Country = "uk"): Car[] {
+  const out = ranked.filter((c) => r.filters.every((f) => passes(c, f, country)));
   const field = r.sort ? fieldByKey(r.sort) : undefined;
   if (!field || field.kind === "bool") return out;
   const sign = r.dir === "asc" ? 1 : -1;
-  const value = field.get as (c: Car) => number | string | null;
+  const value = (c: Car): number | string | null => (field.kind === "number" ? field.get(c, country) : field.get(c));
   return out
     .map((car, i) => ({ car, i }))
     .sort((x, y) => {
@@ -178,14 +189,15 @@ export function refine(ranked: Car[], r: Refinement): Car[] {
 }
 
 /** Short description of a filter for the summary line, e.g. "Price (UK) £20,000–£40,000". */
-export function describe(f: CustomFilter): string {
+export function describe(f: CustomFilter, country: Country = "uk"): string {
   const field = fieldByKey(f.key);
   if (!field) return "";
   switch (field.kind) {
     case "number": {
       const [lo, hi] = parseRange(f.value);
       const show = (n: number) => n.toLocaleString("en-GB", { useGrouping: field.grouping ?? true });
-      const fmt = (n: number) => (field.prefix ? `${field.unit}${show(n)}` : `${show(n)} ${field.unit}`.trim());
+      const unit = unitOf(field, country);
+      const fmt = (n: number) => (field.prefix ? `${unit}${show(n)}` : `${show(n)} ${unit}`.trim());
       if (lo !== null && hi !== null) return `${field.label}: ${fmt(lo)} to ${fmt(hi)}`;
       return `${field.label}: ${lo !== null ? `at least ${fmt(lo)}` : `up to ${fmt(hi!)}`}`;
     }

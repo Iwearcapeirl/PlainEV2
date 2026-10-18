@@ -179,6 +179,43 @@ for c in cars:
     c["image"], c["imageCredit"] = image, credit
     stats["stand-in photo" if note else "photo (other generation list)"] += 1
 
+# UK names and body styles where EV Database's differ from how the car is sold or described here. Checked by hand
+# (October 2026). Applied last, so photos and families above still match on EV Database's names.
+UK_NAMES = {
+    # Geely sells the Galaxy E5 as the EX5 and the E2 as the EX2 in the UK. EV Database's E5 versions match the UK
+    # trims by price and battery: E5 Pro = EX5 SE (£31,990, 60 kWh), E5 Max+ = EX5 Ultra (£38,990, 68 kWh). The E5
+    # Pro+ isn't sold in the UK, so it keeps its own trim name.
+    ("Geely", "E5 Pro"): "EX5 SE",
+    ("Geely", "E5 Max+"): "EX5 Ultra",
+    ("Geely", "E5 Pro+"): "EX5 Pro+",
+    ("Geely", "E2 35 kWh"): "EX2 35 kWh",
+    ("Geely", "E2 47 kWh"): "EX2 47 kWh",
+}
+UK_FAMILIES = {"Geely E5": "Geely EX5", "Geely E2": "Geely EX2"}
+# EV Database lists the Hyundai Inster as an SUV, but it's a city car (size class A, the only "SUV" in it), so it's
+# shown as a hatchback and doesn't come up for people looking for an SUV.
+BODY_OVERRIDES = {("Hyundai", "INSTER"): "Hatchback"}
+
+for c in cars:
+    new = UK_NAMES.get((c["Make"], c["Model"]))
+    if new:
+        c["Model"] = new
+        c["Full name"] = f"{c['Make']} {new}"
+        c["variant"] = variant_name(new)
+        stats["renamed for the UK"] += 1
+    fam = UK_FAMILIES.get(c["family"])
+    if fam:
+        c["family"] = fam
+        if c["imageCredit"] and c["imageCredit"].get("subject") in UK_FAMILIES:
+            c["imageCredit"] = {**c["imageCredit"], "subject": fam}
+        for p in c["interiors"]:
+            if p["subject"] in UK_FAMILIES:
+                p["subject"] = UK_FAMILIES[p["subject"]]
+    for (make, prefix), body in BODY_OVERRIDES.items():
+        if c["Make"] == make and c["Model"].startswith(prefix) and c["Body"] != body:
+            c["Body"] = body
+            stats["body style corrected"] += 1
+
 # Longest real-world range first, then cheapest (UK price, then German), then ID.
 cars.sort(key=lambda c: (-c["Real range km"], c["Price UK GBP"] or c["Price Germany EUR"] or 0, c["ID"]))
 json.dump(cars, open(out, "w"), ensure_ascii=False, indent=2)

@@ -38,3 +38,11 @@ This file lists every electric car in the spreadsheet: 1,493 cars (661 on sale, 
 - `family` is the model family shared by every version of a model (for example "Hyundai Ioniq 5"). The car pages use it for the "Other versions" list.
 - How to rebuild: `scripts/families.py` maps each car to a model family and a Wikipedia article. `scripts/photos.py` lists the accepted exterior Commons files (`PHOTOS` by Wikipedia article, plus `FAMILY_PHOTOS` picked by hand) and the families rejected for showing the wrong car. Run `python3 scripts/build.py ev-database-cars.xlsx data/cars.json` to apply them.
 
+## Changes from EV Database
+
+A few names and body styles are changed in `scripts/build.py` (`UK_NAMES`, `BODY_OVERRIDES`) so the site matches how cars are sold and described in the UK (checked October 2026):
+
+- **Geely E5 → EX5, Geely E2 → EX2** (their UK names). The E5 versions take the UK trim names they match by price and battery: E5 Pro = **EX5 SE** (£31,990, 60 kWh) and E5 Max+ = **EX5 Ultra** (£38,990, 68 kWh). The E5 Pro+ isn't sold in the UK and is shown as **EX5 Pro+**. The E2 keeps its battery-size names (EX2 35 kWh, EX2 47 kWh).
+- **Hyundai Inster: SUV → Hatchback.** EV Database lists it as an SUV, but it's a city car (size class A, where it was the only "SUV"), so it no longer comes up for people looking for an SUV.
+
+All figures are unchanged.

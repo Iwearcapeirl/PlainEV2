@@ -200,6 +200,29 @@ export function groupOffer(g: ResultGroup, country: Country, condition: Conditio
   };
 }
 
+/**
+ * When a result is only in the buyer's budget second-hand (its new price is over the limit): which model years fit
+ * and the cheapest estimated price. Null when the new price fits, or there's no budget.
+ */
+export interface BudgetFit {
+  yearFrom: number;
+  yearTo: number;
+  from: number;
+}
+export function usedBudgetFit(g: ResultGroup, country: Country, condition: Condition, max: number | null): BudgetFit | null {
+  if (max === null || condition === "new") return null;
+  const o = groupOffer(g, country, condition);
+  if (o.newPrice === null || o.newPrice <= max) return null;
+  const fits = g.versions.flatMap((c) => usedEstimates(c, country)).filter((e) => e.low <= max);
+  if (!fits.length) return null;
+  const years = fits.map((e) => e.year);
+  return { yearFrom: Math.min(...years), yearTo: Math.max(...years), from: Math.min(...fits.map((e) => e.low)) };
+}
+
+/** "In your budget used: 2022–2023 cars from £24,200" */
+export const budgetFitText = (f: BudgetFit, country: Country) =>
+  `In your budget used: ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`} cars from ${formatMoney(f.from, country)}`;
+
 // ---------- "Search for this car" ----------
 
 

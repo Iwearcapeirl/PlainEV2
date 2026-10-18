@@ -42,18 +42,25 @@ export const inCurrency = (text: string, country: Country) => text.replace(/£/g
 
 export const BUDGETS: FilterOption[] = [
   budget("no-limit", "No limit", null),
-  budget("under-10k", "Under £10k", 10_000),
-  budget("10-15k", "£10–15k", 15_000),
-  budget("15-20k", "£15–20k", 20_000),
-  // Kept as "under-30k" so older links still work; it's the £20–30k band now the lower bands exist.
-  budget("under-30k", "£20–30k", 30_000),
-  budget("30-40k", "£30–40k", 40_000),
-  budget("40-50k", "£40–50k", 50_000),
-  budget("50-70k", "£50–70k", 70_000),
-  budget("over-70k", "Over £70k", null),
+  // Each option is a ceiling: cheaper cars are included. Ids are kept from when the options were bands
+  // ("10-15k"), so older links still work.
+  budget("under-10k", "Up to £10k", 10_000),
+  budget("10-15k", "Up to £15k", 15_000),
+  budget("15-20k", "Up to £20k", 20_000),
+  budget("under-30k", "Up to £30k", 30_000),
+  budget("30-40k", "Up to £40k", 40_000),
+  budget("40-50k", "Up to £50k", 50_000),
+  budget("50-70k", "Up to £70k", 70_000),
 ];
+/** A budget option's ceiling in the buyer's currency, or null for no limit. */
+export const budgetMax = (id: string): number | null => BUDGET_MAX[id] ?? null;
+const BUDGET_MAX: Record<string, number> = {
+  "under-10k": 10_000, "10-15k": 15_000, "15-20k": 20_000, "under-30k": 30_000, "30-40k": 40_000, "40-50k": 50_000, "50-70k": 70_000,
+};
 /** Display order in the quiz (the default sits last here, as "No limit"). */
-export const BUDGET_ORDER = ["under-10k", "10-15k", "15-20k", "under-30k", "30-40k", "40-50k", "50-70k", "over-70k", "no-limit"];
+export const BUDGET_ORDER = ["under-10k", "10-15k", "15-20k", "under-30k", "30-40k", "40-50k", "50-70k", "no-limit"];
+/** Budget ids from older links: "Over £70k" behaved exactly like No limit, so it now is. */
+const LEGACY_BUDGET: Record<string, string> = { "over-70k": "no-limit" };
 
 const minRange = (miles: number, hint: string): FilterOption => ({
   id: String(miles),
@@ -246,6 +253,7 @@ export function answersFromParams(params: Reader): Answers {
   for (const key of FILTER_KEYS) {
     let v = params.get(PARAM[key]);
     if (key === "range" && v && LEGACY_RANGE[v]) v = LEGACY_RANGE[v];
+    if (key === "budget" && v && LEGACY_BUDGET[v]) v = LEGACY_BUDGET[v];
     if (v && FILTERS[key].some((o) => o.id === v)) a[key] = v;
   }
   const p = params.get("priority");

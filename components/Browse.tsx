@@ -10,9 +10,9 @@ import RefinePanel from "@/components/RefinePanel";
 import { allCars, carHref } from "@/lib/cars";
 import { fieldByKey, isSet, refine, refinementFromParams, writeRefinement, type ChoiceField, type Refinement } from "@/lib/fields";
 import { formatAccel } from "@/lib/format";
-import { CONDITIONS, COUNTRIES, formatMoney, groupOffer, groupResults, miles, yearsLabel, type Condition, type ResultGroup } from "@/lib/market";
+import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupResults, miles, usedBudgetFit, yearsLabel, type Condition, type ResultGroup } from "@/lib/market";
 import { matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
-import { BODIES, BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS, RANGES, answersFromParams, answersToQuery, inCurrency, type Answers } from "@/lib/quiz";
+import { BODIES, BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS, RANGES, answersFromParams, answersToQuery, budgetMax, inCurrency, type Answers } from "@/lib/quiz";
 import { photoSubject } from "@/lib/photo";
 
 /** Rows shown at first, and added by each "Show more". */
@@ -68,7 +68,7 @@ export default function Browse() {
   // In the market the buyer chose, then the page's filters; longest range first unless they sort otherwise.
   const inScope = useMemo(() => groupResults(allCars.filter((c) => matchesAnswers(c, { ...DEFAULT_ANSWERS, country: answers.country, condition: answers.condition }))).length, [answers.country, answers.condition]);
   const ranked = useMemo(() => rankCars(allCars.filter((c) => matchesAnswers(c, answers)), answers.priority), [answers]);
-  const list = useMemo(() => groupResults(refine(ranked, refinement)), [ranked, refinement]);
+  const list = useMemo(() => groupResults(refine(ranked, refinement, answers.country)), [ranked, refinement]);
   const relaxations = useMemo(() => (list.length === 0 ? relaxSearch(allCars, answers, refinement) : []), [list.length, answers, refinement]);
 
   const quickSet = answers.budget !== "no-limit" || answers.range !== "any" || answers.body !== "any" || QUICK.some((k) => quickValue(k));
@@ -169,6 +169,7 @@ export default function Browse() {
 
       <div className="mt-4">
         <RefinePanel
+          country={answers.country}
           value={refinement}
           onChange={(r) => update(answers, r)}
           scope={inScope}
@@ -223,6 +224,7 @@ export default function Browse() {
 function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
   const car = group.car;
   const o = groupOffer(group, answers.country, answers.condition);
+  const fit = usedBudgetFit(group, answers.country, answers.condition, budgetMax(answers.budget));
   const credit = car.imageCredit;
   return (
     <article className="group relative grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 rounded-2xl bg-card p-3 shadow-[0_0_0_1px_var(--line)] transition-shadow hover:shadow-[0_0_0_1.5px_var(--foreground)] has-[a:focus-visible]:shadow-[0_0_0_2px_var(--foreground)] sm:grid-cols-[9.5rem_minmax(0,1fr)_auto] sm:items-center">
@@ -249,10 +251,11 @@ function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
           {o.used && <span className="rounded bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-ink">Used</span>}
           <span>{yearsLabel(group)}</span>
         </p>
+        {fit && <p className="mt-1 text-xs font-semibold text-route">{budgetFitText(fit, answers.country)}</p>}
       </div>
 
       <dl className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm min-[420px]:grid-cols-4 sm:col-span-1 sm:grid-cols-2 sm:pr-2 md:grid-cols-4">
-        {answers.condition !== "used" && <Stat label="New from" value={o.newPrice !== null ? formatMoney(o.newPrice, answers.country) : "–"} />}
+        {answers.condition !== "used" && <Stat label={fit ? "New (over budget)" : "New from"} value={o.newPrice !== null ? formatMoney(o.newPrice, answers.country) : "–"} />}
         {answers.condition !== "new" && <Stat label="Used from (est.)" value={o.used ? formatMoney(o.used.low, answers.country) : "–"} />}
         <Stat label="Real range" value={`${miles(car.rangeKm)} mi`} />
         <Stat label="0–62 mph" value={formatAccel(car.accelS)} />
