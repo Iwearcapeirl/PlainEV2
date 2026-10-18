@@ -2,6 +2,7 @@ import { allCars, type Car } from "./cars";
 import { bodyLabel, CHEMISTRY_LABEL, driveLabel, segmentLabel } from "./carProfile";
 import { feetInches, formatAccel, formatKm, formatMi, formatMiPerKwh, formatWhPerKm, KM_PER_MILE, metres } from "./format";
 import { COUNTRIES, formatMoney, newPrice, soldNew, usedFrom, type Country } from "./market";
+import { termScore, TRANSFER_LABEL, warrantyOf } from "./warranty";
 
 /**
  * "Compare": up to three cars side by side, row by row, with the best figure in each row marked.
@@ -43,6 +44,16 @@ const countryName = (c: Country) => (c === "uk" ? "the UK" : c === "nl" ? "the N
 const int = (n: number) => n.toLocaleString("en-GB");
 const yesNo = (b: boolean): Cell => ({ text: b ? "Yes" : "No", n: b ? 1 : 0 });
 const info = (text: string, sub?: string): Cell => ({ text, sub, n: null });
+/** Car or battery warranty: longer wins (years first, then miles). */
+function warrantyCell(c: Car, which: "car" | "battery"): Cell {
+  const w = warrantyOf(c);
+  const t = w?.[which];
+  if (!w || w.closed || !t || t.years === null) return { text: "–", sub: w?.closed ? "maker closed" : "not confirmed", n: null };
+  const miles = t.miles === "unlimited" ? "unlimited miles" : t.miles === null ? undefined : `${int(t.miles)} miles`;
+  const pct = which === "battery" && w.battery?.capacity != null ? `${w.battery.capacity}% capacity` : undefined;
+  return { text: `${t.years} years`, sub: [miles, pct].filter(Boolean).join(", ") || undefined, n: termScore(t) };
+}
+
 /** Sizes are shown but never "win": bigger or smaller isn't better in itself. */
 const sizeCell = (mm: number | null): Cell => (mm === null ? { text: "–", n: null } : { text: metres(mm), sub: feetInches(mm), n: null });
 
@@ -150,6 +161,14 @@ export function compareGroups(country: Country): CompareGroup[] {
         { key: "towing", label: "Towing (braked)", better: "high", cell: (c) => (c.towingKg > 0 ? { text: `${int(c.towingKg)} kg`, n: c.towingKg } : { text: "Not approved", n: 0 }) },
         { key: "payload", label: "Max payload", better: "high", cell: (c) => (c.payloadKg !== null ? { text: `${int(c.payloadKg)} kg`, sub: "people and luggage", n: c.payloadKg } : { text: "–", n: null }) },
         { key: "ncap", label: "Euro NCAP rating", better: "high", cell: (c) => (c.ncapStars !== null ? { text: `${c.ncapStars} stars`, n: c.ncapStars } : { text: "–", sub: "not tested yet", n: null }) },
+      ],
+    },
+    {
+      title: "Warranty (UK)",
+      rows: [
+        { key: "carWarranty", label: "Car warranty", better: "high", cell: (c) => warrantyCell(c, "car") },
+        { key: "batteryWarranty", label: "Battery warranty", better: "high", cell: (c) => warrantyCell(c, "battery") },
+        { key: "transfer", label: "Passes to next owner", cell: (c) => { const w = warrantyOf(c); return info(w && !w.closed ? TRANSFER_LABEL[w.transfer] : "–"); } },
       ],
     },
     {

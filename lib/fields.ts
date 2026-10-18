@@ -3,6 +3,7 @@ import { allCars, type Car } from "./cars";
 import { COUNTRIES, usedFrom, type Country } from "./market";
 import { KM_PER_MILE, kmToMiles, miPerKwh } from "./format";
 import { looseIncludes } from "./text";
+import { batteryWarrantyYears, carWarrantyYears } from "./warranty";
 
 /**
  * Every field in the car data that a reader can filter or sort the results by, in the units the site shows
@@ -77,6 +78,8 @@ export const FIELDS: Field[] = [
   { key: "widthmirrors", label: "Width with mirrors", kind: "number", unit: "m", step: 0.05, get: (c) => toMetres(c.widthMirrorsMm), about: "metres, mirrors unfolded; listed for fewer cars" },
   { key: "height", label: "Height", kind: "number", unit: "m", step: 0.05, get: (c) => toMetres(c.heightMm), about: "metres, e.g. under 1.6 for a low garage door" },
   { key: "payload", label: "Max payload", kind: "number", unit: "kg", step: 50, get: (c) => c.payloadKg, about: "most weight of people and luggage it can carry" },
+  { key: "carwarranty", label: "Car warranty (UK)", kind: "number", unit: "years", step: 1, grouping: false, get: (c) => carWarrantyYears(c), about: "maker's warranty length in years; blank when not confirmed" },
+  { key: "batterywarranty", label: "Battery warranty (UK)", kind: "number", unit: "years", step: 1, grouping: false, get: (c) => batteryWarrantyYears(c), about: "battery warranty length in years; blank when not confirmed" },
   { key: "weight", label: "Weight", kind: "number", unit: "kg", step: 50, get: (c) => c.weightKg },
   { key: "ncap", label: "Euro NCAP safety rating", kind: "number", unit: "stars", step: 1, get: (c) => c.ncapStars, about: "blank when not yet tested" },
   { key: "year", label: "Model year", kind: "number", unit: "", step: 1, grouping: false, get: (c) => c.yearFrom, about: "year the current version went on sale" },

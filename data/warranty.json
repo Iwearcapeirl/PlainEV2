@@ -1,0 +1,715 @@
+{
+ "_about": "UK maker warranties for electric cars, by make (data make names; Opel = Vauxhall in the UK). Checked on each maker's official UK website or documents on 18 October 2026. car/battery: years and miles ('unlimited' = no mileage limit; null = not confirmed); capacity = % of original battery capacity guaranteed (null = not stated). transfer: yes / conditions / unknown. models: per-model overrides matched on words in the model name. Makes not listed have not been confirmed.",
+ "checked": "2026-10-18",
+ "makes": {
+  "Kia": {
+   "car": {
+    "years": 7,
+    "miles": 100000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Passes to the next owner automatically.",
+   "source": "https://www.kia.com/uk/about/news/electric-car-battery-warranty/",
+   "sourceLabel": "Kia UK"
+  },
+  "Hyundai": {
+   "car": {
+    "years": 5,
+    "miles": "unlimited"
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Passes to the next owner if still valid (servicing must be up to date).",
+   "source": "https://www.hyundai.com/uk/en/owners/owning-a-hyundai/warranty.html",
+   "sourceLabel": "Hyundai UK"
+  },
+  "Tesla": {
+   "car": {
+    "years": 4,
+    "miles": 60000
+   },
+   "carNote": "For cars bought from 1 January 2024.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "batteryNote": "Battery and drive unit.",
+   "transfer": "yes",
+   "transferNote": "Transfers when the change of owner is done through Tesla.",
+   "source": "https://www.tesla.com/en_gb/support/vehicle-warranty",
+   "sourceLabel": "Tesla UK",
+   "models": [
+    {
+     "match": [
+      "Premium",
+      "Performance",
+      "Long Range"
+     ],
+     "battery": {
+      "years": 8,
+      "miles": 120000,
+      "capacity": 70
+     }
+    },
+    {
+     "match": [
+      "Model S",
+      "Model X"
+     ],
+     "battery": {
+      "years": 8,
+      "miles": 150000,
+      "capacity": 70
+     }
+    }
+   ]
+  },
+  "Volkswagen": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "The battery warranty passes to future owners.",
+   "source": "https://www.volkswagen.co.uk/en/electric-and-hybrid/benefits-and-costs/looking-after-your-ev/vehicle-and-battery-warranties.html",
+   "sourceLabel": "Volkswagen UK"
+  },
+  "BMW": {
+   "car": {
+    "years": 3,
+    "miles": "unlimited"
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Not affected by a change of owner.",
+   "source": "https://www.bmw.co.uk/en/topics/owners/service-workshop/warranties.html",
+   "sourceLabel": "BMW UK"
+  },
+  "Mini": {
+   "car": {
+    "years": 3,
+    "miles": "unlimited"
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Not affected by a change of owner.",
+   "source": "https://www.mini.co.uk/en_GB/home/owners/mini-warranties.html",
+   "sourceLabel": "MINI UK"
+  },
+  "Mercedes-Benz": {
+   "car": {
+    "years": 3,
+    "miles": null
+   },
+   "carNote": "Mileage limit not stated.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "batteryNote": "Capacity threshold is set per model.",
+   "transfer": "unknown",
+   "source": "https://www.mercedes-benz.co.uk/passengercars/services/warranty.html",
+   "sourceLabel": "Mercedes-Benz UK"
+  },
+  "Audi": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "All warranties transfer with the car.",
+   "source": "https://www.audi.co.uk/en/owners/warranty/",
+   "sourceLabel": "Audi UK"
+  },
+  "Škoda": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Not affected by a change of owner.",
+   "source": "https://www.skoda.co.uk/electric-hybrid-cars/faq",
+   "sourceLabel": "Škoda UK"
+  },
+  "CUPRA": {
+   "car": {
+    "years": 5,
+    "miles": 90000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "batteryNote": "At least 80% in the first 3 years / 40,000 miles.",
+   "transfer": "unknown",
+   "source": "https://www.cupra.com/en-gb/owners/care-and-maintenance/cupra-warranty",
+   "sourceLabel": "CUPRA UK"
+  },
+  "SEAT": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Transfers to any new owner automatically.",
+   "source": "https://www.seat.co.uk/owners/your-seat/warranty-roadside-assistance/warranty-terms-conditions",
+   "sourceLabel": "SEAT UK"
+  },
+  "Renault": {
+   "car": {
+    "years": 3,
+    "miles": 100000
+   },
+   "carNote": "Unlimited mileage for the first 2 years.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "unknown",
+   "source": "https://www.renault.co.uk/warranty.html",
+   "sourceLabel": "Renault UK"
+  },
+  "Dacia": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Dacia Zen adds a year (18,000 miles) with each Dacia service, up to 6 years / 75,000 miles.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 75
+   },
+   "transfer": "unknown",
+   "source": "https://www.dacia.co.uk/warranty-and-assistance/warranty.html",
+   "sourceLabel": "Dacia UK"
+  },
+  "Nissan": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Electric parts 5 years.",
+   "battery": {
+    "years": 8,
+    "miles": null,
+    "capacity": null
+   },
+   "transfer": "conditions",
+   "transferNote": "Service-activated cover passes to the next owner.",
+   "source": "https://www.nissan.co.uk/owners/car-warranty/nissan-ev-warranty.html",
+   "sourceLabel": "Nissan UK"
+  },
+  "Toyota": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Extends up to 10 years / 100,000 miles with Toyota servicing.",
+   "battery": {
+    "years": 10,
+    "miles": 1000000,
+    "capacity": null
+   },
+   "batteryNote": "Up to 10 years / 1 million miles with yearly Toyota servicing.",
+   "transfer": "conditions",
+   "transferNote": "Service-activated cover passes to the next owner.",
+   "source": "https://www.toyota.co.uk/owners/toyota-warranty",
+   "sourceLabel": "Toyota UK"
+  },
+  "Lexus": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Extends up to 10 years / 100,000 miles with Lexus servicing.",
+   "battery": {
+    "years": 10,
+    "miles": 1000000,
+    "capacity": null
+   },
+   "batteryNote": "Up to 10 years / 1 million miles with Lexus servicing.",
+   "transfer": "yes",
+   "transferNote": "The next owner inherits the extended warranty.",
+   "source": "https://www.lexus.co.uk/owners/warranty/manufacturer-warranty",
+   "sourceLabel": "Lexus UK"
+  },
+  "Volvo": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Transfers to any later registered owner.",
+   "source": "https://www.volvocars.com/uk/l/volvo-warranty/",
+   "sourceLabel": "Volvo UK"
+  },
+  "Polestar": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Needs the Polestar service programme.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Continues after a change of owner.",
+   "source": "https://www.polestar.com/uk/polestar-4/warranty-and-service/",
+   "sourceLabel": "Polestar UK"
+  },
+  "BYD": {
+   "car": {
+    "years": 6,
+    "miles": 93750
+   },
+   "battery": {
+    "years": 8,
+    "miles": 125000,
+    "capacity": null
+   },
+   "batteryNote": "Drive unit 8 years / 93,750 miles.",
+   "transfer": "conditions",
+   "transferNote": "Transfers to the next owner in most cases.",
+   "source": "https://www.byd.com/uk/service-maintenance/warranty-policy",
+   "sourceLabel": "BYD UK"
+  },
+  "Ford": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.ford.co.uk/hybrid-electric/charging/power-promise",
+   "sourceLabel": "Ford UK"
+  },
+  "Opel": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Unlimited mileage in the first year.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "The rest of the warranty transfers without contacting Vauxhall.",
+   "source": "https://www.vauxhall.co.uk/termsandconditions/new-vehicle-warranty.html",
+   "sourceLabel": "Vauxhall UK"
+  },
+  "Peugeot": {
+   "car": {
+    "years": 3,
+    "miles": null
+   },
+   "carNote": "Extends up to 8 years / 100,000 miles with scheduled servicing (Peugeot Care).",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "yes",
+   "transferNote": "Peugeot Care passes to later owners.",
+   "source": "https://www.peugeot.co.uk/owners/peugeot-care.html",
+   "sourceLabel": "Peugeot UK"
+  },
+  "Citroën": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Unlimited mileage for the first 2 years.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "unknown",
+   "source": "https://www.citroen.co.uk/maintain/citroen-warranty.html",
+   "sourceLabel": "Citroën UK"
+  },
+  "Fiat": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Unlimited mileage for the first 2 years.",
+   "battery": {
+    "years": 8,
+    "miles": null,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.fiat.co.uk/owners/warranty",
+   "sourceLabel": "Fiat UK"
+  },
+  "Abarth": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Unlimited mileage for the first 2 years.",
+   "battery": {
+    "years": 8,
+    "miles": null,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.abarthcars.co.uk/mopar/warranty",
+   "sourceLabel": "Abarth UK"
+  },
+  "Alfa Romeo": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Unlimited mileage for the first 2 years.",
+   "battery": {
+    "years": 8,
+    "miles": null,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.alfaromeo.co.uk/mopar/warranty",
+   "sourceLabel": "Alfa Romeo UK"
+  },
+  "Jeep": {
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "The battery warranty is fully transferable.",
+   "source": "https://www.jeep.co.uk/electrification/assistance-warranty",
+   "sourceLabel": "Jeep UK"
+  },
+  "DS Automobiles": {
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "yes",
+   "transferNote": "Stays with the car, so fully transferable.",
+   "source": "https://www.dsautomobiles.co.uk/ds-experience/electric-hybrid/faq.html",
+   "sourceLabel": "DS UK"
+  },
+  "Smart": {
+   "car": {
+    "years": 3,
+    "miles": "unlimited"
+   },
+   "battery": {
+    "years": 8,
+    "miles": 125000,
+    "capacity": 70
+   },
+   "batteryNote": "Electric drive parts 8 years / 100,000 miles.",
+   "transfer": "yes",
+   "transferNote": "Repairs stay free after the car is sold.",
+   "source": "https://uk.smart.com/en/service/warranty-terms/",
+   "sourceLabel": "smart UK"
+  },
+  "Honda": {
+   "car": {
+    "years": 3,
+    "miles": 90000
+   },
+   "carNote": "Extends up to 8 years / 100,000 miles with Honda servicing (cars registered from 1 April 2026).",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "unknown",
+   "source": "https://www.honda.co.uk/cars/owners/honda-warranty.html",
+   "sourceLabel": "Honda UK"
+  },
+  "Mazda": {
+   "car": {
+    "years": 6,
+    "miles": 100000
+   },
+   "carNote": "Cars registered from 1 September 2025, serviced on schedule (before that, 3 years / 60,000 miles).",
+   "battery": {
+    "years": 8,
+    "miles": null,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://uk.mazda-press.com/news/2025/mazda-uk-introduces-six-year-100000-mile-warranty/",
+   "sourceLabel": "Mazda UK"
+  },
+  "Subaru": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://subaru.co.uk/faqs/what-warranty-does-the-subaru-solterra-come-with",
+   "sourceLabel": "Subaru UK"
+  },
+  "Suzuki": {
+   "car": {
+    "years": 3,
+    "miles": 60000
+   },
+   "carNote": "Extends up to 10 years / 100,000 miles with Suzuki servicing.",
+   "battery": {
+    "years": 10,
+    "miles": null,
+    "capacity": null
+   },
+   "batteryNote": "Up to 10 years.",
+   "transfer": "unknown",
+   "source": "https://cars.suzuki.co.uk/new-cars/e-vitara/range-and-charging/",
+   "sourceLabel": "Suzuki UK"
+  },
+  "Porsche": {
+   "car": {
+    "years": 3,
+    "miles": "unlimited"
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "batteryNote": "At least 80% for the first 3 years / 38,000 miles.",
+   "transfer": "unknown",
+   "source": "https://www.porsche.com/uk/accessoriesandservice/porscheservice/vehicleinformation/",
+   "sourceLabel": "Porsche UK"
+  },
+  "Genesis": {
+   "car": {
+    "years": 5,
+    "miles": "unlimited"
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Can be transferred to a new owner.",
+   "source": "https://www.genesis.com/content/dam/genesis-web-eu/site/document/uk/legal/terms-conditions_warranty_uk_en.pdf",
+   "sourceLabel": "Genesis UK"
+  },
+  "Leapmotor": {
+   "car": {
+    "years": 4,
+    "miles": 60000
+   },
+   "carNote": "T03: 3 years.",
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 80
+   },
+   "transfer": "unknown",
+   "source": "https://www.leapmotor.net/uk/warranty",
+   "sourceLabel": "Leapmotor UK",
+   "models": [
+    {
+     "match": [
+      "T03"
+     ],
+     "car": {
+      "years": 3,
+      "miles": null
+     }
+    }
+   ]
+  },
+  "Jaecoo": {
+   "car": {
+    "years": 7,
+    "miles": 100000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": 70
+   },
+   "transfer": "yes",
+   "transferNote": "Passes to the next owner automatically.",
+   "source": "https://jaecoo.co.uk/warranty/",
+   "sourceLabel": "Jaecoo UK"
+  },
+  "Geely": {
+   "car": {
+    "years": 8,
+    "miles": 125000
+   },
+   "carNote": "Excludes the battery, which has its own warranty.",
+   "battery": {
+    "years": 8,
+    "miles": 125000,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.geelyauto.co.uk/ownership/warranty",
+   "sourceLabel": "Geely UK"
+  },
+  "Lotus": {
+   "car": {
+    "years": 5,
+    "miles": 100000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 125000,
+    "capacity": 70
+   },
+   "transfer": "unknown",
+   "source": "https://www.lotuscars.com/en-GB/lotus-warranty/eletre",
+   "sourceLabel": "Lotus UK"
+  },
+  "Land Rover": {
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.landrover.co.uk/ownership/electric/maximise-your-battery-life.html",
+   "sourceLabel": "Land Rover UK"
+  },
+  "Jaguar": {
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://www.jaguar.com/en-gb/jdx/electric-cars/all-electric.html",
+   "sourceLabel": "Jaguar UK"
+  },
+  "Ferrari": {
+   "car": {
+    "years": 4,
+    "miles": null
+   },
+   "carNote": "Mileage limit not stated.",
+   "transfer": "unknown",
+   "source": "https://www.ferrari.com/en-EN/auto/car-part-services-warranty-maintenance",
+   "sourceLabel": "Ferrari"
+  },
+  "KGM": {
+   "car": {
+    "years": 7,
+    "miles": 90000
+   },
+   "carNote": "Torres EVX.",
+   "battery": {
+    "years": 10,
+    "miles": 621000,
+    "capacity": null
+   },
+   "batteryNote": "10 years / 1 million km.",
+   "transfer": "unknown",
+   "source": "https://kgm-motors.co.uk/warranty",
+   "sourceLabel": "KGM UK"
+  },
+  "XPENG": {
+   "car": {
+    "years": 5,
+    "miles": 75000
+   },
+   "battery": {
+    "years": 8,
+    "miles": 100000,
+    "capacity": null
+   },
+   "transfer": "unknown",
+   "source": "https://xpengcars.co.uk/wp-content/uploads/2025/06/VehicleWarranty.pdf",
+   "sourceLabel": "XPENG UK"
+  },
+  "MG": {
+   "car": {
+    "years": 7,
+    "miles": 80000
+   },
+   "carNote": "Unlimited mileage in the first year.",
+   "battery": {
+    "years": 7,
+    "miles": 80000,
+    "capacity": 70
+   },
+   "batteryNote": "Covered by the 7-year warranty.",
+   "transfer": "yes",
+   "transferNote": "Transfers to each new owner while it lasts.",
+   "source": "https://www.mg.co.uk/warranty",
+   "sourceLabel": "MG UK"
+  },
+  "Fisker": {
+   "closed": "Fisker went out of business in 2024, so there's no maker warranty.",
+   "transfer": "unknown"
+  },
+  "Lightyear": {
+   "closed": "Lightyear's car business went out of business in 2023, so there's no maker warranty.",
+   "transfer": "unknown"
+  }
+ }
+}

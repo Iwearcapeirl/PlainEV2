@@ -46,3 +46,7 @@ A few names and body styles are changed in `scripts/build.py` (`UK_NAMES`, `BODY
 - **Hyundai Inster: SUV → Hatchback.** EV Database lists it as an SUV, but it's a city car (size class A, where it was the only "SUV"), so it no longer comes up for people looking for an SUV.
 
 All figures are unchanged.
+
+## Warranties (`warranty.json`)
+
+UK maker warranties by make, checked on each maker's official UK website or warranty documents on 18 October 2026 (the source link is stored with each make and shown on car pages). `car` and `battery` give years and miles ("unlimited" = no mileage limit, null = not stated); `capacity` is the share of battery capacity guaranteed; `transfer` is yes / conditions / unknown; `models` overrides terms for some models (e.g. Tesla's longer battery cover on Long Range and Performance versions). Not yet confirmed from an official source: Alpine, Bentley, Changan, GAC, GWM, Maserati, Maxus, Mitsubishi, ORA, Omoda, Rolls-Royce, Skywell, SsangYong. Fisker and Lightyear have closed down.

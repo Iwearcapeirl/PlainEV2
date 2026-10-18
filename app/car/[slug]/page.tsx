@@ -9,6 +9,7 @@ import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import { compareHref } from "@/lib/compare";
+import { formatBattery, formatTerm, TRANSFER_LABEL, usedWarrantyLeft, WARRANTY_CHECKED, warrantyOf } from "@/lib/warranty";
 import { photoSubject } from "@/lib/photo";
 import {
   bodyLabel,
@@ -296,6 +297,9 @@ export default async function CarPage({ params }: Props) {
         </section>
       )}
 
+      {/* ---------- Warranty ---------- */}
+      <WarrantySection car={car} usedYears={usedTable.map((e) => e.year)} country={country} />
+
       {/* ---------- Summary + how it compares ---------- */}
       <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_23rem]">
         <section aria-labelledby="summary-title">
@@ -518,6 +522,77 @@ export default async function CarPage({ params }: Props) {
 }
 
 // ---------- Pieces ----------
+
+/**
+ * The maker's UK warranty (data/warranty.json): car, battery, whether it passes to the next owner, and for used cars
+ * an estimate of what's likely left, based on today's terms.
+ */
+function WarrantySection({ car, usedYears, country }: { car: Car; usedYears: number[]; country: Country | null }) {
+  const w = warrantyOf(car);
+  const checked = formatDate(WARRANTY_CHECKED);
+  // Newest and oldest used model years (the table is newest first).
+  const years = [...new Set([usedYears[0], usedYears[usedYears.length - 1]].filter((y): y is number => y !== undefined))];
+  return (
+    <section aria-labelledby="warranty-title" className="mt-12">
+      <SectionTitle id="warranty-title">Warranty</SectionTitle>
+      {!w ? (
+        <p className="mt-3 max-w-[66ch] text-muted text-pretty">
+          We haven&rsquo;t been able to confirm {car.make}&rsquo;s UK warranty from an official source yet. Ask the seller or a {car.make} dealer.
+        </p>
+      ) : w.closed ? (
+        <p className="mt-3 max-w-[66ch] text-pretty">{w.closed}</p>
+      ) : (
+        <>
+          <dl className="mt-4 grid gap-px overflow-hidden rounded-2xl bg-line shadow-[0_0_0_1px_var(--line)] sm:grid-cols-3">
+            <WarrantyItem label="Car warranty" value={w.car ? formatTerm(w.car) : "Not confirmed"} note={w.carNote} />
+            <WarrantyItem label="Battery warranty" value={w.battery ? formatBattery(w.battery) : "Not confirmed"} note={w.batteryNote} />
+            <WarrantyItem label="Passes to the next owner" value={TRANSFER_LABEL[w.transfer]} note={w.transferNote} />
+          </dl>
+          {car.status !== "Upcoming" && years.length > 0 && (
+            <ul className="mt-4 grid max-w-[66ch] gap-1.5 text-[15px] text-pretty">
+              {years.map((y) => {
+                const left = usedWarrantyLeft(w, y);
+                const miles = (t?: { miles: number | "unlimited" | null }) => (t && typeof t.miles === "number" ? ` if under ${t.miles.toLocaleString("en-GB")} miles` : "");
+                const parts = [
+                  w.battery?.years != null && (left.battery ? `battery warranty likely runs to ${left.battery}${miles(w.battery)}` : "battery warranty has likely ended"),
+                  w.car?.years != null && (left.car ? `car warranty likely runs to ${left.car}${miles(w.car)}` : "car warranty has likely ended"),
+                ].filter(Boolean);
+                return parts.length ? (
+                  <li key={y}>
+                    <span className="font-semibold">A {y} car:</span> {parts.join("; ")}.
+                  </li>
+                ) : null;
+              })}
+            </ul>
+          )}
+          <p className="mt-3 max-w-[66ch] text-xs text-muted text-pretty">
+            {w.source ? (
+              <>
+                From{" "}
+                <a href={w.source} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                  {w.sourceLabel}
+                </a>
+                , checked {checked}.{" "}
+              </>
+            ) : null}
+            Today&rsquo;s UK terms{country && country !== "uk" ? " (they can differ in Germany and the Netherlands)" : ""}. Older cars may have had
+            different terms and conditions such as servicing apply, so check the service history and what&rsquo;s left with the seller.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+function WarrantyItem({ label, value, note }: { label: string; value: string; note?: string }) {
+  return (
+    <div className="bg-card p-4 sm:p-5">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="mt-1 font-semibold text-pretty">{value}</dd>
+      {note && <dd className="mt-1 text-xs text-muted text-pretty">{note}</dd>}
+    </div>
+  );
+}
 
 function SectionTitle({ id, children }: { id: string; children: React.ReactNode }) {
   return (
