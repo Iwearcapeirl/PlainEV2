@@ -81,9 +81,9 @@ export function CarCard({ car, photo }: { car: Car; photo: string | null }) {
           <div style={{ fontSize: car.variant.length > 28 ? 44 : 54, fontWeight: 700, lineHeight: 1.05, marginTop: 6 }}>{car.variant}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-            <div style={{ fontSize: 96, fontWeight: 700, color: YELLOW, lineHeight: 1 }}>{Math.round(car.rangeKm / 1.609344)}</div>
-            <div style={{ fontSize: 32, fontWeight: 700 }}>miles real-world range</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 14 }}>
+            <div style={{ fontSize: 96, fontWeight: 700, color: YELLOW, lineHeight: 1 }}>{String(Math.round(car.rangeKm / 1.609344))}</div>
+            <div style={{ fontSize: 32, fontWeight: 700, paddingBottom: 10 }}>miles real-world range</div>
           </div>
           {price && <div style={{ fontSize: 34, marginTop: 14 }}>{price}</div>}
         </div>
