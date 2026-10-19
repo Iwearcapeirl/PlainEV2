@@ -9,16 +9,17 @@ import { carHref } from "@/lib/cars";
 import { compareHref, compareTable } from "@/lib/compare";
 import { formatGbp, formatMi } from "@/lib/format";
 import { photoSubject } from "@/lib/photo";
-import { getVsPage, verdict, vsDescription, vsPages, vsPagesFor, vsTitle, type Rival } from "@/lib/rivals";
+import { featuredVsPages, getVsPage, verdict, vsDescription, vsPagesFor, vsTitle, type Rival } from "@/lib/rivals";
 import { DATA_YEAR, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
-// One page per rival pair (lib/rivals.ts); any other /vs/* URL is a 404.
-export const dynamicParams = false;
+// One page per rival pair (lib/rivals.ts); any other /vs/* URL is a 404. Only the well-known match-ups are built with
+// each deployment (to keep deployments small); the rest are built on their first visit, then saved.
+export const dynamicParams = true;
 
 export function generateStaticParams() {
-  return vsPages.map((p) => ({ slug: p.slug }));
+  return featuredVsPages(100).map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -57,11 +57,14 @@ import { SITE_NAME, SITE_URL, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 type Props = { params: Promise<{ slug: string }> };
 
 // One static page per car; any other /car/* URL is a 404.
-export const dynamicParams = false;
+// Only the cars on sale new in the UK are built with each deployment, to keep deployments small (Vercel's free plan
+// caps the storage they use). Every other car's page (no longer sold new, coming soon, or sold only in Germany or the
+// Netherlands) is built the first time someone opens it, then saved and served like the rest until the next
+// deployment. Unknown addresses still get a 404 (notFound below).
+export const dynamicParams = true;
 
 export function generateStaticParams() {
-  // Every car: on sale, no longer sold new, and coming soon.
-  return allCars.map((c) => ({ slug: c.slug }));
+  return allCars.filter((c) => c.status === "Available" && c.priceGbp !== null).map((c) => ({ slug: c.slug }));
 }
 
 const countryName = (c: Country) => (c === "uk" ? "the UK" : c === "nl" ? "the Netherlands" : COUNTRIES[c].label);
