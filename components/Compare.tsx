@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import CarImage from "@/components/CarImage";
 import CompareRows, { COLS } from "@/components/CompareTable";
+import EvdbLink from "@/components/EvdbLink";
 import { saveReturnTo } from "@/components/CarLink";
 import CountrySwitch from "@/components/CountrySwitch";
 import { carHref, type Car } from "@/lib/cars";
@@ -112,7 +113,7 @@ export default function Compare() {
 
           <div className="mt-8 grid gap-2 text-xs text-muted">
             <p>
-              Range is a real-world estimate, not the official WLTP figure. Used prices and &ldquo;range today&rdquo; are our estimates
+              Figures come from EV Database (linked under each car). Range is a real-world estimate, not the official WLTP figure. Used prices and &ldquo;range today&rdquo; are our estimates
               for the oldest model year, from the price when new, typical depreciation and 2% battery wear a year.
             </p>
             <p>
@@ -181,6 +182,12 @@ function Slot({
         </Link>
         <p className="mt-0.5 text-[11px] text-muted sm:text-xs">
           {yearsText(car)} · {statusText(car)}
+        </p>
+        <p className="mt-0.5 text-[11px] text-muted sm:text-xs">
+          Source:{" "}
+          <EvdbLink car={car} className="underline decoration-line underline-offset-2 hover:text-foreground">
+            EV Database
+          </EvdbLink>
         </p>
         {wins && (
           <p className="mt-1.5 self-start rounded-full bg-win px-2 py-0.5 text-[11px] font-semibold text-foreground sm:text-xs">

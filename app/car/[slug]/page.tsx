@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import CarBreadcrumb from "@/components/CarBreadcrumb";
 import CarImage from "@/components/CarImage";
+import EvdbLink from "@/components/EvdbLink";
 import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
@@ -214,6 +215,12 @@ export default async function CarPage({ params }: Props) {
               <Tile label="0–62 mph" value={formatAccel(car.accelS)} sub="0–100 km/h" />
             )}
           </dl>
+          <p className="mt-2.5 text-xs text-muted">
+            Figures from{" "}
+            <EvdbLink car={car} className="font-medium text-foreground underline decoration-line underline-offset-2 hover:decoration-foreground">
+              EV Database: full specs for this car
+            </EvdbLink>
+          </p>
 
           {listing && (
             <a
@@ -337,6 +344,12 @@ export default async function CarPage({ params }: Props) {
       {/* ---------- Full specs ---------- */}
       <section aria-labelledby="specs-title" className="mt-12">
         <SectionTitle id="specs-title">Specifications</SectionTitle>
+        <p className="mt-2 text-sm text-muted">
+          Source:{" "}
+          <EvdbLink car={car} className="underline decoration-line underline-offset-2 hover:text-foreground hover:decoration-foreground">
+            {car.make} {car.model} on EV Database
+          </EvdbLink>
+        </p>
         {/* Every column in the data. Figures marked "estimate" aren't confirmed by the maker yet. */}
         <div className="mt-4 gap-4 md:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
           <SpecGroup
@@ -422,7 +435,11 @@ export default async function CarPage({ params }: Props) {
         <div className="mt-4 grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="grid gap-3 text-sm leading-relaxed text-on-ink/80">
             <p>
-              Specifications, range and efficiency figures were extracted on{" "}
+              Specifications, range and efficiency figures come from{" "}
+              <EvdbLink car={car} className="underline decoration-on-ink/30 underline-offset-2 hover:text-on-ink">
+                EV Database
+              </EvdbLink>
+              , extracted on{" "}
               <time dateTime={UPDATED_ISO}>{formatDate(UPDATED_ISO)}</time>. Range is a real-world estimate, not the official
               WLTP figure. UK prices are starting prices including VAT.
             </p>

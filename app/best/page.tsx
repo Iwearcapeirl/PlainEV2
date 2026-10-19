@@ -5,6 +5,7 @@ import { formatGbp, formatMi, formatMiPerKwh } from "@/lib/format";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
 import { featuredVsPages, vsPages, vsTitle } from "@/lib/rivals";
 import { usedRankingPages } from "@/lib/usedRankings";
+import { DataSourceNote } from "@/components/EvdbLink";
 import { DATA_YEAR, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RankingsIndex() {
       <p className="mt-5 max-w-[62ch] text-lg leading-relaxed">
         Every list uses real-world figures, not WLTP. New-car prices are UK starting prices; used prices are our estimates.
       </p>
+      <DataSourceNote className="mt-3" />
 
       <div className="mt-8">
         <QuizCta compact />

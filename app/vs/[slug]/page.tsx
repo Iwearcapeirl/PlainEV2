@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CarImage from "@/components/CarImage";
 import CompareRows, { COLS_2 } from "@/components/CompareTable";
+import EvdbLink from "@/components/EvdbLink";
 import QuizCta from "@/components/QuizCta";
 import { carHref } from "@/lib/cars";
 import { compareHref, compareTable } from "@/lib/compare";
@@ -90,7 +91,8 @@ export default async function VsPage({ params }: Props) {
         </div>
         <CompareRows table={table} cols={COLS_2} />
         <p className="mt-6 text-xs text-muted">
-          Green marks the better figure in each row. Range is a real-world estimate, not WLTP. Used prices are estimates. Warranty terms are UK
+          Green marks the better figure in each row. Figures come from EV Database (linked under each car above; every version&rsquo;s
+          own page links to its entry there). Range is a real-world estimate, not WLTP. Used prices are estimates. Warranty terms are UK
           terms from each maker&rsquo;s website.
         </p>
       </section>
@@ -163,6 +165,12 @@ function Side({ r, priority, wins, of }: { r: Rival; priority: boolean; wins: nu
       </p>
       <p className="mt-1.5 inline-block rounded-full bg-win px-2 py-0.5 text-xs font-semibold">
         Wins {wins} of {of}
+      </p>
+      <p className="mt-1.5 text-xs text-muted">
+        Source:{" "}
+        <EvdbLink car={c} className="underline decoration-line underline-offset-2 hover:text-foreground">
+          EV Database
+        </EvdbLink>
       </p>
     </div>
   );

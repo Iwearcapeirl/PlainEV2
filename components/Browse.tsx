@@ -15,6 +15,7 @@ import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupRes
 import { matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { BODIES, BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS, RANGES, answersFromParams, answersToQuery, budgetMax, inCurrency, type Answers } from "@/lib/quiz";
 import { photoSubject } from "@/lib/photo";
+import { DataSourceNote } from "@/components/EvdbLink";
 
 /** Rows shown at first, and added by each "Show more". */
 const PAGE = 30;
@@ -83,6 +84,7 @@ export default function Browse() {
       <p className="mt-2 max-w-[62ch] text-muted">
         Every EV you can buy in {where}, new or second-hand, with real-world range (not WLTP). Used prices are estimates.
       </p>
+      <DataSourceNote className="mt-1.5" />
 
       <CountrySwitch value={answers.country} onChange={(country) => setAnswer("country", country)} className="mt-5" />
 

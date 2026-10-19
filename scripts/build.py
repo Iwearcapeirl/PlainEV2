@@ -91,12 +91,30 @@ for r in raw:
         if col not in r:
             r[col] = r.get(f"{col} (listing)")
 
+# EV Database's own page for each car: ev-database.org/car/{ID}/{slug} (the international page, which exists for
+# every car; their /uk/ pages only exist for some). Their slug is the make and model as they name it (before any UK
+# renaming below), without bracketed tags like "(MY25-26)" or "(Juniper)", accents and punctuation dropped, "+"
+# written as "plus" and spaces as hyphens. Checked against every car in their sitemap (October 2026): all match
+# except the two below, whose names have a double space and so a stray hyphen. Recheck new cars each refresh.
+EVDB_SLUG_OVERRIDES = {3335: "Mitsubishi-Eclipse-Cross-87-kWh-", 2157: "Volkswagen-ID-Buzz-LWB-GTX-"}
+
+
+def evdb_slug(car_id, make, model):
+    if car_id in EVDB_SLUG_OVERRIDES:
+        return EVDB_SLUG_OVERRIDES[car_id]
+    import unicodedata
+    s = re.sub(r"\s*\([^)]*\)", "", f"{make} {model}")
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().replace("+", "plus")
+    return re.sub(r"[^A-Za-z0-9 \-]", "", s).strip().replace(" ", "-")
+
+
 cars = []
 for r in raw:
     c = {"ID": int(r["ID"])}
     for col, conv in COLUMNS:
         c[col] = conv(r.get(col))
     c["Full name"] = f"{c['Make']} {c['Model']}"  # the sheet's own Full name column holds chemistry codes
+    c["EVDB slug"] = evdb_slug(c["ID"], c["Make"], c["Model"])
     cars.append(c)
 
 # Earliest model year of each rule family among the cars on sale: the start of the current generation.

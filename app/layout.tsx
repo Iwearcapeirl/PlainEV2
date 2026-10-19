@@ -98,7 +98,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <div className="mt-10 grid max-w-3xl gap-2 border-t border-line pt-6 text-xs leading-relaxed text-muted">
               <p>
                 Car data from{" "}
-                <a href="https://ev-database.org/" className="underline underline-offset-2 hover:text-foreground">
+                <a href="https://ev-database.org/uk/" rel="noopener" className="underline underline-offset-2 hover:text-foreground">
                   EV Database
                 </a>
                 , extracted {new Date(UPDATED_ISO).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}. Range is real-world range, not WLTP.

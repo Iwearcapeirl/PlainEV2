@@ -73,6 +73,8 @@ interface RawCar {
   "Height mm": number | null;
   "Wheelbase mm": number | null;
   "Max payload kg": number | null;
+  /** This car's page on EV Database: ev-database.org/car/{ID}/{slug} */
+  "EVDB slug": string;
   image: string | null;
   imageCredit: ImageCredit | null;
   family: string;
@@ -150,6 +152,8 @@ export interface Car {
   variant: string;
   /** URL slug for the car's page: /car/{slug} */
   slug: string;
+  /** This car's page on EV Database, where the data comes from (their terms ask for a link wherever it's used). */
+  evdbUrl: string;
 }
 
 function toCar(r: RawCar): Car {
@@ -205,6 +209,7 @@ function toCar(r: RawCar): Car {
     family: r.family,
     variant: r.variant,
     slug: slugify(`${r.Make} ${r.Model}`),
+    evdbUrl: `https://ev-database.org/car/${r.ID}/${r["EVDB slug"]}`,
   };
 }
 

@@ -7,6 +7,7 @@ import { CompareBar } from "@/components/ComparePicks";
 import QuizCta from "@/components/QuizCta";
 import { CARS_PER_PAGE, getRankingPage, rankingPages, relatedPages, shortLabel } from "@/lib/rankings";
 import { UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
+import { DataSourceNote } from "@/components/EvdbLink";
 import { getUsedRankingPage, USED_PER_PAGE, usedRankingPages, type UsedRankingPage } from "@/lib/usedRankings";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -72,6 +73,7 @@ export default async function RankingPage({ params }: Props) {
         </p>
         <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty">{page.intro}</p>
         <p className="mt-5 max-w-[70ch] border-l-4 border-signal pl-3 text-sm text-muted">{page.method}</p>
+        <DataSourceNote className="mt-3" />
       </header>
 
       <div className="mt-8">
@@ -183,6 +185,7 @@ function UsedRanking({ page }: { page: UsedRankingPage }) {
         </p>
         <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty">{page.intro}</p>
         <p className="mt-5 max-w-[70ch] border-l-4 border-signal pl-3 text-sm text-muted">{page.method}</p>
+        <DataSourceNote className="mt-3" />
       </header>
 
       <AdSlot slot="ranking-top" className="mt-8" />

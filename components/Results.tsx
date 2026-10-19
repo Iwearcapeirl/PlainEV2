@@ -30,6 +30,7 @@ import {
 import { describe, fieldByKey, isRefined, isSet, refine, refinementFromParams, writeRefinement, type Refinement } from "@/lib/fields";
 import { matchedFilters, matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { activeFilters, answersFromParams, answersToQuery, budgetMax, priorityOf, type Answers } from "@/lib/quiz";
+import { DataSourceNote } from "@/components/EvdbLink";
 
 /** How many cars a refined list shows at first, and how many more each "Show more" adds. */
 const PAGE = 10;
@@ -163,6 +164,7 @@ export default function Results() {
           <span aria-hidden className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-signal align-[-1px]" />
           Ranked by real-world range, not official WLTP figures.
         </p>
+        <DataSourceNote className="mt-1.5" />
       </section>
 
       {total > 0 && (
