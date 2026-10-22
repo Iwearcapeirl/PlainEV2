@@ -7,7 +7,7 @@ import RangeRings from "@/components/RangeRings";
 import { formatGbp, formatMi, kmToMiles, miPerKwh } from "@/lib/format";
 import { both } from "@/lib/units";
 import { u } from "@/components/UnitText";
-import { formatMoney, groupOffer, groupResults, onePerModel, yearsLabel } from "@/lib/market";
+import { formatMoney, groupOffer, groupResults, onePerModel, yearsLabel, formatBand } from "@/lib/market";
 import { matchesAnswers, rankCars } from "@/lib/match";
 import { BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS } from "@/lib/quiz";
 import { cheapest, dearest } from "@/lib/radar";
@@ -204,8 +204,8 @@ export default function HomePage() {
                       <span className="block font-semibold leading-snug">{g.car.variant}</span>
                     </span>
                     <span className="shrink-0 text-right">
-                      <span className="block text-xs text-muted">Used from (est.)</span>
-                      <span className="font-wide block font-semibold tabular-nums">{o.used ? formatMoney(o.used.typical, "uk") : "–"}</span>
+                      <span className="block text-xs text-muted">Used (est.)</span>
+                      <span className="font-wide block font-semibold tabular-nums">{o.used ? formatBand(o.used.low, o.used.high, "uk") : "–"}</span>
                       <span className="block text-xs text-muted">{u(formatMi(g.car.rangeKm))} range new</span>
                     </span>
                   </Link>

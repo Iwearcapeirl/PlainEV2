@@ -2,7 +2,7 @@ import { allCars, type Car } from "@/lib/cars";
 import { plain } from "@/lib/units";
 import { homeCountry } from "@/lib/carProfile";
 import { formatMi } from "@/lib/format";
-import { formatMoney, newPrice, usedFrom } from "@/lib/market";
+import { formatMoney, newPrice, usedFrom, formatBand } from "@/lib/market";
 
 /**
  * Share-image designs (1200×630), drawn by app/api/og/[kind]/[slug]/route.tsx with next/og. Only inline styles and
@@ -22,7 +22,7 @@ function priceLine(car: Car): string | null {
   const p = newPrice(car, country);
   if (car.status === "Available" && p !== null) return `From ${formatMoney(p, country)} new`;
   const u = usedFrom(car, country);
-  if (u) return `Used from about ${formatMoney(u.typical, country)}`;
+  if (u) return `Used roughly ${formatBand(u.low, u.high, country)}`;
   return p !== null ? `${car.status === "Upcoming" ? "Expected" : "Was"} ${formatMoney(p, country)}` : null;
 }
 

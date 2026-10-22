@@ -5,7 +5,7 @@ import { CompareTick } from "@/components/ComparePicks";
 import RangeBar from "@/components/RangeBar";
 import { carHref, type Car } from "@/lib/cars";
 import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiles, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
-import { budgetFitText, formatMoney, type BudgetFit, type Country, type Offer } from "@/lib/market";
+import { budgetFitText, formatMoney, type BudgetFit, type Country, type Offer, formatBand, listingSearch } from "@/lib/market";
 import type { FilterKey } from "@/lib/quiz";
 
 /** Results context: the buyer's country, what they could pay (new and/or used) and the merged version name. */
@@ -142,7 +142,7 @@ export default function CarCard({
             {market && <CompareTick car={car} className="-ml-1.5 mt-1" />}
           </div>
           {market ? (
-            <PriceBlock market={market} featured={featured} />
+            <PriceBlock car={car} market={market} featured={featured} />
           ) : (
             car.priceGbp !== null && (
               <p className="shrink-0 text-right">
@@ -222,7 +222,7 @@ function Stat({ label, value, sub, strong = false }: StatProps) {
 }
 
 /** New price and/or estimated used price, in the buyer's currency. */
-function PriceBlock({ market, featured }: { market: CardMarket; featured: boolean }) {
+function PriceBlock({ car, market, featured }: { car: Car; market: CardMarket; featured: boolean }) {
   const { offer: o, country } = market;
   const big = `font-wide block font-semibold tabular-nums ${featured ? "text-xl sm:text-2xl" : "text-[17px]"}`;
   return (
@@ -235,10 +235,22 @@ function PriceBlock({ market, featured }: { market: CardMarket; featured: boolea
       )}
       {o.used && (
         <p className={o.newPrice !== null ? "mt-1.5" : ""}>
-          <span className={o.newPrice !== null && !market.budgetFit ? "block text-[15px] font-semibold tabular-nums" : big}>{formatMoney(o.used.typical, country)}</span>
-          <span className="block text-xs text-muted">used from, est.</span>
+          <span className={o.newPrice !== null && !market.budgetFit ? "block text-[15px] font-semibold tabular-nums" : big}>{formatBand(o.used.low, o.used.high, country)}</span>
+          <span className="block text-xs text-muted">used, est.</span>
+          <LiveLink car={car} year={o.used.year} country={country} />
         </p>
       )}
     </div>
+  );
+}
+
+/** Live AutoTrader (or AutoScout24) listings for this model and year, so the estimate can be checked in one tap. */
+export function LiveLink({ car, year, country, className = "text-xs" }: { car: Car; year: number; country: Country; className?: string }) {
+  const l = listingSearch(car, country, { from: year, to: year });
+  if (!l.exact) return null;
+  return (
+    <a href={l.url} target="_blank" rel="noopener noreferrer" className={`block font-semibold underline decoration-signal underline-offset-2 ${className}`}>
+      Live prices ↗
+    </a>
   );
 }

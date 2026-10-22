@@ -1,7 +1,7 @@
 import { allCars, type Car } from "./cars";
 import { bodyLabel, CHEMISTRY_LABEL, driveLabel, segmentLabel } from "./carProfile";
 import { feetInches, formatAccel, formatKm, formatMi, formatMiPerKwh, formatWhPerKm, KM_PER_MILE, metres } from "./format";
-import { COUNTRIES, formatMoney, newPrice, soldNew, usedFrom, type Country } from "./market";
+import { COUNTRIES, formatMoney, newPrice, soldNew, usedFrom, type Country, formatBand } from "./market";
 import { termScore, TRANSFER_LABEL, warrantyOf } from "./warranty";
 
 /**
@@ -70,7 +70,7 @@ function priceUsed(c: Car, country: Country): Cell {
   if (c.status === "Upcoming") return { text: "–", sub: "not out yet", n: null };
   const u = usedFrom(c, country);
   if (!u) return { text: "–", sub: newPrice(c, country) === null ? `not sold in ${countryName(country)}` : "too new", n: null };
-  return { text: `about ${formatMoney(u.typical, country)}`, sub: `typical ${u.year} car`, n: u.typical };
+  return { text: formatBand(u.low, u.high, country), sub: `${u.year} car, est.`, n: u.high };
 }
 
 /** New price per mile (UK) or per km (Germany, Netherlands) of real-world range. */

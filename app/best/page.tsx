@@ -81,7 +81,7 @@ export default function RankingsIndex() {
                     <span className="tabular-nums text-foreground">about {u(formatMi(top.pick.rangeTodayKm))} today</span>
                   </span>
                   <span className="text-xs text-muted">
-                    {p.entries.length} models · from about {formatGbp(Math.min(...p.entries.map((e) => e.pick.typical)))}
+                    {p.entries.length} models · from roughly {formatGbp(Math.min(...p.entries.map((e) => e.pick.low)))}
                   </span>
                 </Link>
               </li>

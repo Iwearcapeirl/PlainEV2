@@ -1,5 +1,5 @@
 import { allCars, cars, type Car, type UkCar } from "./cars";
-import { COUNTRIES, formatMoney, newPrice, usedEstimates, type Country } from "./market";
+import { COUNTRIES, formatMoney, newPrice, usedEstimates, type Country, formatBand } from "./market";
 import { formatDistance, formatEfficiency, formatGbp, formatGbpPerMile, formatMiles, formatMiPerKwh, KM_PER_MILE } from "./format";
 
 /**
@@ -223,8 +223,8 @@ export function carSummary(car: Car): string[] {
     const oldest = used[used.length - 1];
     const prices =
       used.length === 1
-        ? `a ${newest.year} example typically sells for about ${formatMoney(newest.typical, country)}`
-        : `a ${oldest.year} example typically sells for about ${formatMoney(oldest.typical, country)} and a ${newest.year} one for about ${formatMoney(newest.typical, country)}`;
+        ? `a ${newest.year} example is likely to be advertised at roughly ${formatBand(newest.low, newest.high, country)}`
+        : `a ${oldest.year} example is likely to be advertised at roughly ${formatBand(oldest.low, oldest.high, country)} and a ${newest.year} one at ${formatBand(newest.low, newest.high, country)}`;
     paragraphs.push(
       `Second-hand${country === "uk" ? "" : ` in ${COUNTRIES[country].label}`}, ${prices} (our estimate for an average-mileage car, checked against real listings). ` +
         `After typical battery wear, a ${oldest.year} car should still manage about ${formatMiles(oldest.rangeTodayKm)} of real-world range. ` +

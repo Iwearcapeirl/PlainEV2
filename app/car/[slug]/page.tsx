@@ -47,6 +47,7 @@ import {
   BATTERY_LOSS_PER_YEAR,
   COUNTRIES,
   formatMoney,
+  formatBand,
   formatMoneyRange,
   listingSearch,
   newPrice,
@@ -101,7 +102,7 @@ async function metadataFor({ params }: Props): Promise<Metadata> {
     car.status === "Available" && price !== null && country
       ? `from ${formatMoney(price, country)} in ${countryName(country)}`
       : used && country
-        ? `used from about ${formatMoney(used.typical, country)} (estimated)`
+        ? `used roughly ${formatBand(used.low, used.high, country)} (estimated)`
         : car.status === "Upcoming"
           ? "coming soon"
           : "";
@@ -129,6 +130,12 @@ export default async function CarPage({ params }: Props) {
   const cheapestUsed = usedTable.length ? usedTable[usedTable.length - 1] : null;
   // Everything except coming-soon cars (nothing to buy yet) gets a search on a listings site, new and used.
   const listing = country && car.status !== "Upcoming" ? listingSearch(car, country) : null;
+  // Live listings for one model year, next to each estimated used price (only when the search is for this model).
+  const liveFor = (year: number) => {
+    if (!country) return null;
+    const l = listingSearch(car, country, { from: year, to: year });
+    return l.exact ? l.url : null;
+  };
   const standings = carStandings(car);
   const summary = carSummary(car);
   const versions = otherVersions(car);
@@ -183,9 +190,14 @@ export default async function CarPage({ params }: Props) {
               </p>
               {cheapestUsed && (
                 <p className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="text-sm text-muted">Used from</span>
-                  <span className="font-wide text-xl font-semibold tabular-nums">{formatMoney(cheapestUsed.typical, country)}</span>
+                  <span className="text-sm text-muted">Used</span>
+                  <span className="font-wide text-xl font-semibold tabular-nums">{formatBand(cheapestUsed.low, cheapestUsed.high, country)}</span>
                   <span className="text-sm text-muted">estimated, {cheapestUsed.year} car</span>
+                  {liveFor(cheapestUsed.year) && (
+                    <a href={liveFor(cheapestUsed.year)!} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold underline decoration-signal decoration-2 underline-offset-4">
+                      Live prices ↗
+                    </a>
+                  )}
                 </p>
               )}
             </div>
@@ -283,8 +295,8 @@ export default async function CarPage({ params }: Props) {
         <section aria-labelledby="used-title" className="mt-12">
           <SectionTitle id="used-title">Buying one used</SectionTitle>
           <p className="mt-2 max-w-[66ch] text-muted text-pretty">
-            Typical asking prices by model year{country !== "uk" ? ` in ${countryName(country)}` : ""} for an average-mileage example,
-            estimated from its price when new and checked against real UK listings, with the real-world range you can expect today
+            Likely asking prices by model year{country !== "uk" ? ` in ${countryName(country)}` : ""} for an average-mileage example,
+            estimated from its price when new and checked against real UK listings (most cars are advertised within the band), with the real-world range you can expect today
             after about {Math.round(BATTERY_LOSS_PER_YEAR * 100)}% battery wear a year. They&rsquo;re estimates, not valuations: mileage,
             trim, condition and battery health make a big difference, so check real listings before you budget.
           </p>
@@ -293,7 +305,7 @@ export default async function CarPage({ params }: Props) {
               <thead className="bg-accent-soft text-left text-xs text-muted">
                 <tr>
                   <th scope="col" className="px-4 py-2.5 font-medium sm:px-5">Model year</th>
-                  <th scope="col" className="px-4 py-2.5 font-medium">Typical price (est.)</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Likely price (est.)</th>
                   <th scope="col" className="px-4 py-2.5 text-right font-medium sm:px-5">Range today (est.)</th>
                 </tr>
               </thead>
@@ -302,8 +314,12 @@ export default async function CarPage({ params }: Props) {
                   <tr key={e.year} className="border-t border-line">
                     <th scope="row" className="px-4 py-2.5 text-left font-semibold sm:px-5">{e.year}</th>
                     <td className="px-4 py-2.5">
-                      <span className="font-semibold">{formatMoney(e.typical, country)}</span>
-                      <span className="block text-xs text-muted sm:inline sm:pl-2">most {formatMoneyRange(e.low, e.high, country)}</span>
+                      <span className="font-semibold">{formatMoneyRange(e.low, e.high, country)}</span>
+                      {liveFor(e.year) && (
+                        <a href={liveFor(e.year)!} target="_blank" rel="noopener noreferrer" className="block text-xs font-semibold underline decoration-signal underline-offset-2 sm:inline sm:pl-2">
+                          live prices ↗
+                        </a>
+                      )}
                     </td>
                     <td className="px-4 py-2.5 text-right sm:px-5">{u(formatMiles(e.rangeTodayKm))}</td>
                   </tr>
@@ -726,7 +742,7 @@ function versionPrice(v: Car): string {
   if (!c) return "";
   if (v.status === "Available") return formatMoney(newPrice(v, c)!, c);
   const u = usedFrom(v, c);
-  return u ? `used from about ${formatMoney(u.typical, c)}` : "";
+  return u ? `used roughly ${formatBand(u.low, u.high, c)}` : "";
 }
 
 const formatDate = (iso: string) =>

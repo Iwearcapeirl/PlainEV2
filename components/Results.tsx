@@ -5,7 +5,7 @@ import { u } from "@/components/UnitText";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import AdSlot from "@/components/AdSlot";
-import CarCard, { type CardMarket } from "@/components/CarCard";
+import CarCard, { LiveLink, type CardMarket } from "@/components/CarCard";
 import CarImage from "@/components/CarImage";
 import CarLink from "@/components/CarLink";
 import { CompareBar, CompareTick } from "@/components/ComparePicks";
@@ -25,8 +25,7 @@ import {
   onePerModel,
   yearsLabel,
   type Country,
-  type ResultGroup,
-} from "@/lib/market";
+  type ResultGroup, formatBand } from "@/lib/market";
 import { describe, fieldByKey, isRefined, isSet, refine, refinementFromParams, writeRefinement, type Refinement } from "@/lib/fields";
 import { matchedFilters, matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { activeFilters, answersFromParams, answersToQuery, budgetMax, priorityOf, type Answers } from "@/lib/quiz";
@@ -363,8 +362,9 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
           )}
           {o.used && (
             <div>
-              <dt className="text-on-ink/70">Used from (est.)</dt>
-              <dd className="font-wide text-lg font-semibold tabular-nums">{formatMoney(o.used.typical, country)}</dd>
+              <dt className="text-on-ink/70">Used (est.)</dt>
+              <dd className="font-wide text-lg font-semibold tabular-nums">{formatBand(o.used.low, o.used.high, country)}</dd>
+              <dd><LiveLink car={car} year={o.used.year} country={country} className="text-xs text-signal" /></dd>
             </div>
           )}
           <div>

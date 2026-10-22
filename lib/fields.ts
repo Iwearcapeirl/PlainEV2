@@ -63,7 +63,7 @@ const choice = (key: string, label: string, get: (c: Car) => string, display: (v
 
 export const FIELDS: Field[] = [
   { key: "price", label: "UK price when new", kind: "number", unit: "£", prefix: true, step: 1000, get: (c) => c.priceGbp },
-  { key: "usedprice", label: "Used price from (estimated)", kind: "number", unit: "£", prefix: true, currency: true, step: 1000, get: (c, country) => usedFrom(c, country)?.typical ?? null, about: "typical estimated second-hand price of the oldest model year in the buyer's country and currency; blank for cars not yet sold" },
+  { key: "usedprice", label: "Used price from (estimated)", kind: "number", unit: "£", prefix: true, currency: true, step: 1000, get: (c, country) => usedFrom(c, country)?.high ?? null, about: "top of the estimated second-hand price band for the oldest model year (cautious: most examples cost less) in the buyer's country and currency; blank for cars not yet sold" },
   { key: "range", label: "Real-world range", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.rangeKm) },
   { key: "onestop", label: "Range with one 15-min charge", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.oneStopKm) },
   { key: "efficiency", label: "Efficiency", kind: "number", unit: "mi/kWh", step: 0.1, get: (c) => Math.round(miPerKwh(c.whPerKm) * 10) / 10 },

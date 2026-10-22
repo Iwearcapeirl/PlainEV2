@@ -50,12 +50,12 @@ function rank(max: number, test: (c: Car) => boolean = () => true): UsedEntry[] 
   for (const car of allCars) {
     // Makes that have closed down (no warranty or parts support) aren't recommended.
     if (car.priceGbp === null || !test(car) || warrantyOf(car)?.closed) continue;
-    const fits = usedEstimates(car, "uk").filter((e) => e.typical <= max);
+    const fits = usedEstimates(car, "uk").filter((e) => e.high <= max);
     if (!fits.length) continue;
     const years = fits.map((e) => e.year);
     entries.push({ car, pick: fits[0], yearFrom: Math.min(...years), yearTo: Math.max(...years) });
   }
-  entries.sort((x, y) => y.pick.rangeTodayKm - x.pick.rangeTodayKm || x.pick.typical - y.pick.typical || x.car.id - y.car.id);
+  entries.sort((x, y) => y.pick.rangeTodayKm - x.pick.rangeTodayKm || x.pick.high - y.pick.high || x.car.id - y.car.id);
   const seen = new Set<string>();
   return entries.filter((e) => (seen.has(e.car.family) ? false : (seen.add(e.car.family), true)));
 }

@@ -54,29 +54,42 @@ export function usedYears(c: Car): number[] {
 }
 
 /**
- * Share of the new price a typical second-hand example keeps at a given age (average mileage, private or dealer
- * asking price). Calibrated in October 2026 against real asking prices on AutoTrader for 27 popular models and years
- * (data/README.md): dearer cars lose a bigger share, and a few makes hold value better or worse than average.
- * Cars under a year old are treated as a year old: once it's second-hand, the first-year drop has happened.
+ * Share of the new price a typical second-hand example keeps at a given age (average mileage, dealer or private
+ * asking price). Fitted in October 2026 to median AutoTrader asking prices for 51 model years, from nearly new to
+ * nine years old (data/README.md). Dearer cars lose a bigger share (the price effect stops at £80k), and a few makes
+ * sit clearly above or below the curve. Ages count from the model year, so a "1-year-old" car is 1–2 years old.
  */
-export function retained(age: number, newPrice: number, make: string): number {
+export function retained(age: number, newPrice: number, make: string, family = ""): number {
   const a = Math.max(1, age);
-  const base = a === 1 ? 0.62 : Math.exp(-0.174 - 0.433 * Math.log(a) - 0.0463 * (newPrice / 10_000));
-  return base * (MAKE_FACTOR[make] ?? 1);
+  // Above about £60k the price makes little further difference to the share kept.
+  const p = Math.min(newPrice, 60_000);
+  const factor = FAMILY_FACTOR[family] ?? MAKE_FACTOR[make] ?? 1;
+  return Math.min(Math.exp(0.364 - 0.549 * Math.log(a + 0.5) - 0.106 * (p / 10_000)) * factor, MAX_RETAINED);
 }
 
-/** Makes whose used prices sat clearly above or below the curve in the October 2026 check (3+ samples each). */
-const MAKE_FACTOR: Record<string, number> = { Tesla: 1.15, Nissan: 0.85, MG: 0.86 };
+/** Makes whose asking prices sat clearly above or below the curve in the October 2026 check (51 model years). */
+const MAKE_FACTOR: Record<string, number> = { Tesla: 1.2, Kia: 1.14, BMW: 1.09, "Mercedes-Benz": 1.09, MG: 0.72 };
+/**
+ * Models that differ from their make: the old Leaf sells for far less than newer Nissans such as the Ariya, and the
+ * first big electric SUVs from Jaguar and Audi lost value faster than later premium EVs.
+ */
+const FAMILY_FACTOR: Record<string, number> = { "Nissan Leaf": 0.71, "Jaguar I-Pace": 0.84, "Audi e-tron": 0.84 };
+/** No used car is estimated at more than this share of its new price. */
+const MAX_RETAINED = 0.9;
 
-/** Most examples are advertised within about this share either side of the typical price. */
-const SPREAD = 0.12;
+/**
+ * The band shown around the typical price. In the check, the cheaper normal listings (10th percentile) sat about 15%
+ * under the median and the dearer ones (75th percentile) 5–10% over; the curve itself is off by about 9% either way,
+ * and nine in ten model years were within 15%, so the band is ±15%. Budget checks use the top of the band.
+ */
+const SPREAD = 0.15;
 
 export interface UsedEstimate {
   /** Model year */
   year: number;
-  /** Typical asking price, rounded to the nearest 100: the figure budget checks use. */
+  /** Typical asking price, rounded to the nearest 100 */
   typical: number;
-  /** Estimated price range (most examples), rounded to the nearest 100 */
+  /** Likely price band, rounded to the nearest 100. Budget checks use `high`, so a car only counts as affordable if a typical example is. */
   low: number;
   high: number;
   /** Estimated real-world range today after battery wear, in km */
@@ -90,12 +103,13 @@ export function usedEstimate(c: Car, country: Country, year: number): UsedEstima
   if (price === null) return null;
   // The curve was fitted on UK pounds; euro prices are scaled to pounds for the price effect.
   const gbpEquivalent = country === "uk" ? price : price * 0.86;
-  const typical = price * retained(VALUATION_YEAR - year, gbpEquivalent, c.make);
+  const typical = price * retained(VALUATION_YEAR - year, gbpEquivalent, c.make, c.family);
   return {
     year,
     typical: round100(typical),
     low: round100(typical * (1 - SPREAD)),
-    high: round100(typical * (1 + SPREAD)),
+    // Never above the price new: nobody needs to pay more than that for a used one.
+    high: round100(Math.min(typical * (1 + SPREAD), price)),
     rangeTodayKm: Math.round(c.rangeKm * (1 - BATTERY_LOSS_PER_YEAR) ** Math.max(0, VALUATION_YEAR - year)),
   };
 }
@@ -136,13 +150,19 @@ export function inMarket(c: Car, country: Country, condition: Condition): boolea
 
 /** The lowest price the buyer could pay (new price or cheapest used estimate), for budget checks. */
 export function lowestPrice(o: Offer): number | null {
-  const prices = [o.newPrice, o.used?.typical].filter((p): p is number => p != null);
+  const prices = [o.newPrice, o.used?.high].filter((p): p is number => p != null);
   return prices.length ? Math.min(...prices) : null;
 }
 
 const money = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
 /** "£24,500" or "€24,500" */
 export const formatMoney = (n: number, country: Country) => `${COUNTRIES[country].symbol}${money.format(n)}`;
+/** "£24.1k–£32.6k" (or "£8,200–£11,100" under £10k): compact price band for cards and lists. */
+export function formatBand(low: number, high: number, country: Country): string {
+  const sym = COUNTRIES[country].symbol;
+  const k = (n: number) => (high >= 10_000 ? `${sym}${(Math.round(n / 100) / 10).toFixed(1)}k` : `${sym}${money.format(n)}`);
+  return `${k(low)}–${k(high)}`;
+}
 /** "£9,800–£11,200" */
 export const formatMoneyRange = (low: number, high: number, country: Country) =>
   `${formatMoney(low, country)}–${formatMoney(high, country)}`;
@@ -206,7 +226,7 @@ export function groupOffer(g: ResultGroup, country: Country, condition: Conditio
   const useds = offers.map((o) => o.used).filter((u): u is UsedEstimate => u !== null);
   return {
     newPrice: news.length ? Math.min(...news) : null,
-    used: useds.length ? useds.reduce((a, b) => (b.typical < a.typical ? b : a)) : null,
+    used: useds.length ? useds.reduce((a, b) => (b.high < a.high ? b : a)) : null,
   };
 }
 
@@ -217,21 +237,24 @@ export function groupOffer(g: ResultGroup, country: Country, condition: Conditio
 export interface BudgetFit {
   yearFrom: number;
   yearTo: number;
-  from: number;
+  /** Price band of the cheapest model year that fits */
+  low: number;
+  high: number;
 }
 export function usedBudgetFit(g: ResultGroup, country: Country, condition: Condition, max: number | null): BudgetFit | null {
   if (max === null || condition === "new") return null;
   const o = groupOffer(g, country, condition);
   if (o.newPrice === null || o.newPrice <= max) return null;
-  const fits = g.versions.flatMap((c) => usedEstimates(c, country)).filter((e) => e.typical <= max);
+  const fits = g.versions.flatMap((c) => usedEstimates(c, country)).filter((e) => e.high <= max);
   if (!fits.length) return null;
   const years = fits.map((e) => e.year);
-  return { yearFrom: Math.min(...years), yearTo: Math.max(...years), from: Math.min(...fits.map((e) => e.typical)) };
+  const cheapest = fits.reduce((x, y) => (y.high < x.high ? y : x));
+  return { yearFrom: Math.min(...years), yearTo: Math.max(...years), low: cheapest.low, high: cheapest.high };
 }
 
-/** "In your budget used: 2022–2023 cars from £24,200" */
+/** "In your budget used: 2022–2023 cars, roughly £21.5k–£29.1k" */
 export const budgetFitText = (f: BudgetFit, country: Country) =>
-  `In your budget used: ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`} cars from about ${formatMoney(f.from, country)}`;
+  `In your budget used: ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`} cars, roughly ${formatBand(f.low, f.high, country)}`;
 
 // ---------- "Search for this car" ----------
 
@@ -263,11 +286,16 @@ export interface ListingSearch {
  * A search for this car on a listings site (new and used): AutoTrader in the UK, AutoScout24 in Germany and the
  * Netherlands. Visitors enter their own postcode on AutoTrader.
  */
-export function listingSearch(c: Car, country: Country): ListingSearch {
+export function listingSearch(c: Car, country: Country, years?: { from: number; to: number }): ListingSearch {
   if (country === "uk") {
     const make = AT.makes[c.family] ?? AT.makes[c.make] ?? c.make;
     const model = AT.models[c.family];
-    const q = new URLSearchParams({ make, ...(model ? { model } : {}), "fuel-type": "Electric" });
+    const q = new URLSearchParams({
+      make,
+      ...(model ? { model } : {}),
+      "fuel-type": "Electric",
+      ...(years ? { "year-from": String(years.from), "year-to": String(years.to) } : {}),
+    });
     return {
       site: "AutoTrader",
       url: `https://www.autotrader.co.uk/car-search?${q}`,
@@ -279,7 +307,7 @@ export function listingSearch(c: Car, country: Country): ListingSearch {
   const domain = country === "de" ? "autoscout24.de" : "autoscout24.nl";
   return {
     site: "AutoScout24",
-    url: `https://www.${domain}/lst/${urlSlug(c.make)}/${urlSlug(model)}?fuel=E`,
+    url: `https://www.${domain}/lst/${urlSlug(c.make)}/${urlSlug(model)}?fuel=E${years ? `&fregfrom=${years.from}&fregto=${years.to}` : ""}`,
     label: "Search for this car on AutoScout24",
     exact: true,
   };

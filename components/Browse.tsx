@@ -14,7 +14,7 @@ import RefinePanel from "@/components/RefinePanel";
 import { allCars, carHref } from "@/lib/cars";
 import { fieldByKey, isSet, refine, refinementFromParams, writeRefinement, type ChoiceField, type Refinement } from "@/lib/fields";
 import { formatAccel, formatMi } from "@/lib/format";
-import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupResults, usedBudgetFit, yearsLabel, type Condition, type ResultGroup } from "@/lib/market";
+import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupResults, usedBudgetFit, yearsLabel, type Condition, type ResultGroup, formatBand } from "@/lib/market";
 import { matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { BODIES, BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS, RANGES, answersFromParams, answersToQuery, budgetMax, inCurrency, type Answers } from "@/lib/quiz";
 import { photoSubject } from "@/lib/photo";
@@ -266,7 +266,7 @@ function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
 
       <dl className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm min-[420px]:grid-cols-4 sm:col-span-1 sm:grid-cols-2 sm:pr-2 md:grid-cols-4">
         {answers.condition !== "used" && <Stat label={fit ? "New (over budget)" : "New from"} value={o.newPrice !== null ? formatMoney(o.newPrice, answers.country) : "–"} />}
-        {answers.condition !== "new" && <Stat label="Used from (est.)" value={o.used ? formatMoney(o.used.typical, answers.country) : "–"} />}
+        {answers.condition !== "new" && <Stat label="Used (est.)" value={o.used ? formatBand(o.used.low, o.used.high, answers.country) : "–"} />}
         <Stat label="Real range" value={formatMi(car.rangeKm)} />
         <Stat label="0–62 mph" value={formatAccel(car.accelS)} />
       </dl>
