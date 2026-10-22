@@ -154,7 +154,7 @@ export default function Results() {
 
         <ul className={`${searched ? "mt-3" : "mt-5"} flex flex-wrap gap-1.5`} aria-label="Your answers">
           {summary.map((s) => (
-            <li key={u(s)} className="rounded-full bg-accent-soft px-3 py-1 text-sm text-foreground/80">
+            <li key={s} className="rounded-full bg-accent-soft px-3 py-1 text-sm text-foreground/80">
               {u(s)}
             </li>
           ))}
