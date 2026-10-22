@@ -104,14 +104,25 @@ export function usedEstimate(c: Car, country: Country, year: number): UsedEstima
   // The curve was fitted on UK pounds; euro prices are scaled to pounds for the price effect.
   const gbpEquivalent = country === "uk" ? price : price * 0.86;
   const typical = price * retained(VALUATION_YEAR - year, gbpEquivalent, c.make, c.family);
-  return {
-    year,
-    typical: round100(typical),
-    low: round100(typical * (1 - SPREAD)),
-    // Never above the price new: nobody needs to pay more than that for a used one.
-    high: round100(Math.min(typical * (1 + SPREAD), price)),
-    rangeTodayKm: Math.round(c.rangeKm * (1 - BATTERY_LOSS_PER_YEAR) ** Math.max(0, VALUATION_YEAR - year)),
-  };
+  return capBand(
+    {
+      year,
+      typical: round100(typical),
+      low: round100(typical * (1 - SPREAD)),
+      high: round100(typical * (1 + SPREAD)),
+      rangeTodayKm: Math.round(c.rangeKm * (1 - BATTERY_LOSS_PER_YEAR) ** Math.max(0, VALUATION_YEAR - year)),
+    },
+    price,
+  );
+}
+
+/** A used car should always look cheaper than a new one: the band tops out a little under the new price. */
+const USED_CEILING = 0.95;
+export function capBand(e: UsedEstimate, newPriceCap: number): UsedEstimate {
+  const high = Math.min(e.high, round100(newPriceCap * USED_CEILING));
+  if (high >= e.high) return e;
+  const low = Math.min(e.low, round100(high * (1 - SPREAD) / (1 + SPREAD)));
+  return { ...e, high, low, typical: Math.min(e.typical, round100((low + high) / 2)) };
 }
 
 /** Estimates for every model year a used example could be, newest first. */
@@ -224,9 +235,12 @@ export function groupOffer(g: ResultGroup, country: Country, condition: Conditio
   const offers = g.versions.map((c) => offer(c, country, condition));
   const news = offers.map((o) => o.newPrice).filter((p): p is number => p !== null);
   const useds = offers.map((o) => o.used).filter((u): u is UsedEstimate => u !== null);
+  const newMin = news.length ? Math.min(...news) : null;
+  const used = useds.length ? useds.reduce((a, b) => (b.high < a.high ? b : a)) : null;
   return {
-    newPrice: news.length ? Math.min(...news) : null,
-    used: useds.length ? useds.reduce((a, b) => (b.high < a.high ? b : a)) : null,
+    newPrice: newMin,
+    // Shown next to the group's cheapest new price, so keep the used band under that too.
+    used: used && newMin !== null ? capBand(used, newMin) : used,
   };
 }
 
