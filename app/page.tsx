@@ -4,8 +4,10 @@ import { allCars, carHref, cars } from "@/lib/cars";
 import AdSlot from "@/components/AdSlot";
 import RangeRadar from "@/components/RangeRadar";
 import RangeRings from "@/components/RangeRings";
-import { formatGbp, formatMiPerKwh, kmToMiles } from "@/lib/format";
-import { formatMoney, groupOffer, groupResults, miles, onePerModel, yearsLabel } from "@/lib/market";
+import { formatGbp, formatMi, kmToMiles, miPerKwh } from "@/lib/format";
+import { both } from "@/lib/units";
+import { u } from "@/components/UnitText";
+import { formatMoney, groupOffer, groupResults, onePerModel, yearsLabel } from "@/lib/market";
 import { matchesAnswers, rankCars } from "@/lib/match";
 import { BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS } from "@/lib/quiz";
 import { cheapest, dearest } from "@/lib/radar";
@@ -39,6 +41,8 @@ export default function HomePage() {
   const mid = Math.floor(ranges.length / 2);
   const medianMiles = kmToMiles(ranges.length % 2 ? ranges[mid] : (ranges[mid - 1] + ranges[mid]) / 2);
   const longestMiles = kmToMiles(ranges[ranges.length - 1]);
+  const medianKm = Math.round(ranges.length % 2 ? ranges[mid] : (ranges[mid - 1] + ranges[mid]) / 2);
+  const longestKm = Math.round(ranges[ranges.length - 1]);
   const budgets = BUDGET_ORDER.map((id) => BUDGETS.find((b) => b.id === id)!).map((b) => ({
     ...b,
     // Models a UK buyer would see in the results for this budget, new and used (as the quiz counts them).
@@ -154,7 +158,7 @@ export default function HomePage() {
             ))}
           </ul>
           <p className="mt-8 text-sm text-muted">
-            Used prices are estimates based on typical depreciation. Data updated{" "}
+            Used prices are typical asking prices, estimated and checked against real listings. Data updated{" "}
             <time dateTime={UPDATED_ISO}>{UPDATED_LABEL}</time>.
           </p>
         </div>
@@ -201,8 +205,8 @@ export default function HomePage() {
                     </span>
                     <span className="shrink-0 text-right">
                       <span className="block text-xs text-muted">Used from (est.)</span>
-                      <span className="font-wide block font-semibold tabular-nums">{o.used ? formatMoney(o.used.low, "uk") : "–"}</span>
-                      <span className="block text-xs text-muted">{miles(g.car.rangeKm)} mi range new</span>
+                      <span className="font-wide block font-semibold tabular-nums">{o.used ? formatMoney(o.used.typical, "uk") : "–"}</span>
+                      <span className="block text-xs text-muted">{u(formatMi(g.car.rangeKm))} range new</span>
                     </span>
                   </Link>
                 </li>
@@ -221,12 +225,12 @@ export default function HomePage() {
         <h2 id="spread-title" className="font-wide max-w-[19ch] text-[clamp(2rem,4.6vw,3.6rem)] font-semibold leading-[1.06] text-balance">
           The typical new electric car goes{" "}
           <span className="whitespace-nowrap">
-            <Figure value={medianMiles} /> miles
+            <Figure value={u(both(`${medianMiles}`, `${medianKm}`))} /> {u(both("miles", "km"))}
           </span>{" "}
           on a charge.
         </h2>
         <p className="font-wide mt-4 text-[clamp(2rem,4.6vw,3.6rem)] font-semibold leading-[1.06] text-muted sm:ml-[18%]">
-          The longest goes <Figure value={longestMiles} />.
+          The longest goes <Figure value={u(both(`${longestMiles}`, `${longestKm}`))} />.
         </p>
 
         <div className="mt-16 grid gap-10 sm:mt-20 md:grid-cols-[minmax(0,1fr)_15rem] md:gap-16">
@@ -276,7 +280,7 @@ export default function HomePage() {
               <div>
                 <dt className="font-semibold">Further out means further on a charge.</dt>
                 <dd className="mt-1 text-on-ink/75 leading-relaxed text-pretty">
-                  A ring for every 100 miles of real-world range. The dashed yellow ring is the typical EV, at {medianMiles} miles.
+                  A ring for every 100 miles of real-world range. The dashed yellow ring is the typical EV, at {u(both(`${medianMiles} miles`, `${medianKm} km`))}.
                 </dd>
               </div>
               <div>
@@ -332,9 +336,9 @@ export default function HomePage() {
                     </span>
                     <span className="mt-4 flex items-baseline gap-1.5 border-t border-line pt-4">
                       <span className="font-wide text-3xl font-semibold tabular-nums text-signal">
-                        {p.metric === "efficiency" ? formatMiPerKwh(top.whPerKm).replace(" mi/kWh", "") : kmToMiles(top.rangeKm)}
+                        {u(p.metric === "efficiency" ? both(miPerKwh(top.whPerKm).toFixed(1), (top.whPerKm / 10).toFixed(1)) : both(String(kmToMiles(top.rangeKm)), String(top.rangeKm)))}
                       </span>
-                      <span className="text-sm text-muted">{p.metric === "efficiency" ? "mi/kWh" : "mi real range"}</span>
+                      <span className="text-sm text-muted">{u(p.metric === "efficiency" ? both("mi/kWh", "kWh/100 km") : both("mi real range", "km real range"))}</span>
                       <span aria-hidden className="ml-auto text-lg transition-transform duration-150 group-hover:translate-x-0.5">
                         →
                       </span>
@@ -352,7 +356,7 @@ export default function HomePage() {
 }
 
 /** A real figure, underlined in signal yellow. */
-function Figure({ value }: { value: number }) {
+function Figure({ value }: { value: React.ReactNode }) {
   return (
     <span className="tabular-nums shadow-[inset_0_-0.16em_0_var(--signal)]">
       {value}

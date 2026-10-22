@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { hasUnits, plain } from "@/lib/units";
 import { useMemo, useState } from "react";
 import CountrySwitch from "@/components/CountrySwitch";
 import RangeRadar from "@/components/RangeRadar";
@@ -39,7 +40,7 @@ const STEPS = [
     key: "condition",
     name: "New or used",
     title: "Are you buying new, used or either?",
-    sub: "Used prices are estimates based on each car’s age and its price when new.",
+    sub: "Used prices are typical asking prices for an average-mileage car, estimated from its age and price when new.",
   },
   {
     key: "budget",
@@ -304,7 +305,6 @@ export default function Quiz() {
               <div className="clear-both flex flex-wrap gap-1.5 pt-3" role="radiogroup" aria-label={f.title}>
                 {FILTERS[f.key].map((o) => {
                   const on = answers[f.key] === o.id;
-                  const [main, extra] = o.label.split(/ (?=\()/);
                   return (
                     <button
                       key={o.id}
@@ -318,8 +318,7 @@ export default function Quiz() {
                           : "bg-background text-foreground shadow-[inset_0_0_0_1px_var(--line)] hover:shadow-[inset_0_0_0_1.5px_var(--foreground)]"
                       }`}
                     >
-                      {main}
-                      {extra && <span className={`ml-1 text-xs font-normal ${on ? "text-on-ink/70" : "text-muted"}`}>{extra}</span>}
+                      <LabelText text={o.label} extraClass={`ml-1 text-xs font-normal ${on ? "text-on-ink/70" : "text-muted"}`} />
                     </button>
                   );
                 })}
@@ -432,7 +431,30 @@ function Instrument({
   );
 }
 
-/** Answer tile. Labels like "250+ miles (400+ km)" show the bracketed part smaller. */
+/**
+ * An answer label; the bracketed part ("250+ miles (400+ km)") is shown smaller. Labels with miles/km versions
+ * (lib/units.ts) are laid out once per unit, and CSS shows the one picked with the switch.
+ */
+function LabelText({ text, extraClass }: { text: string; extraClass: string }) {
+  const one = (t: string) => {
+    const [main, extra] = t.split(/ (?=\()/);
+    return (
+      <>
+        {main}
+        {extra && <span className={extraClass}>{extra}</span>}
+      </>
+    );
+  };
+  if (!hasUnits(text)) return one(text);
+  return (
+    <>
+      <span className="u-mi">{one(plain(text, "mi"))}</span>
+      <span className="u-km">{one(plain(text, "km"))}</span>
+    </>
+  );
+}
+
+/** Answer tile. */
 function Option({
   children,
   hint,
@@ -449,7 +471,6 @@ function Option({
   count?: number;
   onClick: () => void;
 }) {
-  const [main, extra] = children.split(/ (?=\()/);
   return (
     <button
       type="button"
@@ -472,8 +493,7 @@ function Option({
       </span>
       <span className="min-w-0 flex-1">
         <span className="font-wide block text-[16px] font-semibold leading-snug">
-          {main}
-          {extra && <span className={`ml-1.5 font-sans text-sm font-normal ${selected ? "text-on-ink/70" : "text-muted"}`}>{extra}</span>}
+          <LabelText text={children} extraClass={`ml-1.5 font-sans text-sm font-normal ${selected ? "text-on-ink/70" : "text-muted"}`} />
         </span>
         {hint && <span className={`mt-1 block text-sm ${selected ? "text-on-ink/75" : "text-muted"}`}>{hint}</span>}
       </span>

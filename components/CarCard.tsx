@@ -1,10 +1,11 @@
 import CarImage from "@/components/CarImage";
+import { u } from "@/components/UnitText";
 import CarLink from "@/components/CarLink";
 import { CompareTick } from "@/components/ComparePicks";
 import RangeBar from "@/components/RangeBar";
 import { carHref, type Car } from "@/lib/cars";
-import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
-import { budgetFitText, formatMoney, miles, type BudgetFit, type Country, type Offer } from "@/lib/market";
+import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiles, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
+import { budgetFitText, formatMoney, type BudgetFit, type Country, type Offer } from "@/lib/market";
 import type { FilterKey } from "@/lib/quiz";
 
 /** Results context: the buyer's country, what they could pay (new and/or used) and the merged version name. */
@@ -158,7 +159,7 @@ export default function CarCard({
           <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size={featured ? "lg" : "md"} />
           {market?.offer.used && (
             <p className="mt-2 text-xs text-muted">
-              Range when new. A {market.offer.used.year} car today: about {miles(market.offer.used.rangeTodayKm)} miles (estimated, after battery wear).
+              Range when new. A {market.offer.used.year} car today: about {u(formatMiles(market.offer.used.rangeTodayKm))} (estimated, after battery wear).
             </p>
           )}
         </div>
@@ -178,7 +179,7 @@ export default function CarCard({
               {matched.map((m) => (
                 <li key={m.key} className="rounded-full bg-ink px-2.5 py-1 text-xs font-medium text-on-ink">
                   <span aria-hidden className="mr-1 text-signal">✓</span>
-                  {m.chip}
+                  {u(m.chip)}
                 </li>
               ))}
             </ul>
@@ -214,8 +215,8 @@ function Stat({ label, value, sub, strong = false }: StatProps) {
   return (
     <div className={`px-3 py-2.5 ${strong ? "bg-signal text-signal-ink" : "bg-card"}`}>
       <dt className={`text-xs ${strong ? "text-signal-ink/75" : "text-muted"}`}>{label}</dt>
-      <dd className="mt-0.5 text-[15px] font-semibold tabular-nums">{value}</dd>
-      {sub && <dd className={`text-[11px] tabular-nums ${strong ? "text-signal-ink/70" : "text-muted"}`}>{sub}</dd>}
+      <dd className="mt-0.5 text-[15px] font-semibold tabular-nums">{u(value)}</dd>
+      {sub && <dd className={`text-[11px] tabular-nums ${strong ? "text-signal-ink/70" : "text-muted"}`}>{u(sub)}</dd>}
     </div>
   );
 }
@@ -234,7 +235,7 @@ function PriceBlock({ market, featured }: { market: CardMarket; featured: boolea
       )}
       {o.used && (
         <p className={o.newPrice !== null ? "mt-1.5" : ""}>
-          <span className={o.newPrice !== null && !market.budgetFit ? "block text-[15px] font-semibold tabular-nums" : big}>{formatMoney(o.used.low, country)}</span>
+          <span className={o.newPrice !== null && !market.budgetFit ? "block text-[15px] font-semibold tabular-nums" : big}>{formatMoney(o.used.typical, country)}</span>
           <span className="block text-xs text-muted">used from, est.</span>
         </p>
       )}

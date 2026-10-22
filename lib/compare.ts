@@ -70,7 +70,7 @@ function priceUsed(c: Car, country: Country): Cell {
   if (c.status === "Upcoming") return { text: "–", sub: "not out yet", n: null };
   const u = usedFrom(c, country);
   if (!u) return { text: "–", sub: newPrice(c, country) === null ? `not sold in ${countryName(country)}` : "too new", n: null };
-  return { text: formatMoney(u.low, country), sub: `${u.year} car`, n: u.low };
+  return { text: `about ${formatMoney(u.typical, country)}`, sub: `typical ${u.year} car`, n: u.typical };
 }
 
 /** New price per mile (UK) or per km (Germany, Netherlands) of real-world range. */

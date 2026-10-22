@@ -1,4 +1,5 @@
 import { allCars, type Car } from "@/lib/cars";
+import { plain } from "@/lib/units";
 import { homeCountry } from "@/lib/carProfile";
 import { formatMi } from "@/lib/format";
 import { formatMoney, newPrice, usedFrom } from "@/lib/market";
@@ -21,7 +22,7 @@ function priceLine(car: Car): string | null {
   const p = newPrice(car, country);
   if (car.status === "Available" && p !== null) return `From ${formatMoney(p, country)} new`;
   const u = usedFrom(car, country);
-  if (u) return `Used from about ${formatMoney(u.low, country)}`;
+  if (u) return `Used from about ${formatMoney(u.typical, country)}`;
   return p !== null ? `${car.status === "Upcoming" ? "Expected" : "Was"} ${formatMoney(p, country)}` : null;
 }
 
@@ -98,7 +99,7 @@ export function VsCard({ a, b, names, photos }: { a: Car; b: Car; names: [string
     <div style={{ display: "flex", flexDirection: "column", width: 520 }}>
       <div style={{ fontSize: 40, fontWeight: 700, lineHeight: 1.05 }}>{name}</div>
       <div style={{ fontSize: 28, marginTop: 8, color: "rgba(255,255,255,0.85)" }}>
-        {`${formatMi(c.rangeKm)} · ${priceLine(c) ?? ""}`}
+        {`${plain(formatMi(c.rangeKm))} · ${priceLine(c) ?? ""}`}
       </div>
     </div>
   );

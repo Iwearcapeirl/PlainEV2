@@ -1,4 +1,5 @@
 import { cars, type Car } from "./cars";
+import { both } from "./units";
 import { milesToKm } from "./format";
 import { COUNTRIES, COUNTRY_IDS, CONDITIONS, inMarket, lowestPrice, offer, type Condition, type Country } from "./market";
 
@@ -62,11 +63,14 @@ export const BUDGET_ORDER = ["under-10k", "10-15k", "15-20k", "under-30k", "30-4
 /** Budget ids from older links: "Over £70k" behaved exactly like No limit, so it now is. */
 const LEGACY_BUDGET: Record<string, string> = { "over-70k": "no-limit" };
 
+/** Miles to km, rounded to 10 for labels: 250 → 400. */
+const km10 = (miles: number) => Math.round(milesToKm(miles) / 10) * 10;
+
 const minRange = (miles: number, hint: string): FilterOption => ({
   id: String(miles),
-  label: `${miles}+ miles (${Math.round(milesToKm(miles) / 10) * 10}+ km)`,
+  label: both(`${miles}+ miles (${km10(miles)}+ km)`, `${km10(miles)}+ km (${miles}+ miles)`),
   hint,
-  chip: `${miles}+ mi range`,
+  chip: both(`${miles}+ mi range`, `${km10(miles)}+ km range`),
   test: (c) => c.rangeKm >= milesToKm(miles),
 });
 
@@ -125,8 +129,8 @@ export const V2L: FilterOption[] = required("yes", "V2L", (c) => c.v2l);
 /** Efficiency ceilings in Wh/km (the data's unit), shown miles-first. */
 const efficiency = (id: string, maxWh: number, miPerKwh: string, label: string): FilterOption => ({
   id,
-  label: `${label}${miPerKwh}+ mi/kWh (≤${maxWh} Wh/km)`,
-  chip: `${miPerKwh}+ mi/kWh`,
+  label: `${label}${both(`${miPerKwh}+ mi/kWh (≤${maxWh} Wh/km)`, `≤${(maxWh / 10).toFixed(1)} kWh/100 km (${miPerKwh}+ mi/kWh)`)}`,
+  chip: both(`${miPerKwh}+ mi/kWh`, `≤${(maxWh / 10).toFixed(1)} kWh/100 km`),
   test: (c) => c.whPerKm <= maxWh,
 });
 export const EFFICIENCIES: FilterOption[] = [
@@ -138,8 +142,8 @@ export const EFFICIENCIES: FilterOption[] = [
 
 const oneStop = (miles: number): FilterOption => ({
   id: String(miles),
-  label: `${miles}+ miles`,
-  chip: `${miles}+ mi with one stop`,
+  label: both(`${miles}+ miles`, `${km10(miles)}+ km`),
+  chip: both(`${miles}+ mi with one stop`, `${km10(miles)}+ km with one stop`),
   test: (c) => c.oneStopKm >= milesToKm(miles),
 });
 export const ONE_STOPS: FilterOption[] = [any(), oneStop(300), oneStop(350), oneStop(400)];

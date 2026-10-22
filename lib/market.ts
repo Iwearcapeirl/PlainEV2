@@ -54,22 +54,29 @@ export function usedYears(c: Car): number[] {
 }
 
 /**
- * Share of the new price a car keeps at a given age, as [low, high]:
- * 57–65% after a year, 38–42% after three (falling evenly in between), then 10–15% less each further year.
+ * Share of the new price a typical second-hand example keeps at a given age (average mileage, private or dealer
+ * asking price). Calibrated in October 2026 against real asking prices on AutoTrader for 27 popular models and years
+ * (data/README.md): dearer cars lose a bigger share, and a few makes hold value better or worse than average.
  * Cars under a year old are treated as a year old: once it's second-hand, the first-year drop has happened.
  */
-export function retained(age: number): [number, number] {
+export function retained(age: number, newPrice: number, make: string): number {
   const a = Math.max(1, age);
-  if (a === 1) return [0.57, 0.65];
-  if (a === 2) return [(0.57 + 0.38) / 2, (0.65 + 0.42) / 2];
-  if (a === 3) return [0.38, 0.42];
-  return [0.38 * 0.85 ** (a - 3), 0.42 * 0.9 ** (a - 3)];
+  const base = a === 1 ? 0.62 : Math.exp(-0.174 - 0.433 * Math.log(a) - 0.0463 * (newPrice / 10_000));
+  return base * (MAKE_FACTOR[make] ?? 1);
 }
+
+/** Makes whose used prices sat clearly above or below the curve in the October 2026 check (3+ samples each). */
+const MAKE_FACTOR: Record<string, number> = { Tesla: 1.15, Nissan: 0.85, MG: 0.86 };
+
+/** Most examples are advertised within about this share either side of the typical price. */
+const SPREAD = 0.12;
 
 export interface UsedEstimate {
   /** Model year */
   year: number;
-  /** Estimated price range, rounded to the nearest 100 */
+  /** Typical asking price, rounded to the nearest 100: the figure budget checks use. */
+  typical: number;
+  /** Estimated price range (most examples), rounded to the nearest 100 */
   low: number;
   high: number;
   /** Estimated real-world range today after battery wear, in km */
@@ -81,11 +88,14 @@ const round100 = (n: number) => Math.round(n / 100) * 100;
 export function usedEstimate(c: Car, country: Country, year: number): UsedEstimate | null {
   const price = newPrice(c, country);
   if (price === null) return null;
-  const [lo, hi] = retained(VALUATION_YEAR - year);
+  // The curve was fitted on UK pounds; euro prices are scaled to pounds for the price effect.
+  const gbpEquivalent = country === "uk" ? price : price * 0.86;
+  const typical = price * retained(VALUATION_YEAR - year, gbpEquivalent, c.make);
   return {
     year,
-    low: round100(price * lo),
-    high: round100(price * hi),
+    typical: round100(typical),
+    low: round100(typical * (1 - SPREAD)),
+    high: round100(typical * (1 + SPREAD)),
     rangeTodayKm: Math.round(c.rangeKm * (1 - BATTERY_LOSS_PER_YEAR) ** Math.max(0, VALUATION_YEAR - year)),
   };
 }
@@ -126,7 +136,7 @@ export function inMarket(c: Car, country: Country, condition: Condition): boolea
 
 /** The lowest price the buyer could pay (new price or cheapest used estimate), for budget checks. */
 export function lowestPrice(o: Offer): number | null {
-  const prices = [o.newPrice, o.used?.low].filter((p): p is number => p != null);
+  const prices = [o.newPrice, o.used?.typical].filter((p): p is number => p != null);
   return prices.length ? Math.min(...prices) : null;
 }
 
@@ -196,13 +206,13 @@ export function groupOffer(g: ResultGroup, country: Country, condition: Conditio
   const useds = offers.map((o) => o.used).filter((u): u is UsedEstimate => u !== null);
   return {
     newPrice: news.length ? Math.min(...news) : null,
-    used: useds.length ? useds.reduce((a, b) => (b.low < a.low ? b : a)) : null,
+    used: useds.length ? useds.reduce((a, b) => (b.typical < a.typical ? b : a)) : null,
   };
 }
 
 /**
  * When a result is only in the buyer's budget second-hand (its new price is over the limit): which model years fit
- * and the cheapest estimated price. Null when the new price fits, or there's no budget.
+ * and the lowest typical price among them. Null when the new price fits, or there's no budget.
  */
 export interface BudgetFit {
   yearFrom: number;
@@ -213,15 +223,15 @@ export function usedBudgetFit(g: ResultGroup, country: Country, condition: Condi
   if (max === null || condition === "new") return null;
   const o = groupOffer(g, country, condition);
   if (o.newPrice === null || o.newPrice <= max) return null;
-  const fits = g.versions.flatMap((c) => usedEstimates(c, country)).filter((e) => e.low <= max);
+  const fits = g.versions.flatMap((c) => usedEstimates(c, country)).filter((e) => e.typical <= max);
   if (!fits.length) return null;
   const years = fits.map((e) => e.year);
-  return { yearFrom: Math.min(...years), yearTo: Math.max(...years), from: Math.min(...fits.map((e) => e.low)) };
+  return { yearFrom: Math.min(...years), yearTo: Math.max(...years), from: Math.min(...fits.map((e) => e.typical)) };
 }
 
 /** "In your budget used: 2022–2023 cars from £24,200" */
 export const budgetFitText = (f: BudgetFit, country: Country) =>
-  `In your budget used: ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`} cars from ${formatMoney(f.from, country)}`;
+  `In your budget used: ${f.yearFrom === f.yearTo ? f.yearFrom : `${f.yearFrom}–${f.yearTo}`} cars from about ${formatMoney(f.from, country)}`;
 
 // ---------- "Search for this car" ----------
 

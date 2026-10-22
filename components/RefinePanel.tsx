@@ -1,6 +1,8 @@
 "use client";
 
 import { useId } from "react";
+import { useUnits } from "@/components/UnitsSwitch";
+import { KM_PER_MILE, milesToKm } from "@/lib/format";
 import {
   FIELDS,
   SORT_FIELDS,
@@ -232,25 +234,31 @@ function FilterRow({
 
 /** Min and max inputs; either may be left empty. Stored as "min~max". */
 function NumberRange({ field, value, onChange, labelledBy, unit }: { field: Field & { kind: "number" }; value: string; onChange: (v: string) => void; labelledBy: string; unit: string }) {
+  // Distances are stored in miles. With km picked in the top bar, the boxes show and take km, and the value is kept
+  // in miles to two decimals so what was typed comes back unchanged.
+  const km = useUnits() === "km" && unit === "mi";
+  const toShow = (v: string) => (km && v !== "" && !Number.isNaN(Number(v)) ? String(Math.round(milesToKm(Number(v)))) : v);
+  const toStore = (v: string) => (km && v !== "" && !Number.isNaN(Number(v)) ? String(Math.round((Number(v) / KM_PER_MILE) * 100) / 100) : v);
+  const shownUnit = km ? "km" : unit;
   const [lo = "", hi = ""] = value.split("~");
   const input = (side: "min" | "max", v: string) => (
     <label className="flex min-w-0 flex-1 items-center gap-1.5 sm:flex-none">
       <span className="sr-only" id={`${labelledBy}-${side}`}>
         {side === "min" ? "Minimum" : "Maximum"}
       </span>
-      {field.prefix && <span className="text-sm text-muted">{unit}</span>}
+      {field.prefix && <span className="text-sm text-muted">{shownUnit}</span>}
       <input
         type="number"
         inputMode="decimal"
         min={0}
-        step={field.step}
-        value={v}
+        step={km ? 10 : field.step}
+        value={toShow(v)}
         placeholder={side === "min" ? "Min" : "Max"}
         aria-labelledby={`${labelledBy} ${labelledBy}-${side}`}
-        onChange={(e) => onChange(side === "min" ? `${e.target.value}~${hi}` : `${lo}~${e.target.value}`)}
+        onChange={(e) => onChange(side === "min" ? `${toStore(e.target.value)}~${hi}` : `${lo}~${toStore(e.target.value)}`)}
         className={`${control} w-full min-w-0 tabular-nums sm:w-28`}
       />
-      {!field.prefix && <span className="text-sm text-muted">{unit}</span>}
+      {!field.prefix && <span className="text-sm text-muted">{shownUnit}</span>}
     </label>
   );
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { u } from "@/components/UnitText";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import AdSlot from "@/components/AdSlot";
@@ -12,7 +13,7 @@ import RangeBar from "@/components/RangeBar";
 import CountrySwitch from "@/components/CountrySwitch";
 import RefinePanel from "@/components/RefinePanel";
 import { allCars, carHref, type Car } from "@/lib/cars";
-import { formatAccel, formatMi, formatMiPerKwh } from "@/lib/format";
+import { formatAccel, formatMi, formatMiles, formatMiPerKwh } from "@/lib/format";
 import {
   COUNTRIES,
   CONDITIONS,
@@ -21,7 +22,6 @@ import {
   budgetFitText,
   usedBudgetFit,
   groupResults,
-  miles,
   onePerModel,
   yearsLabel,
   type Country,
@@ -154,8 +154,8 @@ export default function Results() {
 
         <ul className={`${searched ? "mt-3" : "mt-5"} flex flex-wrap gap-1.5`} aria-label="Your answers">
           {summary.map((s) => (
-            <li key={s} className="rounded-full bg-accent-soft px-3 py-1 text-sm text-foreground/80">
-              {s}
+            <li key={u(s)} className="rounded-full bg-accent-soft px-3 py-1 text-sm text-foreground/80">
+              {u(s)}
             </li>
           ))}
         </ul>
@@ -178,7 +178,7 @@ export default function Results() {
           <h2 id="refined-title" className="font-wide text-2xl font-semibold" aria-live="polite">
             {list.length} of {total} {total === 1 ? "car" : "cars"}
           </h2>
-          <p className="mt-1 text-sm text-muted">{listSummary.join(". ")}.</p>
+          <p className="mt-1 text-sm text-muted">{u(listSummary.join(". "))}.</p>
           {list.length > 0 ? (
             <>
               <ol className="mt-5 grid gap-4">
@@ -349,7 +349,7 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
           <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />
           {o.used && (
             <p className="mt-2 text-sm text-on-ink/75">
-              Range when new. A {o.used.year} car today: about {miles(o.used.rangeTodayKm)} miles (estimated, after battery wear).
+              Range when new. A {o.used.year} car today: about {u(formatMiles(o.used.rangeTodayKm))} (estimated, after battery wear).
             </p>
           )}
         </div>
@@ -364,16 +364,16 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
           {o.used && (
             <div>
               <dt className="text-on-ink/70">Used from (est.)</dt>
-              <dd className="font-wide text-lg font-semibold tabular-nums">{formatMoney(o.used.low, country)}</dd>
+              <dd className="font-wide text-lg font-semibold tabular-nums">{formatMoney(o.used.typical, country)}</dd>
             </div>
           )}
           <div>
             <dt className={efficient ? "text-signal" : "text-on-ink/70"}>Efficiency</dt>
-            <dd className="font-wide text-lg font-semibold tabular-nums">{formatMiPerKwh(car.whPerKm)}</dd>
+            <dd className="font-wide text-lg font-semibold tabular-nums">{u(formatMiPerKwh(car.whPerKm))}</dd>
           </div>
           <div>
             <dt className="text-on-ink/70">1-stop range</dt>
-            <dd className="font-wide text-lg font-semibold tabular-nums">{formatMi(car.oneStopKm)}</dd>
+            <dd className="font-wide text-lg font-semibold tabular-nums">{u(formatMi(car.oneStopKm))}</dd>
           </div>
           <div>
             <dt className={quick ? "text-signal" : "text-on-ink/70"}>0–62 mph</dt>
@@ -386,7 +386,7 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
             {matched.map((m) => (
               <li key={m.key} className="rounded-full bg-on-ink/10 px-2.5 py-1 text-xs font-medium text-on-ink">
                 <span aria-hidden className="mr-1 text-signal">✓</span>
-                {m.chip}
+                {u(m.chip)}
               </li>
             ))}
           </ul>

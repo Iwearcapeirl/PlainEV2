@@ -1,6 +1,6 @@
 import { allCars, cars, type Car, type UkCar } from "./cars";
-import { COUNTRIES, formatMoney, formatMoneyRange, miles, newPrice, usedEstimates, type Country } from "./market";
-import { formatDistance, formatEfficiency, formatGbp, formatGbpPerMile, formatMiPerKwh, KM_PER_MILE } from "./format";
+import { COUNTRIES, formatMoney, newPrice, usedEstimates, type Country } from "./market";
+import { formatDistance, formatEfficiency, formatGbp, formatGbpPerMile, formatMiles, formatMiPerKwh, KM_PER_MILE } from "./format";
 
 /**
  * Everything the car page says about a car beyond the raw specs: where it ranks against the other EVs on sale,
@@ -223,11 +223,11 @@ export function carSummary(car: Car): string[] {
     const oldest = used[used.length - 1];
     const prices =
       used.length === 1
-        ? `a ${newest.year} example is estimated at ${formatMoneyRange(newest.low, newest.high, country)}`
-        : `a ${oldest.year} example is estimated at ${formatMoneyRange(oldest.low, oldest.high, country)} and a ${newest.year} one at ${formatMoneyRange(newest.low, newest.high, country)}`;
+        ? `a ${newest.year} example typically sells for about ${formatMoney(newest.typical, country)}`
+        : `a ${oldest.year} example typically sells for about ${formatMoney(oldest.typical, country)} and a ${newest.year} one for about ${formatMoney(newest.typical, country)}`;
     paragraphs.push(
-      `Second-hand${country === "uk" ? "" : ` in ${COUNTRIES[country].label}`}, ${prices}, based on typical EV depreciation. ` +
-        `After typical battery wear, a ${oldest.year} car should still manage about ${miles(oldest.rangeTodayKm)} miles of real-world range. ` +
+      `Second-hand${country === "uk" ? "" : ` in ${COUNTRIES[country].label}`}, ${prices} (our estimate for an average-mileage car, checked against real listings). ` +
+        `After typical battery wear, a ${oldest.year} car should still manage about ${formatMiles(oldest.rangeTodayKm)} of real-world range. ` +
         `These are estimates, not valuations: check real prices before you buy.`,
     );
   }

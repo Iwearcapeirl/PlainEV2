@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
+import UnitsSwitch from "@/components/UnitsSwitch";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
+import { UNITS_KEY } from "@/lib/units";
 import { ADSENSE_CLIENT, SITE_NAME, SITE_URL, UPDATED_ISO } from "@/lib/site";
 import "./globals.css";
 
@@ -27,8 +29,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-GB" className={archivo.variable}>
+    <html lang="en-GB" className={archivo.variable} suppressHydrationWarning>
       <head>
+        {/* Miles or km, picked with the switch in the top bar: set before the page paints so the right unit shows at once. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem(${JSON.stringify(UNITS_KEY)})==="km")document.documentElement.dataset.units="km"}catch(e){}` }} />
         {/* Google AdSense: verifies the site and loads ads into the AdSlot spaces. Plain async tag so it sits in <head>, as AdSense asks. */}
         <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
       </head>
@@ -39,19 +43,20 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Logo />
               <span className="font-wide whitespace-nowrap text-[15px] font-semibold max-[439px]:sr-only">{SITE_NAME}</span>
             </Link>
-            <nav aria-label="Main" className="flex items-center gap-1 text-sm max-[359px]:gap-0.5 sm:gap-2">
-              <Link href="/best" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[359px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
+            <nav aria-label="Main" className="flex items-center gap-1 text-sm max-[399px]:gap-0.5 max-[359px]:gap-0 sm:gap-2">
+              <UnitsSwitch />
+              <Link href="/best" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 Rankings
               </Link>
-              <Link href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[359px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
+              <Link href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 All cars
               </Link>
-              <Link href="/compare" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[359px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
+              <Link href="/compare" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 Compare
               </Link>
               <Link
                 href="/quiz"
-                className="whitespace-nowrap rounded-lg bg-signal px-3 py-2 font-semibold max-[359px]:px-2 text-signal-ink hover:brightness-95 sm:px-3.5"
+                className="whitespace-nowrap rounded-lg bg-signal px-3 py-2 font-semibold max-[359px]:px-1.5 text-signal-ink hover:brightness-95 sm:px-3.5"
               >
                 {/* Narrow phones get the short label so all four links fit on one line. */}
                 <span className="max-sm:hidden">Find your match</span>

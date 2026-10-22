@@ -42,7 +42,7 @@ export interface UsedRankingPage {
 }
 
 const METHOD =
-  "Ranked by estimated real-world range today: the range when new, less about 2% battery wear a year, for the newest model year that fits the budget. One car per model. Used prices are our estimates from the price when new and typical depreciation, not valuations, so check real listings.";
+  "Ranked by estimated real-world range today: the range when new, less about 2% battery wear a year, for the newest model year whose typical asking price fits the budget. One car per model. Used prices are our estimates for an average-mileage example, checked against real UK listings, not valuations, so check real listings before you buy.";
 
 /** Every version's newest model year within the budget, best range today first, one per model family. */
 function rank(max: number, test: (c: Car) => boolean = () => true): UsedEntry[] {
@@ -50,12 +50,12 @@ function rank(max: number, test: (c: Car) => boolean = () => true): UsedEntry[] 
   for (const car of allCars) {
     // Makes that have closed down (no warranty or parts support) aren't recommended.
     if (car.priceGbp === null || !test(car) || warrantyOf(car)?.closed) continue;
-    const fits = usedEstimates(car, "uk").filter((e) => e.low <= max);
+    const fits = usedEstimates(car, "uk").filter((e) => e.typical <= max);
     if (!fits.length) continue;
     const years = fits.map((e) => e.year);
     entries.push({ car, pick: fits[0], yearFrom: Math.min(...years), yearTo: Math.max(...years) });
   }
-  entries.sort((x, y) => y.pick.rangeTodayKm - x.pick.rangeTodayKm || x.pick.low - y.pick.low || x.car.id - y.car.id);
+  entries.sort((x, y) => y.pick.rangeTodayKm - x.pick.rangeTodayKm || x.pick.typical - y.pick.typical || x.car.id - y.car.id);
   const seen = new Set<string>();
   return entries.filter((e) => (seen.has(e.car.family) ? false : (seen.add(e.car.family), true)));
 }

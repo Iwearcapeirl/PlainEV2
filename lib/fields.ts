@@ -1,7 +1,8 @@
 import { bodyLabel, driveLabel, segmentLabel } from "./carProfile";
 import { allCars, type Car } from "./cars";
 import { COUNTRIES, usedFrom, type Country } from "./market";
-import { KM_PER_MILE, kmToMiles, miPerKwh } from "./format";
+import { KM_PER_MILE, kmToMiles, milesToKm, miPerKwh } from "./format";
+import { both } from "./units";
 import { looseIncludes } from "./text";
 import { batteryWarrantyYears, carWarrantyYears } from "./warranty";
 
@@ -62,7 +63,7 @@ const choice = (key: string, label: string, get: (c: Car) => string, display: (v
 
 export const FIELDS: Field[] = [
   { key: "price", label: "UK price when new", kind: "number", unit: "£", prefix: true, step: 1000, get: (c) => c.priceGbp },
-  { key: "usedprice", label: "Used price from (estimated)", kind: "number", unit: "£", prefix: true, currency: true, step: 1000, get: (c, country) => usedFrom(c, country)?.low ?? null, about: "cheapest estimated second-hand price (oldest model year) in the buyer's country and currency; blank for cars not yet sold" },
+  { key: "usedprice", label: "Used price from (estimated)", kind: "number", unit: "£", prefix: true, currency: true, step: 1000, get: (c, country) => usedFrom(c, country)?.typical ?? null, about: "typical estimated second-hand price of the oldest model year in the buyer's country and currency; blank for cars not yet sold" },
   { key: "range", label: "Real-world range", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.rangeKm) },
   { key: "onestop", label: "Range with one 15-min charge", kind: "number", unit: "mi", step: 10, get: (c) => kmToMiles(c.oneStopKm) },
   { key: "efficiency", label: "Efficiency", kind: "number", unit: "mi/kWh", step: 0.1, get: (c) => Math.round(miPerKwh(c.whPerKm) * 10) / 10 },
@@ -209,8 +210,11 @@ export function describe(f: CustomFilter, country: Country = "uk"): string {
       const show = (n: number) => n.toLocaleString("en-GB", { useGrouping: field.grouping ?? true });
       const unit = unitOf(field, country);
       const fmt = (n: number) => (field.prefix ? `${unit}${show(n)}` : `${show(n)} ${unit}`.trim());
-      if (lo !== null && hi !== null) return `${field.label}: ${fmt(lo)} to ${fmt(hi)}`;
-      return `${field.label}: ${lo !== null ? `at least ${fmt(lo)}` : `up to ${fmt(hi!)}`}`;
+      const text = (f: (n: number) => string) =>
+        lo !== null && hi !== null ? `${f(lo)} to ${f(hi)}` : lo !== null ? `at least ${f(lo)}` : `up to ${f(hi!)}`;
+      // Distances are stored in miles; the km version is shown with the units switch (lib/units.ts).
+      if (unit === "mi") return `${field.label}: ${both(text((n) => `${Math.round(n).toLocaleString("en-GB")} mi`), text((n) => `${Math.round(milesToKm(n)).toLocaleString("en-GB")} km`))}`;
+      return `${field.label}: ${text(fmt)}`;
     }
     case "choice":
       return `${field.label}: ${field.options.find((o) => o.value === f.value)?.label ?? f.value}`;

@@ -1,4 +1,5 @@
 import { allCars } from "./cars";
+import { plain } from "./units";
 import { EMPTY_REFINEMENT, FIELDS, SORT_FIELDS, fieldByKey, isSet, type CustomFilter, type Refinement } from "./fields";
 import { milesToKm } from "./format";
 import { squash } from "./text";
@@ -52,7 +53,8 @@ export function optionsGuide(): string {
   lines.push(`- priority: ${PRIORITIES.map((p) => `"${p.id}" = ${p.hint}`).join("; ")}`);
   lines.push(`- country: "uk" = buying in the UK (prices in £); "de" = Germany (prices in €); "nl" = the Netherlands (prices in €)`);
   lines.push(`- condition: ${CONDITIONS.map((c) => `"${c.id}" = ${c.label.toLowerCase()}`).join("; ")}`);
-  return lines.join("\n");
+  // Labels carry miles and km versions (lib/units.ts); the model gets the miles ones.
+  return plain(lines.join("\n"));
 }
 
 // ---------- Built-in rules ----------

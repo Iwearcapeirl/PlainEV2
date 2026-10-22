@@ -203,3 +203,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rr-focus-ring { animation: none; }
 }
+
+/* Miles or km (lib/units.ts): both versions are in the page, the switch in the top bar picks one. */
+.u-km { display: none; }
+html[data-units="km"] .u-km { display: revert-layer; }
+html[data-units="km"] .u-mi { display: none; }

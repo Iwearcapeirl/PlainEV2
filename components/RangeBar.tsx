@@ -1,4 +1,8 @@
+import { u } from "@/components/UnitText";
 import { formatKm, kmToMiles, milesToKm } from "@/lib/format";
+import { both } from "@/lib/units";
+
+const km10 = (miles: number) => Math.round(milesToKm(miles) / 10) * 10;
 
 /** Every bar uses the same scale, so cars can be compared at a glance down a list. */
 export const RANGE_SCALE_MILES = 600;
@@ -29,10 +33,10 @@ export default function RangeBar({
     <div>
       <p className="flex flex-wrap items-baseline gap-x-2">
         <span className={`font-wide font-semibold tabular-nums leading-none ${lg ? "text-5xl sm:text-6xl" : "text-3xl"}`}>
-          {miles}
+          {u(both(String(miles), String(rangeKm)))}
         </span>
-        <span className={`font-semibold ${lg ? "text-lg" : "text-base"}`}>miles</span>
-        <span className="text-sm text-muted">({formatKm(rangeKm)}) real-world range</span>
+        <span className={`font-semibold ${lg ? "text-lg" : "text-base"}`}>{u(both("miles", "km"))}</span>
+        <span className="text-sm text-muted">({u(formatKm(rangeKm))}) real-world range</span>
       </p>
 
       <div
@@ -56,8 +60,8 @@ export default function RangeBar({
 
       <div aria-hidden className="mt-1 flex justify-between text-[10px] tabular-nums text-muted">
         <span>0</span>
-        {lg && TICKS.map((t) => <span key={t}>{t}</span>)}
-        <span>{RANGE_SCALE_MILES} mi</span>
+        {lg && TICKS.map((t) => <span key={t}>{u(both(String(t), String(km10(t))))}</span>)}
+        <span>{u(both(`${RANGE_SCALE_MILES} mi`, `${km10(RANGE_SCALE_MILES)} km`))}</span>
       </div>
     </div>
   );

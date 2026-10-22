@@ -1,4 +1,5 @@
 import type { Cell, CompareTable as Table } from "@/lib/compare";
+import { u } from "@/components/UnitText";
 
 /** The columns of the slots and the table: a label column on wider screens, then one per car. */
 export const COLS =
@@ -43,10 +44,10 @@ function Value({ cell, win }: { cell: Cell | null; win: boolean }) {
             ✓
           </span>
         )}
-        <span className="min-w-0">{cell.text}</span>
+        <span className="min-w-0">{u(cell.text)}</span>
         {win && <span className="sr-only"> (best)</span>}
       </span>
-      {cell.sub && <span className="block text-[11px] leading-snug text-muted sm:text-xs">{cell.sub}</span>}
+      {cell.sub && <span className="block text-[11px] leading-snug text-muted sm:text-xs">{u(cell.sub)}</span>}
     </dd>
   );
 }

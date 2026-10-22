@@ -1,6 +1,9 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUnits } from "@/components/UnitsSwitch";
+import { plain } from "@/lib/units";
+import { u } from "@/components/UnitText";
 import { useEffect, useId, useMemo, useState } from "react";
 import AdSlot from "@/components/AdSlot";
 import CarImage from "@/components/CarImage";
@@ -10,8 +13,8 @@ import CountrySwitch from "@/components/CountrySwitch";
 import RefinePanel from "@/components/RefinePanel";
 import { allCars, carHref } from "@/lib/cars";
 import { fieldByKey, isSet, refine, refinementFromParams, writeRefinement, type ChoiceField, type Refinement } from "@/lib/fields";
-import { formatAccel } from "@/lib/format";
-import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupResults, miles, usedBudgetFit, yearsLabel, type Condition, type ResultGroup } from "@/lib/market";
+import { formatAccel, formatMi } from "@/lib/format";
+import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupResults, usedBudgetFit, yearsLabel, type Condition, type ResultGroup } from "@/lib/market";
 import { matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { BODIES, BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS, RANGES, answersFromParams, answersToQuery, budgetMax, inCurrency, type Answers } from "@/lib/quiz";
 import { photoSubject } from "@/lib/photo";
@@ -40,6 +43,8 @@ function browseQuery(a: Answers, r: Refinement): string {
 export default function Browse() {
   const router = useRouter();
   const params = useSearchParams();
+  // Dropdown options can't hold the two unit spans, so they follow the switch directly.
+  const units = useUnits();
   const id = useId();
   const [answers, setAnswers] = useState<Answers>(() => answersFromParams(params));
   const [refinement, setRefinement] = useState<Refinement>(() => refinementFromParams(params));
@@ -157,7 +162,7 @@ export default function Browse() {
             <select value={answers.range} onChange={(e) => setAnswer("range", e.target.value)} className={`${control} font-normal`}>
               {RANGES.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.label}
+                  {plain(r.label, units)}
                 </option>
               ))}
             </select>
@@ -261,8 +266,8 @@ function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
 
       <dl className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm min-[420px]:grid-cols-4 sm:col-span-1 sm:grid-cols-2 sm:pr-2 md:grid-cols-4">
         {answers.condition !== "used" && <Stat label={fit ? "New (over budget)" : "New from"} value={o.newPrice !== null ? formatMoney(o.newPrice, answers.country) : "–"} />}
-        {answers.condition !== "new" && <Stat label="Used from (est.)" value={o.used ? formatMoney(o.used.low, answers.country) : "–"} />}
-        <Stat label="Real range" value={`${miles(car.rangeKm)} mi`} />
+        {answers.condition !== "new" && <Stat label="Used from (est.)" value={o.used ? formatMoney(o.used.typical, answers.country) : "–"} />}
+        <Stat label="Real range" value={formatMi(car.rangeKm)} />
         <Stat label="0–62 mph" value={formatAccel(car.accelS)} />
       </dl>
 
@@ -286,7 +291,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-[5.5rem]">
       <dt className="text-xs text-muted">{label}</dt>
-      <dd className="font-wide font-semibold tabular-nums">{value}</dd>
+      <dd className="font-wide font-semibold tabular-nums">{u(value)}</dd>
     </div>
   );
 }

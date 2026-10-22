@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { u } from "@/components/UnitText";
+import { plainDeep } from "@/lib/units";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CarImage from "@/components/CarImage";
@@ -22,7 +24,12 @@ export function generateStaticParams() {
   return featuredVsPages(100).map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+// Titles and descriptions are shown by search engines and share previews, which can't switch units: always miles.
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  return plainDeep(await metadataFor(props));
+}
+
+async function metadataFor({ params }: Props): Promise<Metadata> {
   const page = getVsPage((await params).slug);
   if (!page) return {};
   const title = `${vsTitle(page)}: which is better? (${DATA_YEAR})`;
@@ -71,7 +78,7 @@ export default async function VsPage({ params }: Props) {
         <h2 id="verdict-title" className="font-wide text-2xl font-semibold">Our verdict</h2>
         <div className="mt-4 grid max-w-[66ch] gap-3 text-[17px] leading-relaxed text-pretty">
           {verdict(page).map((p) => (
-            <p key={p.slice(0, 40)}>{p}</p>
+            <p key={p.slice(0, 40)}>{u(p)}</p>
           ))}
         </div>
         <p className="mt-4 max-w-[66ch] border-l-4 border-signal pl-3 text-sm text-muted">
@@ -111,7 +118,7 @@ export default async function VsPage({ params }: Props) {
                       {v.model}
                     </Link>
                     <span className="shrink-0 tabular-nums text-muted">
-                      {formatGbp(v.priceGbp)} · {formatMi(v.rangeKm)}
+                      {formatGbp(v.priceGbp)} · {u(formatMi(v.rangeKm))}
                     </span>
                   </li>
                 ))}
@@ -162,7 +169,7 @@ function Side({ r, priority, wins, of }: { r: Rival; priority: boolean; wins: nu
         {c.model}
       </Link>
       <p className="mt-1 text-sm tabular-nums">
-        <span className="font-semibold">{formatGbp(c.priceGbp)}</span> <span className="text-muted">· {formatMi(c.rangeKm)}</span>
+        <span className="font-semibold">{formatGbp(c.priceGbp)}</span> <span className="text-muted">· {u(formatMi(c.rangeKm))}</span>
       </p>
       <p className="mt-1.5 inline-block rounded-full bg-win px-2 py-0.5 text-xs font-semibold">
         Wins {wins} of {of}

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { plainDeep } from "@/lib/units";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import CarBreadcrumb from "@/components/CarBreadcrumb";
 import CarImage from "@/components/CarImage";
 import EvdbLink from "@/components/EvdbLink";
+import { u } from "@/components/UnitText";
 import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
@@ -36,6 +38,7 @@ import {
   formatGbpPerMile,
   formatKm,
   formatMi,
+  formatMiles,
   formatMiPerKwh,
   formatSize,
   formatWhPerKm,
@@ -46,7 +49,6 @@ import {
   formatMoney,
   formatMoneyRange,
   listingSearch,
-  miles,
   newPrice,
   usedEstimates,
   usedFrom,
@@ -79,7 +81,12 @@ function statusLabel(car: Car): string {
   return car.priceGbp !== null ? "On sale new" : `On sale new in ${[car.priceDeEur !== null && "Germany", car.priceNlEur !== null && "the Netherlands"].filter(Boolean).join(" and ")}`;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+// Titles and descriptions are shown by search engines and share previews, which can't switch units: always miles.
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  return plainDeep(await metadataFor(props));
+}
+
+async function metadataFor({ params }: Props): Promise<Metadata> {
   const car = getCarBySlug((await params).slug);
   if (!car) return {};
   const name = `${car.make} ${car.model}`;
@@ -94,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     car.status === "Available" && price !== null && country
       ? `from ${formatMoney(price, country)} in ${countryName(country)}`
       : used && country
-        ? `used from about ${formatMoney(used.low, country)} (estimated)`
+        ? `used from about ${formatMoney(used.typical, country)} (estimated)`
         : car.status === "Upcoming"
           ? "coming soon"
           : "";
@@ -177,7 +184,7 @@ export default async function CarPage({ params }: Props) {
               {cheapestUsed && (
                 <p className="flex flex-wrap items-baseline gap-x-2">
                   <span className="text-sm text-muted">Used from</span>
-                  <span className="font-wide text-xl font-semibold tabular-nums">{formatMoney(cheapestUsed.low, country)}</span>
+                  <span className="font-wide text-xl font-semibold tabular-nums">{formatMoney(cheapestUsed.typical, country)}</span>
                   <span className="text-sm text-muted">estimated, {cheapestUsed.year} car</span>
                 </p>
               )}
@@ -276,16 +283,17 @@ export default async function CarPage({ params }: Props) {
         <section aria-labelledby="used-title" className="mt-12">
           <SectionTitle id="used-title">Buying one used</SectionTitle>
           <p className="mt-2 max-w-[66ch] text-muted text-pretty">
-            Estimated prices by model year{country !== "uk" ? ` in ${countryName(country)}` : ""}, from its price when new and typical EV
-            depreciation, and the real-world range you can expect today after about {Math.round(BATTERY_LOSS_PER_YEAR * 100)}% battery
-            wear a year. These are estimates, not valuations: mileage, condition and battery health make a big difference.
+            Typical asking prices by model year{country !== "uk" ? ` in ${countryName(country)}` : ""} for an average-mileage example,
+            estimated from its price when new and checked against real UK listings, with the real-world range you can expect today
+            after about {Math.round(BATTERY_LOSS_PER_YEAR * 100)}% battery wear a year. They&rsquo;re estimates, not valuations: mileage,
+            trim, condition and battery health make a big difference, so check real listings before you budget.
           </p>
           <div className="mt-4 overflow-hidden rounded-2xl bg-card shadow-[0_0_0_1px_var(--line)]">
             <table className="w-full text-sm tabular-nums">
               <thead className="bg-accent-soft text-left text-xs text-muted">
                 <tr>
                   <th scope="col" className="px-4 py-2.5 font-medium sm:px-5">Model year</th>
-                  <th scope="col" className="px-4 py-2.5 font-medium">Estimated price</th>
+                  <th scope="col" className="px-4 py-2.5 font-medium">Typical price (est.)</th>
                   <th scope="col" className="px-4 py-2.5 text-right font-medium sm:px-5">Range today (est.)</th>
                 </tr>
               </thead>
@@ -293,8 +301,11 @@ export default async function CarPage({ params }: Props) {
                 {usedTable.map((e) => (
                   <tr key={e.year} className="border-t border-line">
                     <th scope="row" className="px-4 py-2.5 text-left font-semibold sm:px-5">{e.year}</th>
-                    <td className="px-4 py-2.5">{formatMoneyRange(e.low, e.high, country)}</td>
-                    <td className="px-4 py-2.5 text-right sm:px-5">{miles(e.rangeTodayKm)} miles</td>
+                    <td className="px-4 py-2.5">
+                      <span className="font-semibold">{formatMoney(e.typical, country)}</span>
+                      <span className="block text-xs text-muted sm:inline sm:pl-2">most {formatMoneyRange(e.low, e.high, country)}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right sm:px-5">{u(formatMiles(e.rangeTodayKm))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -319,7 +330,7 @@ export default async function CarPage({ params }: Props) {
           <SectionTitle id="summary-title">Summary</SectionTitle>
           <div className="mt-4 grid max-w-[66ch] gap-4 text-[17px] leading-relaxed text-pretty">
             {summary.map((p) => (
-              <p key={p.slice(0, 32)}>{p}</p>
+              <p key={p.slice(0, 32)}>{u(p)}</p>
             ))}
           </div>
           <p className="mt-5 max-w-[66ch] border-l-4 border-signal pl-3 text-sm text-muted">
@@ -487,11 +498,11 @@ export default async function CarPage({ params }: Props) {
                       {v.model}
                     </span>
                     <span className="block text-xs text-muted">
-                      {versionYears(v)} · {driveLabel(v.drive)} · {v.batteryKwh} kWh · {formatMiPerKwh(v.whPerKm)}
+                      {versionYears(v)} · {driveLabel(v.drive)} · {v.batteryKwh} kWh · {u(formatMiPerKwh(v.whPerKm))}
                     </span>
                   </span>
                   <span className="shrink-0 text-right tabular-nums">
-                    <span className="block font-semibold">{formatMi(v.rangeKm)}</span>
+                    <span className="block font-semibold">{u(formatMi(v.rangeKm))}</span>
                     <span className="block text-xs text-muted">{versionPrice(v)}</span>
                   </span>
                   <span aria-hidden className="text-muted transition-transform group-hover:translate-x-0.5">→</span>
@@ -546,7 +557,7 @@ export default async function CarPage({ params }: Props) {
                     </Link>
                   </h3>
                   <p className="mt-auto flex items-baseline justify-between gap-2 pt-3 text-sm tabular-nums">
-                    <span className="font-semibold">{formatMi(s.rangeKm)} <span className="font-normal text-muted">range</span></span>
+                    <span className="font-semibold">{u(formatMi(s.rangeKm))} <span className="font-normal text-muted">range</span></span>
                     <span className="text-muted">{formatGbp(s.priceGbp)}</span>
                   </p>
                 </div>
@@ -648,8 +659,8 @@ function Tile({ label, value, sub }: { label: string; value: string; sub: string
   return (
     <div className="bg-card px-3 py-2.5">
       <dt className="text-xs text-muted">{label}</dt>
-      <dd className="mt-0.5 text-[15px] font-semibold tabular-nums">{value}</dd>
-      <dd className="text-[11px] tabular-nums text-muted">{sub}</dd>
+      <dd className="mt-0.5 text-[15px] font-semibold tabular-nums">{u(value)}</dd>
+      <dd className="text-[11px] tabular-nums text-muted">{u(sub)}</dd>
     </div>
   );
 }
@@ -661,7 +672,7 @@ function Rank({ label, extra, s, scope }: { label: string; extra?: string; s: St
       <p className="flex items-baseline justify-between gap-3">
         <span className="text-sm text-muted">
           {label}
-          {extra && ` ${extra}`}
+          {extra && <> {u(extra)}</>}
         </span>
         <span className="tabular-nums">
           <span className="font-wide text-lg font-semibold">{s.rank}</span>
@@ -689,7 +700,7 @@ function SpecGroup({ title, rows }: { title: string; rows: [string, string][] })
         {rows.map(([k, v]) => (
           <div key={k} className="flex items-baseline justify-between gap-4 border-t border-line py-2.5 first:border-t-0">
             <dt className="text-sm text-muted">{k}</dt>
-            <dd className="text-right text-sm font-medium tabular-nums">{v}</dd>
+            <dd className="text-right text-sm font-medium tabular-nums">{u(v)}</dd>
           </div>
         ))}
       </dl>
@@ -715,7 +726,7 @@ function versionPrice(v: Car): string {
   if (!c) return "";
   if (v.status === "Available") return formatMoney(newPrice(v, c)!, c);
   const u = usedFrom(v, c);
-  return u ? `used from ${formatMoney(u.low, c)}` : "";
+  return u ? `used from about ${formatMoney(u.typical, c)}` : "";
 }
 
 const formatDate = (iso: string) =>

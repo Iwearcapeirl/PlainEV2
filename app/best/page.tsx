@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { u } from "@/components/UnitText";
 import Link from "next/link";
 import QuizCta from "@/components/QuizCta";
 import { formatGbp, formatMi, formatMiPerKwh } from "@/lib/format";
@@ -50,7 +51,7 @@ export default function RankingsIndex() {
                       <span className="mt-auto pt-3 text-sm text-muted">
                         Top: {top.make} {top.model},{" "}
                         <span className="tabular-nums text-foreground">
-                          {p.metric === "efficiency" ? formatMiPerKwh(top.whPerKm) : formatMi(top.rangeKm)}
+                          {u(p.metric === "efficiency" ? formatMiPerKwh(top.whPerKm) : formatMi(top.rangeKm))}
                         </span>
                       </span>
                       <span className="text-xs text-muted">{p.ranked.length} cars compared</span>
@@ -77,10 +78,10 @@ export default function RankingsIndex() {
                   <span className="text-[15px] font-semibold leading-snug">{p.label}</span>
                   <span className="mt-auto pt-3 text-sm text-muted">
                     Top: {top.car.make} {top.car.variant} ({top.pick.year}),{" "}
-                    <span className="tabular-nums text-foreground">about {formatMi(top.pick.rangeTodayKm)} today</span>
+                    <span className="tabular-nums text-foreground">about {u(formatMi(top.pick.rangeTodayKm))} today</span>
                   </span>
                   <span className="text-xs text-muted">
-                    {p.entries.length} models · from about {formatGbp(Math.min(...p.entries.map((e) => e.pick.low)))}
+                    {p.entries.length} models · from about {formatGbp(Math.min(...p.entries.map((e) => e.pick.typical)))}
                   </span>
                 </Link>
               </li>

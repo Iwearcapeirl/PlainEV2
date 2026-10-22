@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { u } from "@/components/UnitText";
+import { plainDeep } from "@/lib/units";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
@@ -19,7 +21,12 @@ export function generateStaticParams() {
   return [...rankingPages, ...usedRankingPages].map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+// Titles and descriptions are shown by search engines and share previews, which can't switch units: always miles.
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  return plainDeep(await metadataFor(props));
+}
+
+async function metadataFor({ params }: Props): Promise<Metadata> {
   const slug = (await params).slug;
   const page = getRankingPage(slug) ?? getUsedRankingPage(slug);
   if (!page) return {};
@@ -71,8 +78,8 @@ export default async function RankingPage({ params }: Props) {
           <time dateTime={UPDATED_ISO}>Updated {UPDATED_LABEL}</time>
           <span>{page.ranked.length} cars compared</span>
         </p>
-        <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty">{page.intro}</p>
-        <p className="mt-5 max-w-[70ch] border-l-4 border-signal pl-3 text-sm text-muted">{page.method}</p>
+        <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty">{u(page.intro)}</p>
+        <p className="mt-5 max-w-[70ch] border-l-4 border-signal pl-3 text-sm text-muted">{u(page.method)}</p>
         <DataSourceNote className="mt-3" />
       </header>
 
@@ -183,8 +190,8 @@ function UsedRanking({ page }: { page: UsedRankingPage }) {
           <time dateTime={UPDATED_ISO}>Updated {UPDATED_LABEL}</time>
           <span>{page.entries.length} models compared</span>
         </p>
-        <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty">{page.intro}</p>
-        <p className="mt-5 max-w-[70ch] border-l-4 border-signal pl-3 text-sm text-muted">{page.method}</p>
+        <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty">{u(page.intro)}</p>
+        <p className="mt-5 max-w-[70ch] border-l-4 border-signal pl-3 text-sm text-muted">{u(page.method)}</p>
         <DataSourceNote className="mt-3" />
       </header>
 

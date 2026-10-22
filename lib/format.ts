@@ -1,5 +1,7 @@
 // The data is stored in metric units (km, Wh/km), as published by EV Database.
-// Everything shown to UK readers leads with miles, with the metric equivalent in brackets.
+// Distances and efficiency are shown in miles by default, or km with the switch in the top bar: those formatters
+// return both versions (lib/units.ts), so render them with u() from components/UnitText.tsx.
+import { both } from "./units";
 
 const gbp = new Intl.NumberFormat("en-GB", {
   style: "currency",
@@ -18,21 +20,27 @@ export const kmToMiles = (km: number) => Math.round(km / KM_PER_MILE);
 /** miles → km (unrounded; used for filter thresholds). */
 export const milesToKm = (miles: number) => miles * KM_PER_MILE;
 
-/** "311 mi" — compact, for stat tiles. */
-export const formatMi = (km: number) => `${int.format(kmToMiles(km))} mi`;
-/** "500 km" */
-export const formatKm = (km: number) => `${int.format(km)} km`;
-/** "311 miles (500 km)" — for running text. */
-export const formatDistance = (km: number) => `${int.format(kmToMiles(km))} miles (${formatKm(km)})`;
+/** "311 mi" (or "500 km") — compact, for stat tiles. */
+export const formatMi = (km: number) => both(`${int.format(kmToMiles(km))} mi`, `${int.format(km)} km`);
+/** "311 miles" (or "500 km") — for running text. */
+export const formatMiles = (km: number) => both(`${int.format(kmToMiles(km))} miles`, `${int.format(km)} km`);
+/** The other unit, for the small line under a figure: "500 km" (or "311 mi" when showing km). */
+export const formatKm = (km: number) => both(`${int.format(km)} km`, `${int.format(kmToMiles(km))} mi`);
+/** "311 miles (500 km)" (or "500 km (311 miles)") — for running text. */
+export const formatDistance = (km: number) =>
+  both(`${int.format(kmToMiles(km))} miles (${int.format(km)} km)`, `${int.format(km)} km (${int.format(kmToMiles(km))} miles)`);
 
 /** Wh/km → miles per kWh (higher is better). */
 export const miPerKwh = (whPerKm: number) => 1000 / (whPerKm * KM_PER_MILE);
-/** "4.1 mi/kWh" */
-export const formatMiPerKwh = (whPerKm: number) => `${oneDp.format(miPerKwh(whPerKm))} mi/kWh`;
-/** "151 Wh/km" */
-export const formatWhPerKm = (whPerKm: number) => `${int.format(whPerKm)} Wh/km`;
-/** "4.1 mi/kWh (151 Wh/km)" — for running text. */
-export const formatEfficiency = (whPerKm: number) => `${formatMiPerKwh(whPerKm)} (${formatWhPerKm(whPerKm)})`;
+const miKwh = (whPerKm: number) => `${oneDp.format(miPerKwh(whPerKm))} mi/kWh`;
+const kwh100 = (whPerKm: number) => `${oneDp.format(whPerKm / 10)} kWh/100 km`;
+/** "4.1 mi/kWh" (or "15.1 kWh/100 km") */
+export const formatMiPerKwh = (whPerKm: number) => both(miKwh(whPerKm), kwh100(whPerKm));
+/** The other unit, under an efficiency figure: "151 Wh/km" (or "4.1 mi/kWh" when showing km). */
+export const formatWhPerKm = (whPerKm: number) => both(`${int.format(whPerKm)} Wh/km`, miKwh(whPerKm));
+/** "4.1 mi/kWh (151 Wh/km)" (or "15.1 kWh/100 km (4.1 mi/kWh)") — for running text. */
+export const formatEfficiency = (whPerKm: number) =>
+  both(`${miKwh(whPerKm)} (${int.format(whPerKm)} Wh/km)`, `${kwh100(whPerKm)} (${miKwh(whPerKm)})`);
 
 /** UK price per mile of real-world range, e.g. "£172". */
 export const formatGbpPerMile = (priceGbp: number, rangeKm: number) => gbp.format(priceGbp / (rangeKm / KM_PER_MILE));

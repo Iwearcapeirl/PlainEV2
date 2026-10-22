@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { plain } from "@/lib/units";
 import { ImageResponse } from "next/og";
 import { CarCard, H, ListCard, SiteCard, VsCard, W } from "@/components/ShareCards";
 import type { Car } from "@/lib/cars";
@@ -38,14 +39,14 @@ export async function GET(_req: Request, { params }: Params) {
       body = (
         <ListCard
           title={ranking.h1}
-          lines={ranking.ranked.slice(0, 3).map((c) => `${c.make} ${c.model} · ${formatMi(c.rangeKm)}`)}
+          lines={ranking.ranked.slice(0, 3).map((c) => `${c.make} ${c.model} · ${plain(formatMi(c.rangeKm))}`)}
         />
       );
     } else if (used) {
       body = (
         <ListCard
           title={used.h1}
-          lines={used.entries.slice(0, 3).map((e) => `${e.car.make} ${e.car.variant} (${e.pick.year}) · about ${formatMi(e.pick.rangeTodayKm)} today`)}
+          lines={used.entries.slice(0, 3).map((e) => `${e.car.make} ${e.car.variant} (${e.pick.year}) · about ${plain(formatMi(e.pick.rangeTodayKm))} today`)}
         />
       );
     }

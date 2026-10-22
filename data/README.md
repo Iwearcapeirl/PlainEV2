@@ -50,3 +50,39 @@ All figures are unchanged.
 ## Warranties (`warranty.json`)
 
 UK maker warranties by make, checked on each maker's official UK website or warranty documents on 18 October 2026 (the source link is stored with each make and shown on car pages). `car` and `battery` give years and miles ("unlimited" = no mileage limit, null = not stated); `capacity` is the share of battery capacity guaranteed; `transfer` is yes / conditions / unknown; `models` overrides terms for some models (e.g. Tesla's longer battery cover on Long Range and Performance versions). Not yet confirmed from an official source: Alpine, Bentley, Changan, GAC, GWM, Maserati, Maxus, Mitsubishi, ORA, Omoda, Rolls-Royce, Skywell, SsangYong. Fisker and Lightyear have closed down.
+
+## Used prices
+
+Used prices are **typical asking prices** for an average-mileage example, estimated from the car's price when new, its age and its make (`lib/market.ts`). The curve was fitted in October 2026 to the median asking price of the first page of AutoTrader results (about 20 listings, Cat S/N excluded) for 27 popular model years, checked by hand in a browser. Only the medians below were recorded. Budget checks use the typical price; the range shown is ±12%, about where most listings sat.
+
+| Model | Year | Median asking price | New estimate | Old estimate (low end, used for budgets) |
+|---|---|---|---|---|
+| Nissan Leaf | 2017 | £4,995 | £5,900 | £3,400 |
+| Nissan Leaf | 2019 | £8,100 | £8,200 | £6,100 |
+| Nissan Leaf | 2021 | £9,490 | £9,500 | £8,400 |
+| Nissan Leaf | 2023 | £11,944 | £12,200 | £12,100 |
+| Renault Zoe | 2020 | £8,995 | £10,000 | £6,900 |
+| Tesla Model 3 | 2019 | £16,000 | £15,700 | £9,300 |
+| Tesla Model 3 | 2021 | £18,249 | £18,000 | £12,800 |
+| Tesla Model 3 | 2023 | £21,995 | £23,300 | £18,400 |
+| Tesla Model Y | 2022 | £23,449 | £20,500 | £15,700 |
+| Volkswagen ID.3 | 2021 | £13,350 | £11,100 | £8,400 |
+| Volkswagen ID.3 | 2023 | £17,295 | £19,500 | £17,600 |
+| Volkswagen ID.4 | 2022 | £16,930 | £16,900 | £14,600 |
+| MG4 | 2023 | £12,799 | £12,800 | £12,600 |
+| MG4 | 2024 | £15,370 | £15,300 | £15,800 |
+| Kia e-Niro | 2020 | £13,820 | £11,000 | £7,700 |
+| Hyundai Kona Electric | 2020 | £12,618 | £11,500 | £8,100 |
+| Hyundai Ioniq 5 | 2022 | £18,495 | £17,000 | £14,700 |
+| Hyundai Ioniq 5 | 2024 | £22,099 | £23,500 | £22,300 |
+| Kia EV6 | 2022 | £19,029 | £18,800 | £16,700 |
+| Škoda Enyaq | 2021 | £15,220 | £14,700 | £11,800 |
+| Polestar 2 | 2021 | £17,227 | £16,100 | £13,200 |
+| BMW i3 | 2018 | £10,990 | £9,700 | £5,600 |
+| Audi e-tron | 2020 | £17,699 | £20,000 | £16,900 |
+| Jaguar I-Pace | 2019 | £12,800 | £17,300 | £12,800 |
+| Peugeot e-208 | 2021 | £11,950 | £10,700 | £8,100 |
+| Cupra Born | 2022 | £16,250 | £13,800 | £11,300 |
+| BYD Atto 3 | 2023 | £17,490 | £16,400 | £14,100 |
+
+Recheck every six months or so (same searches: make, model, single year, electric, national), and refit if the medians drift by more than about 10%.

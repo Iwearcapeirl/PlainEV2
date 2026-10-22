@@ -114,7 +114,7 @@ export default function Compare() {
           <div className="mt-8 grid gap-2 text-xs text-muted">
             <p>
               Figures come from EV Database (linked under each car). Range is a real-world estimate, not the official WLTP figure. Used prices and &ldquo;range today&rdquo; are our estimates
-              for the oldest model year, from the price when new, typical depreciation and 2% battery wear a year.
+              for the oldest model year: a typical asking price for an average-mileage car (checked against real listings) and 2% battery wear a year.
             </p>
             <p>
               Photos:{" "}

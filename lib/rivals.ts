@@ -1,6 +1,7 @@
 import { bodyNoun, segmentLabel } from "./carProfile";
 import { cars, slugify, type UkCar } from "./cars";
 import { formatAccel, formatGbp, formatMi, formatMiPerKwh, KM_PER_MILE } from "./format";
+import { both } from "./units";
 import { warrantyOf } from "./warranty";
 
 /**
@@ -121,10 +122,12 @@ function points(a: UkCar, b: UkCar): Point[] {
   const pick = (x: number, y: number, higher: boolean): 0 | 1 | null => (close(x, y) ? null : (x > y) === higher ? 0 : 1);
   const p: Point[] = [];
   const [ra, rb] = [miles(a.rangeKm), miles(b.rangeKm)];
+  const [ka, kb] = [Math.round(a.rangeKm), Math.round(b.rangeKm)];
   p.push({
     winner: pick(a.rangeKm, b.rangeKm, true),
-    text: (w, l) => `goes further, with about ${Math.max(ra, rb)} miles of real-world range against ${Math.min(ra, rb)} for the ${short(l)}`,
-    same: ra === rb ? `real-world range (about ${ra} miles each)` : `real-world range (about ${ra} and ${rb} miles)`,
+    text: (w, l) =>
+      `goes further, with about ${both(`${Math.max(ra, rb)} miles`, `${Math.max(ka, kb)} km`)} of real-world range against ${both(String(Math.min(ra, rb)), String(Math.min(ka, kb)))} for the ${short(l)}`,
+    same: ra === rb ? `real-world range (about ${both(`${ra} miles`, `${ka} km`)} each)` : `real-world range (about ${both(`${ra} and ${rb} miles`, `${ka} and ${kb} km`)})`,
     want: "the longest range",
   });
   p.push({

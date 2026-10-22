@@ -79,7 +79,8 @@ export default function RangeRadar({
       <g fill="currentColor" className="rr-label" stroke="none">
         {RADAR_RINGS.slice(0, 4).map((m) => (
           <text key={m} x={C + 8} y={C - s(radarRingRadius(m)) + 20} fillOpacity="0.6">
-            {m} mi
+            <tspan className="u-mi">{m} mi</tspan>
+            <tspan className="u-km">{Math.round((m * 1.609344) / 10) * 10} km</tspan>
           </text>
         ))}
       </g>
