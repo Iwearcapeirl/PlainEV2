@@ -121,7 +121,8 @@ const USED_CEILING = 0.95;
 export function capBand(e: UsedEstimate, newPriceCap: number): UsedEstimate {
   const high = Math.min(e.high, round100(newPriceCap * USED_CEILING));
   if (high >= e.high) return e;
-  const low = Math.min(e.low, round100(high * (1 - SPREAD) / (1 + SPREAD)));
+  // Keep the bottom of the band where it was unless the lower top squeezes it.
+  const low = Math.min(e.low, round100(high * 0.85));
   return { ...e, high, low, typical: Math.min(e.typical, round100((low + high) / 2)) };
 }
 
