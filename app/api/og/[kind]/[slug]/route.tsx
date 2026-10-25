@@ -15,6 +15,7 @@ import { getUsedRankingPage } from "@/lib/usedRankings";
  * Wikimedia; if one can't be fetched the card is drawn without it. Cached for a week.
  */
 
+// Share images are for link previews, not search results: X-Robots-Tag keeps them out of Google's index (previews still work).
 const CACHE = "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400";
 
 type Params = { params: Promise<{ kind: string; slug: string }> };
@@ -55,7 +56,7 @@ export async function GET(_req: Request, { params }: Params) {
   }
 
   if (!body) return new Response("Not found", { status: 404 });
-  return new ImageResponse(body, { width: W, height: H, headers: { "Cache-Control": CACHE } });
+  return new ImageResponse(body, { width: W, height: H, headers: { "Cache-Control": CACHE, "X-Robots-Tag": "noindex" } });
 }
 
 /** The car's photo as a data URL (JPEG/PNG only), or null. */
