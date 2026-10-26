@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useUnits } from "@/components/UnitsSwitch";
 import { plain } from "@/lib/units";
 import { u } from "@/components/UnitText";
@@ -87,7 +88,12 @@ export default function Browse() {
     <div className="mx-auto max-w-4xl">
       <h1 className="font-wide text-3xl font-semibold leading-tight sm:text-4xl">All electric cars</h1>
       <p className="mt-2 max-w-[62ch] text-muted">
-        Every EV you can buy in {where}, new or second-hand, with real-world range (not WLTP). Used prices are estimates.
+        Every EV you can buy in {where}, new or second-hand, with real-world range (not WLTP). Used prices are estimates. Looking for one
+        model? See{" "}
+        <Link href="/models" className="font-semibold text-foreground underline decoration-signal decoration-2 underline-offset-4">
+          every model A–Z
+        </Link>
+        .
       </p>
       <DataSourceNote className="mt-1.5" />
 

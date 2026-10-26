@@ -5,15 +5,17 @@ import { useEffect, useState } from "react";
 import { readReturnTo, type ReturnTo } from "@/components/CarLink";
 
 /**
- * Breadcrumb for a car page. Server-rendered as Home / Rankings / {car}; after hydration, if the visitor came
- * from their quiz results or a ranking, the middle step and a "Back to …" button point there instead.
+ * Breadcrumb for a car page. Server-rendered as Home / {model} / {car} (or Home / Rankings / {car} for a model with a
+ * single version); after hydration, if the visitor came from their quiz results or a ranking, the middle step and a
+ * "Back to …" button point there instead.
  */
-export default function CarBreadcrumb({ current }: { current: string }) {
+export default function CarBreadcrumb({ current, model }: { current: string; model?: { href: string; label: string } }) {
   const [from, setFrom] = useState<ReturnTo | null>(null);
   useEffect(() => setFrom(readReturnTo()), []);
 
-  const middle = from ?? { href: "/best", label: "Rankings" };
-  const middleLabel = from ? capitalise(from.label) : "Rankings";
+  const fallback = model ?? { href: "/best", label: "Rankings" };
+  const middle = from ?? fallback;
+  const middleLabel = from ? capitalise(from.label) : fallback.label;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">

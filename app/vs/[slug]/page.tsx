@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { familyHref } from "@/lib/models";
 import { u } from "@/components/UnitText";
 import { plainDeep } from "@/lib/units";
 import Link from "next/link";
@@ -110,7 +111,15 @@ export default async function VsPage({ params }: Props) {
         <div className="mt-4 grid gap-6 sm:grid-cols-2">
           {[a, b].map((r) => (
             <div key={r.name}>
-              <h3 className="font-semibold">{r.name}</h3>
+              <h3 className="font-semibold">
+                {familyHref(r.name) ? (
+                  <Link href={familyHref(r.name)!} className="underline decoration-line underline-offset-4 hover:decoration-foreground">
+                    {r.name}
+                  </Link>
+                ) : (
+                  r.name
+                )}
+              </h3>
               <ul className="mt-2 grid gap-1.5 text-sm">
                 {r.versions.map((v) => (
                   <li key={v.id} className="flex items-baseline justify-between gap-3 border-t border-line pt-1.5">
@@ -164,7 +173,15 @@ function Side({ r, priority, wins, of }: { r: Rival; priority: boolean; wins: nu
         frameClass="aspect-[16/10] rounded-xl shadow-[0_0_0_1px_var(--line)]"
         sizes="(min-width: 768px) 440px, 50vw"
       />
-      <p className="mt-2 text-xs text-muted sm:text-sm">{r.name}</p>
+      <p className="mt-2 text-xs text-muted sm:text-sm">
+        {familyHref(r.name) ? (
+          <Link href={familyHref(r.name)!} className="underline decoration-line underline-offset-2 hover:text-foreground">
+            {r.name}
+          </Link>
+        ) : (
+          r.name
+        )}
+      </p>
       <Link href={carHref(c)} className="block text-sm font-semibold leading-tight hover:underline sm:text-base">
         {c.model}
       </Link>

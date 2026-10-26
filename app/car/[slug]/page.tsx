@@ -12,6 +12,7 @@ import RangeBar from "@/components/RangeBar";
 import { carExtras } from "@/lib/carExtras";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import { compareHref } from "@/lib/compare";
+import { modelHref, modelOf, rangeSpan } from "@/lib/models";
 import { vsPagesFor, vsTitle } from "@/lib/rivals";
 import { formatBattery, formatTerm, TRANSFER_LABEL, usedWarrantyLeft, WARRANTY_CHECKED, warrantyOf } from "@/lib/warranty";
 import { photoSubject } from "@/lib/photo";
@@ -24,7 +25,6 @@ import {
   driveLabel,
   getCarBySlug,
   homeCountry,
-  otherVersions,
   segmentLabel,
   similarCars,
   type Standing,
@@ -48,7 +48,6 @@ import {
   COUNTRIES,
   formatMoney,
   formatBand,
-  formatMoneyRange,
   listingSearch,
   newPrice,
   usedEstimates,
@@ -138,7 +137,7 @@ export default async function CarPage({ params }: Props) {
   };
   const standings = carStandings(car);
   const summary = carSummary(car);
-  const versions = otherVersions(car);
+  const model = modelOf(car.family);
   const similar = similarCars(car);
   const rivals = vsPagesFor(car.family);
 
@@ -150,7 +149,7 @@ export default async function CarPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(car)).replace(/</g, "\\u003c") }}
       />
 
-      <CarBreadcrumb current={name} />
+      <CarBreadcrumb current={name} model={model ? { href: modelHref(model), label: model.name } : undefined} />
 
       {/* ---------- Hero: photo + key facts ---------- */}
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
@@ -178,6 +177,13 @@ export default async function CarPage({ params }: Props) {
           </p>
           <h1 className="font-wide mt-1 text-[1.75rem] font-semibold leading-[1.1] text-balance sm:text-3xl">{car.model}</h1>
           {car.fullName !== name && <p className="mt-1.5 text-sm text-muted">{car.fullName}</p>}
+          {model && (
+            <p className="mt-1.5 text-sm">
+              <Link href={modelHref(model)} className="font-semibold underline decoration-signal decoration-2 underline-offset-4">
+                See all {model.versions.length} versions of the {model.name}
+              </Link>
+            </p>
+          )}
 
           {country && price !== null && (
             <div className="mt-4 grid gap-1">
@@ -314,7 +320,7 @@ export default async function CarPage({ params }: Props) {
                   <tr key={e.year} className="border-t border-line">
                     <th scope="row" className="px-4 py-2.5 text-left font-semibold sm:px-5">{e.year}</th>
                     <td className="px-4 py-2.5">
-                      <span className="font-semibold">{formatMoneyRange(e.low, e.high, country)}</span>
+                      <span className="font-semibold">{formatBand(e.low, e.high, country)}</span>
                       {liveFor(e.year) && (
                         <a href={liveFor(e.year)!} target="_blank" rel="noopener noreferrer" className="block text-xs font-semibold underline decoration-signal underline-offset-2 sm:inline sm:pl-2">
                           live prices ↗
@@ -501,31 +507,20 @@ export default async function CarPage({ params }: Props) {
         <p className="mt-6 text-xs text-on-ink/55">Updated {UPDATED_LABEL}</p>
       </section>
 
-      {/* ---------- Other versions ---------- */}
-      {versions.length > 0 && (
+      {/* ---------- Other versions: on the model page ---------- */}
+      {model && (
         <section aria-labelledby="versions-title" className="mt-12">
           <SectionTitle id="versions-title">Other versions of the {car.family}</SectionTitle>
-          <ul className="mt-4 overflow-hidden rounded-2xl bg-card shadow-[0_0_0_1px_var(--line)]">
-            {versions.map((v) => (
-              <li key={v.id} className="border-t border-line first:border-t-0">
-                <Link href={carHref(v)} className="group flex items-center gap-4 px-4 py-3.5 hover:bg-accent-soft sm:px-5">
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium group-hover:underline group-hover:decoration-signal group-hover:decoration-2 group-hover:underline-offset-4">
-                      {v.model}
-                    </span>
-                    <span className="block text-xs text-muted">
-                      {versionYears(v)} · {driveLabel(v.drive)} · {v.batteryKwh} kWh · {u(formatMiPerKwh(v.whPerKm))}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-right tabular-nums">
-                    <span className="block font-semibold">{u(formatMi(v.rangeKm))}</span>
-                    <span className="block text-xs text-muted">{versionPrice(v)}</span>
-                  </span>
-                  <span aria-hidden className="text-muted transition-transform group-hover:translate-x-0.5">→</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <Link
+            href={modelHref(model)}
+            className="mt-4 flex items-center justify-between gap-4 rounded-2xl bg-card px-5 py-4 shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1.5px_var(--foreground)]"
+          >
+            <span className="min-w-0">
+              <span className="block font-semibold">All {model.versions.length} versions of the {model.name}, side by side</span>
+              <span className="block text-sm text-muted">Real-world range {u(rangeSpan(model))}, prices and used values by year</span>
+            </span>
+            <span aria-hidden className="text-lg">→</span>
+          </Link>
         </section>
       )}
 
@@ -729,21 +724,6 @@ const est = (value: string, estimated: boolean) => (estimated ? `${value} (estim
 const euro = (n: number) => `€${n.toLocaleString("en-GB")}`;
 const monthYear = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
-
-/** "2019–2022, used", "2024 on, new", "coming soon" for the versions list. */
-function versionYears(v: Car): string {
-  if (v.status === "Upcoming") return "Coming soon";
-  if (v.status === "Available") return `${v.yearFrom} on`;
-  return v.yearTo && v.yearTo !== v.yearFrom ? `${v.yearFrom}–${v.yearTo}` : `${v.yearFrom}`;
-}
-/** New price if on sale, otherwise the cheapest estimated used price, in the car's home currency. */
-function versionPrice(v: Car): string {
-  const c = homeCountry(v);
-  if (!c) return "";
-  if (v.status === "Available") return formatMoney(newPrice(v, c)!, c);
-  const u = usedFrom(v, c);
-  return u ? `used roughly ${formatBand(u.low, u.high, c)}` : "";
-}
 
 const formatDate = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });

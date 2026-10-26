@@ -1,4 +1,6 @@
+import Link from "next/link";
 import CarImage from "@/components/CarImage";
+import { familyHref } from "@/lib/models";
 import { u } from "@/components/UnitText";
 import CarLink from "@/components/CarLink";
 import { CompareTick } from "@/components/ComparePicks";
@@ -117,7 +119,16 @@ export default function CarCard({
             {rank}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-muted">{car.make}</p>
+            {familyHref(car.family) ? (
+              <p className="text-sm text-muted">
+                {/* Above the card's stretched link, so it opens the model page rather than this version. */}
+                <Link href={familyHref(car.family)!} className="relative z-10 hover:text-foreground hover:underline">
+                  {car.family}
+                </Link>
+              </p>
+            ) : (
+              <p className="text-sm text-muted">{car.make}</p>
+            )}
             <Heading className={`font-semibold leading-snug text-pretty ${featured ? "text-xl sm:text-2xl" : "text-[17px]"}`}>
               <CarLink
                 href={carHref(car)}

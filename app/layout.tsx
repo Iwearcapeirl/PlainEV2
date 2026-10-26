@@ -77,6 +77,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <li><Link href="/" className="text-muted hover:text-foreground">Home</Link></li>
                   <li><Link href="/quiz" className="text-muted hover:text-foreground">Find your match</Link></li>
                   <li><Link href="/cars" className="text-muted hover:text-foreground">All cars</Link></li>
+                  <li><Link href="/models" className="text-muted hover:text-foreground">Models A–Z</Link></li>
                   <li><Link href="/compare" className="text-muted hover:text-foreground">Compare cars</Link></li>
                   <li><Link href="/best" className="text-muted hover:text-foreground">All rankings</Link></li>
                 </ul>
