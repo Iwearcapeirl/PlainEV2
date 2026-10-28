@@ -347,7 +347,7 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
         <div className="mt-6">
           <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />
           {o.used && (
-            <p className="mt-2 text-sm text-on-ink/75">
+            <p className="mt-2 text-sm text-on-ink/85">
               Range when new. A {o.used.year} car today: about {u(formatMiles(o.used.rangeTodayKm))} (estimated, after battery wear).
             </p>
           )}
@@ -356,27 +356,27 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
         <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm">
           {o.newPrice !== null && (
             <div>
-              <dt className="text-on-ink/70">{market.budgetFit ? "New from (over budget)" : "New from"}</dt>
-              <dd className={`font-wide text-lg font-semibold tabular-nums ${market.budgetFit ? "text-on-ink/70" : ""}`}>{formatMoney(o.newPrice, country)}</dd>
+              <dt className="text-on-ink/85">{market.budgetFit ? "New from (over budget)" : "New from"}</dt>
+              <dd className={`font-wide text-lg font-semibold tabular-nums ${market.budgetFit ? "text-on-ink/85" : ""}`}>{formatMoney(o.newPrice, country)}</dd>
             </div>
           )}
           {o.used && (
             <div>
-              <dt className="text-on-ink/70">Used (est.)</dt>
+              <dt className="text-on-ink/85">Used (est.)</dt>
               <dd className="font-wide text-lg font-semibold tabular-nums">{formatBand(o.used.low, o.used.high, country)}</dd>
               <dd><LiveLink car={car} year={o.used.year} country={country} className="text-xs text-signal" /></dd>
             </div>
           )}
           <div>
-            <dt className={efficient ? "text-signal" : "text-on-ink/70"}>Efficiency</dt>
+            <dt className={efficient ? "text-signal" : "text-on-ink/85"}>Efficiency</dt>
             <dd className="font-wide text-lg font-semibold tabular-nums">{u(formatMiPerKwh(car.whPerKm))}</dd>
           </div>
           <div>
-            <dt className="text-on-ink/70">1-stop range</dt>
+            <dt className="text-on-ink/85">1-stop range</dt>
             <dd className="font-wide text-lg font-semibold tabular-nums">{u(formatMi(car.oneStopKm))}</dd>
           </div>
           <div>
-            <dt className={quick ? "text-signal" : "text-on-ink/70"}>0–62 mph</dt>
+            <dt className={quick ? "text-signal" : "text-on-ink/85"}>0–62 mph</dt>
             <dd className="font-wide text-lg font-semibold tabular-nums">{formatAccel(car.accelS)}</dd>
           </div>
         </dl>

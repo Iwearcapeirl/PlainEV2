@@ -37,6 +37,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
       </head>
       <body className="min-h-dvh font-sans antialiased">
+        {/* First thing a keyboard user reaches: jump past the top bar. Hidden until focused. */}
+        <a
+          href="#main"
+          className="sr-only rounded-lg bg-signal px-4 py-2 font-semibold text-signal-ink focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50"
+        >
+          Skip to content
+        </a>
         <header className="bg-ink text-on-ink">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 px-4 py-3.5 sm:gap-3 sm:px-6">
             <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={`${SITE_NAME} home`}>
@@ -66,7 +73,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
         </header>
 
-        <main className="px-4 pb-16 pt-8 sm:px-6 sm:pt-12">{children}</main>
+        <main id="main" tabIndex={-1} className="px-4 pb-16 pt-8 outline-none sm:px-6 sm:pt-12">{children}</main>
 
         <footer className="border-t border-line bg-card">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">

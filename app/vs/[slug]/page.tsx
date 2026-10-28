@@ -122,7 +122,7 @@ export default async function VsPage({ params }: Props) {
             <div key={r.name}>
               <h3 className="font-semibold">
                 {familyHref(r.name) ? (
-                  <Link href={familyHref(r.name)!} className="underline decoration-line underline-offset-4 hover:decoration-foreground">
+                  <Link href={familyHref(r.name)!} className="-my-1 inline-block py-1 underline decoration-line underline-offset-4 hover:decoration-foreground">
                     {r.name}
                   </Link>
                 ) : (
@@ -132,7 +132,7 @@ export default async function VsPage({ params }: Props) {
               <ul className="mt-2 grid gap-1.5 text-sm">
                 {r.versions.map((v) => (
                   <li key={v.id} className="flex items-baseline justify-between gap-3 border-t border-line pt-1.5">
-                    <Link href={carHref(v)} className="min-w-0 underline decoration-line underline-offset-4 hover:decoration-foreground">
+                    <Link href={carHref(v)} className="-my-1 inline-block min-w-0 py-1 underline decoration-line underline-offset-4 hover:decoration-foreground">
                       {v.model}
                     </Link>
                     <span className="shrink-0 tabular-nums text-muted">
@@ -182,9 +182,9 @@ function Side({ r, priority, wins, of }: { r: Rival; priority: boolean; wins: nu
         frameClass="aspect-[16/10] rounded-xl shadow-[0_0_0_1px_var(--line)]"
         sizes="(min-width: 768px) 440px, 50vw"
       />
-      <p className="mt-2 text-xs text-muted sm:text-sm">
+      <p className="mt-1 text-xs text-muted sm:text-sm">
         {familyHref(r.name) ? (
-          <Link href={familyHref(r.name)!} className="underline decoration-line underline-offset-2 hover:text-foreground">
+          <Link href={familyHref(r.name)!} className="inline-block py-1 underline decoration-line underline-offset-2 hover:text-foreground">
             {r.name}
           </Link>
         ) : (

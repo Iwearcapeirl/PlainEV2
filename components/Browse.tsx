@@ -315,7 +315,7 @@ function ModelRow({ model, total, answers }: { model: ModelGroup; total: number;
             <span aria-hidden>·</span>
             <span>{n < total ? `${n} of ${total} versions match` : `${n} versions`}</span>
           </p>
-          {fit && <p className="mt-1 text-xs font-semibold text-route">{budgetFitText(fit, answers.country)}</p>}
+          {fit && <p className="mt-1 text-xs font-semibold text-route-ink">{budgetFitText(fit, answers.country)}</p>}
         </div>
 
         <dl className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm min-[420px]:grid-cols-4 sm:col-span-1 sm:grid-cols-2 sm:pr-2 md:grid-cols-4">
@@ -330,7 +330,7 @@ function ModelRow({ model, total, answers }: { model: ModelGroup; total: number;
         <button
           type="button"
           aria-expanded={open}
-          aria-controls={listId}
+          aria-controls={open ? listId : undefined}
           onClick={() => setOpen((o) => !o)}
           className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-1.5 text-left text-sm font-semibold hover:text-foreground"
         >
@@ -361,7 +361,7 @@ function ModelRow({ model, total, answers }: { model: ModelGroup; total: number;
           </ul>
         )}
         {familyHref(model.family) && (
-          <Link href={familyHref(model.family)!} className="mt-1 block px-1 pb-1 text-sm font-semibold text-route underline decoration-signal decoration-2 underline-offset-4">
+          <Link href={familyHref(model.family)!} className="mt-1 block px-1 pb-1 text-sm font-semibold text-route-ink underline decoration-signal decoration-2 underline-offset-4">
             See the {model.family} model page →
           </Link>
         )}
@@ -414,7 +414,7 @@ function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
           {o.used && <span className="rounded bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-ink">Used</span>}
           <span>{yearsLabel(group)}</span>
         </p>
-        {fit && <p className="mt-1 text-xs font-semibold text-route">{budgetFitText(fit, answers.country)}</p>}
+        {fit && <p className="mt-1 text-xs font-semibold text-route-ink">{budgetFitText(fit, answers.country)}</p>}
         <CompareTick car={car} className="-ml-1.5 mt-1" />
       </div>
 

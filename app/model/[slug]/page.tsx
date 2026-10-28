@@ -270,7 +270,7 @@ export default async function ModelPage({ params }: Props) {
           estimate, not the official WLTP figure. UK prices are starting prices including VAT.
         </p>
         {m.lead.imageCredit && (
-          <p className="mt-3 text-xs text-on-ink/55">
+          <p className="mt-3 text-xs text-on-ink/85">
             Photo: {photoSubject(m.lead.imageCredit)}, by{" "}
             <a href={m.lead.imageCredit.source} target="_blank" rel="noopener noreferrer" className="underline decoration-on-ink/30 underline-offset-2">
               {m.lead.imageCredit.author}

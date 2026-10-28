@@ -134,7 +134,7 @@ export default function CarCard({
             {familyHref(car.family) ? (
               <p className="text-sm text-muted">
                 {/* Above the card's stretched link, so it opens the model page rather than this version. */}
-                <Link href={familyHref(car.family)!} className="relative z-10 hover:text-foreground hover:underline">
+                <Link href={familyHref(car.family)!} className="relative z-10 -my-1 inline-block py-1 hover:text-foreground hover:underline">
                   {car.family}
                 </Link>
               </p>
@@ -159,7 +159,7 @@ export default function CarCard({
               </p>
             )}
             {market?.budgetFit && (
-              <p className="mt-1.5 text-xs font-semibold text-route">{budgetFitText(market.budgetFit, market.country)}</p>
+              <p className="mt-1.5 text-xs font-semibold text-route-ink">{budgetFitText(market.budgetFit, market.country)}</p>
             )}
             {/* Results only (ranking pages have no market): pick cars for the compare bar. */}
             {market && <CompareTick car={car} className="-ml-1.5 mt-1" />}

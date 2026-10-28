@@ -61,7 +61,7 @@ export default function CarSearch({
         type="search"
         role="combobox"
         aria-expanded={showList}
-        aria-controls={`${id}-list`}
+        aria-controls={showList ? `${id}-list` : undefined}
         aria-autocomplete="list"
         aria-activedescendant={showList && results[active] ? `${id}-o${active}` : undefined}
         autoComplete="off"

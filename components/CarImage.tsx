@@ -44,6 +44,12 @@ export default function CarImage({
 }) {
   const [failed, setFailed] = useState(false);
   const [open, setOpen] = useState(false);
+  const zoom = useRef<HTMLButtonElement>(null);
+  // The viewer unmounts on close, so the browser can't put focus back by itself: return it to the photo's button.
+  const close = useCallback(() => {
+    setOpen(false);
+    requestAnimationFrame(() => zoom.current?.focus());
+  }, []);
   const show = Boolean(src) && !failed;
   // An image that errored before hydration never fires onError, so check its state when it mounts.
   const checkLoaded = useCallback((el: HTMLImageElement | null) => {
@@ -89,6 +95,7 @@ export default function CarImage({
       {/* Above any link stretched over a card or row, so tapping the photo enlarges it instead of opening the car. */}
       {show && (
         <button
+          ref={zoom}
           type="button"
           onClick={() => setOpen(true)}
           aria-label={`Enlarge photo: ${alt ?? (credit ? photoSubject(credit) : `${make} ${model}`)}`}
@@ -105,14 +112,14 @@ export default function CarImage({
         <PhotoViewer
           photos={gallery?.length ? gallery : [{ src: src!, credit, alt: alt ?? (credit ? photoSubject(credit) : `${make} ${model}`) }]}
           start={Math.max(0, gallery?.findIndex((g) => g.src === src) ?? 0)}
-          onClose={() => setOpen(false)}
+          onClose={close}
         />
       )}
 
       {show && credit && caption && (
         <figcaption className="pointer-events-none absolute inset-x-2 bottom-2 z-20 flex flex-col items-end gap-1 text-[10px] leading-tight text-on-ink/90 [&_a]:pointer-events-auto">
-          {credit.note && <span className="max-w-full rounded bg-ink/80 px-1.5 py-0.5 text-right font-medium text-on-ink">{credit.note}</span>}
-          <span className="max-w-[85%] truncate rounded bg-ink/70 px-1.5 py-0.5">
+          {credit.note && <span className="max-w-full rounded bg-ink/90 px-1.5 py-0.5 text-right font-medium text-on-ink">{credit.note}</span>}
+          <span className="max-w-[85%] truncate rounded bg-ink/90 px-1.5 py-0.5 text-on-ink">
             <a href={credit.source} target="_blank" rel="noopener noreferrer" className="hover:underline">
               Photo: {credit.author}
             </a>

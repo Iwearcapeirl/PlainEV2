@@ -44,10 +44,10 @@ export default function UnitsSwitch() {
       {/* Narrow phones: just the current unit (tap to swap). Wider: both, with the current one filled. */}
       <span className="u-mi flex">
         <span className="rounded-md bg-on-ink px-1.5 py-1 text-ink max-[399px]:px-1 max-[359px]:px-1">mi</span>
-        <span className="px-1.5 py-1 text-on-ink/70 max-sm:hidden">km</span>
+        <span className="px-1.5 py-1 text-on-ink/85 max-sm:hidden">km</span>
       </span>
       <span className="u-km flex">
-        <span className="px-1.5 py-1 text-on-ink/70 max-sm:hidden">mi</span>
+        <span className="px-1.5 py-1 text-on-ink/85 max-sm:hidden">mi</span>
         <span className="rounded-md bg-on-ink px-1.5 py-1 text-ink max-[399px]:px-1 max-[359px]:px-1">km</span>
       </span>
     </button>

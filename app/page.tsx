@@ -84,7 +84,7 @@ export default function HomePage() {
           <h1 id="hero-title" className="font-wide max-w-[13ch] text-[2.4rem] font-semibold leading-[1.02] text-balance sm:text-[3.6rem] lg:text-[4.2rem]">
             Find the right electric car, new or used.
           </h1>
-          <p className="mt-5 max-w-[40ch] text-lg leading-relaxed text-on-ink/75 text-pretty">
+          <p className="mt-5 max-w-[40ch] text-lg leading-relaxed text-on-ink/85 text-pretty">
             Every EV sold in the UK since {firstYear}, with real-world range, honest used-price estimates and a quick quiz to
             find your match.
           </p>
@@ -114,7 +114,7 @@ export default function HomePage() {
               Compare cars
             </Link>
           </div>
-          <p className="mt-5 text-sm text-on-ink/65">Buying in Germany or the Netherlands? We show euro prices too.</p>
+          <p className="mt-5 text-sm text-on-ink/85">Buying in Germany or the Netherlands? We show euro prices too.</p>
         </div>
       </section>
 
@@ -291,19 +291,19 @@ export default function HomePage() {
             <h2 id="radar-title" className="font-wide text-[1.7rem] font-semibold leading-[1.08] text-balance sm:text-[2.4rem]">
               Every new EV on sale in the UK, on one dial.
             </h2>
-            <p className="mt-3 max-w-[42ch] text-on-ink/75 leading-relaxed text-pretty sm:text-lg">
+            <p className="mt-3 max-w-[42ch] text-on-ink/85 leading-relaxed text-pretty sm:text-lg">
               {cars.length} cars you can order new today. Each dot is one of them.
             </p>
             <dl className="mt-8 grid gap-5 border-t border-line pt-6">
               <div>
                 <dt className="font-semibold">Further out means further on a charge.</dt>
-                <dd className="mt-1 text-on-ink/75 leading-relaxed text-pretty">
+                <dd className="mt-1 text-on-ink/85 leading-relaxed text-pretty">
                   A ring for every 100 miles of real-world range. The dashed yellow ring is the typical EV, at {u(both(`${medianMiles} miles`, `${medianKm} km`))}.
                 </dd>
               </div>
               <div>
                 <dt className="font-semibold">Clockwise, they get dearer.</dt>
-                <dd className="mt-1 text-on-ink/75 leading-relaxed text-pretty">
+                <dd className="mt-1 text-on-ink/85 leading-relaxed text-pretty">
                   From {formatGbp(cheapest.priceGbp)} at the top to {formatGbp(dearest.priceGbp)} just before it. The yellow marks are
                   £30k, £40k, £50k and £70k.
                 </dd>

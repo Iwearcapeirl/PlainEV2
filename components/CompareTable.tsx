@@ -40,7 +40,7 @@ function Value({ cell, win }: { cell: Cell | null; win: boolean }) {
     <dd className={`min-w-0 rounded-md px-1.5 py-1 sm:px-2 ${win ? "bg-win shadow-[inset_0_0_0_1px_var(--route)]" : ""}`}>
       <span className="flex items-start gap-1 text-[13px] font-semibold leading-snug tabular-nums break-words sm:text-[15px]">
         {win && (
-          <span aria-hidden className="text-route">
+          <span aria-hidden className="text-route-ink">
             ✓
           </span>
         )}

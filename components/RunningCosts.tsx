@@ -121,7 +121,7 @@ export default function RunningCosts({ whPerKm, name, calculatorHref }: { whPerK
       </p>
       <Assumptions className="mt-4" />
       <p className="mt-4 text-sm">
-        <a href={calculatorHref} className="font-semibold underline decoration-signal decoration-2 underline-offset-4">
+        <a href={calculatorHref} className="inline-block py-1 font-semibold underline decoration-signal decoration-2 underline-offset-4">
           Compare its running costs with other cars →
         </a>
       </p>
@@ -159,7 +159,7 @@ export function Assumptions({ className = "", startOpen = false }: { className?:
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          aria-controls={`${id}-panel`}
+          aria-controls={open ? `${id}-panel` : undefined}
           className="underline decoration-line underline-offset-4 hover:decoration-foreground"
         >
           {open ? "Hide" : "Change"} these figures

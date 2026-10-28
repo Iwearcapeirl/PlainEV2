@@ -509,7 +509,7 @@ export default async function CarPage({ params }: Props) {
           </div>
           <div className="text-sm">
             <p className="font-semibold">Photos</p>
-            <ul className="mt-2 grid gap-2 text-on-ink/75">
+            <ul className="mt-2 grid gap-2 text-on-ink/85">
               {[car.imageCredit && { ...car.imageCredit, what: "Exterior" }, ...interiors.map((p) => ({ ...p, what: "Interior" }))]
                 .filter((c): c is ImageCredit & { what: string } => Boolean(c))
                 .map((c) => (
@@ -527,10 +527,10 @@ export default async function CarPage({ params }: Props) {
                 ))}
               {!car.imageCredit && interiors.length === 0 && <li>No freely licensed photos of this model yet.</li>}
             </ul>
-            <p className="mt-3 text-xs text-on-ink/55">Photos show the model, not always the exact version or year.</p>
+            <p className="mt-3 text-xs text-on-ink/85">Photos show the model, not always the exact version or year.</p>
           </div>
         </div>
-        <p className="mt-6 text-xs text-on-ink/55">Updated {UPDATED_LABEL}</p>
+        <p className="mt-6 text-xs text-on-ink/85">Updated {UPDATED_LABEL}</p>
       </section>
 
       {/* ---------- Other versions: on the model page ---------- */}

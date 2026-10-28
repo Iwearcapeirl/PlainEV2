@@ -318,7 +318,7 @@ export default function Quiz() {
                           : "bg-background text-foreground shadow-[inset_0_0_0_1px_var(--line)] hover:shadow-[inset_0_0_0_1.5px_var(--foreground)]"
                       }`}
                     >
-                      <LabelText text={o.label} extraClass={`ml-1 text-xs font-normal ${on ? "text-on-ink/70" : "text-muted"}`} />
+                      <LabelText text={o.label} extraClass={`ml-1 text-xs font-normal ${on ? "text-on-ink/85" : "text-muted"}`} />
                     </button>
                   );
                 })}
@@ -354,7 +354,7 @@ export default function Quiz() {
               <span className="font-wide text-lg font-semibold">{liveCount}</span> {liveCount === 1 ? "car matches" : "cars match"}
             </p>
             {extraCount > 0 && (
-              <button type="button" onClick={resetMore} className="text-on-ink/70 underline underline-offset-4 hover:text-on-ink">
+              <button type="button" onClick={resetMore} className="text-on-ink/85 underline underline-offset-4 hover:text-on-ink">
                 Clear these filters
               </button>
             )}
@@ -415,15 +415,15 @@ function Instrument({
       className={`on-ink rounded-2xl shadow-[var(--sc-e2)] ${compact ? "flex items-center gap-4 px-4 py-3" : "px-6 pb-6 pt-5"} ${className}`}
     >
       <div className={compact ? "order-2 min-w-0 flex-1" : ""}>
-        <p className="text-xs text-on-ink/65">Still in the running</p>
+        <p className="text-xs text-on-ink/85">Still in the running</p>
         <p className="mt-0.5 flex items-baseline gap-1.5">
           <span className={`font-wide font-semibold tabular-nums ${compact ? "text-2xl" : "text-4xl"}`}>{count}</span>
-          <span className="text-sm text-on-ink/65">of {of} cars</span>
+          <span className="text-sm text-on-ink/85">of {of} cars</span>
         </p>
       </div>
       <RangeRadar lit={lit} className={compact ? "order-1 size-20 shrink-0" : "mt-4 w-full"} />
       {!compact && (
-        <p className="mt-4 text-xs leading-relaxed text-on-ink/65">
+        <p className="mt-4 text-xs leading-relaxed text-on-ink/85">
           Each dot is a car on sale new in the UK. Further from the centre means more real-world range; clockwise means dearer.
         </p>
       )}
@@ -493,12 +493,12 @@ function Option({
       </span>
       <span className="min-w-0 flex-1">
         <span className="font-wide block text-[16px] font-semibold leading-snug">
-          <LabelText text={children} extraClass={`ml-1.5 font-sans text-sm font-normal ${selected ? "text-on-ink/70" : "text-muted"}`} />
+          <LabelText text={children} extraClass={`ml-1.5 font-sans text-sm font-normal ${selected ? "text-on-ink/85" : "text-muted"}`} />
         </span>
-        {hint && <span className={`mt-1 block text-sm ${selected ? "text-on-ink/75" : "text-muted"}`}>{hint}</span>}
+        {hint && <span className={`mt-1 block text-sm ${selected ? "text-on-ink/85" : "text-muted"}`}>{hint}</span>}
       </span>
       {count !== undefined && (
-        <span className={`shrink-0 pt-0.5 text-sm tabular-nums ${selected ? "text-on-ink/75" : count === 0 ? "text-muted/70" : "text-muted"}`}>
+        <span className={`shrink-0 pt-0.5 text-sm tabular-nums ${selected ? "text-on-ink/85" : "text-muted"}`}>
           {count} {count === 1 ? "car" : "cars"}
         </span>
       )}
