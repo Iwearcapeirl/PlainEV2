@@ -20,9 +20,9 @@ export const BODY_PAGES = [
 ] as const;
 
 /** Which metric a page is ranked by and highlights. */
-export type RankingMetric = "range" | "efficiency" | "value" | "running";
+export type RankingMetric = "range" | "efficiency" | "value" | "running" | "towing" | "onestop" | "charging";
 
-export type RankingKind = "range-under" | "most-efficient" | "value-under" | "lfp" | "seven-seat" | "cheapest-to-run";
+export type RankingKind = "range-under" | "most-efficient" | "value-under" | "lfp" | "seven-seat" | "cheapest-to-run" | "towing" | "one-stop" | "fastest-charging" | "city";
 
 export interface RankingPage {
   slug: string;
@@ -78,6 +78,10 @@ const METHOD_VALUE =
   `Ranked by real-world range (not WLTP). Cars within ${kmToMiles(VALUE_TIE_KM)} miles (${VALUE_TIE_KM} km) of each other are ordered by UK price per mile of range. Prices are starting prices in the UK.`;
 
 const priceLabel = (p: number) => formatGbp(p);
+/** The towing page: braked towing limit enough for most caravans. */
+export const TOWING_MIN_KG = 1500;
+/** EV Database size classes: A city cars, B small cars (superminis). */
+const CITY_SEGMENTS = ["A", "B"];
 const topLine = (c: Car) => `${c.make} ${c.model}, with ${formatDistance(c.rangeKm)}`;
 
 // ---------- Page definitions ----------
@@ -199,6 +203,84 @@ function build(): RankingPage[] {
     });
   }
 
+  {
+    const ranked = allCars.filter((c) => c.towingKg >= TOWING_MIN_KG).sort(byRange);
+    const lead = ranked[0];
+    pages.push({
+      slug: "best-evs-for-towing",
+      kind: "towing",
+      metric: "towing",
+      metaTitle: `Best electric cars for towing (${DATA_YEAR})`,
+      metaDescription: lead
+        ? `Electric cars on sale in the UK rated to tow at least ${TOWING_MIN_KG.toLocaleString("en-GB")} kg, ranked by real-world range. Number 1 is the ${topLine(lead)}, rated to tow ${lead.towingKg.toLocaleString("en-GB")} kg.`
+        : "",
+      h1: `Best EVs for towing in ${DATA_YEAR}`,
+      intro:
+        `${ranked.length} electric cars on sale in the UK are rated to tow at least ${TOWING_MIN_KG.toLocaleString("en-GB")} kg (braked), enough for many caravans. ` +
+        `These go furthest on a charge. Expect far less range while towing, often around half, so a long range matters more than usual.`,
+      method: `Cars rated to tow at least ${TOWING_MIN_KG.toLocaleString("en-GB")} kg braked, ranked by real-world range without a trailer (not WLTP). Check the towing limit and nose weight for your trailer with the maker. Prices are starting prices in the UK.`,
+      ranked,
+    });
+  }
+
+  {
+    const ranked = [...allCars].sort((a, b) => b.oneStopKm - a.oneStopKm || byRange(a, b));
+    const lead = ranked[0];
+    pages.push({
+      slug: "longest-range-with-one-stop",
+      kind: "one-stop",
+      metric: "onestop",
+      metaTitle: `EVs that go furthest with one 15-minute charging stop (${DATA_YEAR})`,
+      metaDescription: lead
+        ? `Electric cars on sale in the UK ranked by how far they go at motorway speed with one 15-minute rapid-charging stop. Number 1 is the ${lead.make} ${lead.model}, at ${formatDistance(lead.oneStopKm)}.`
+        : "",
+      h1: `Longest range with one 15-minute stop in ${DATA_YEAR}`,
+      intro:
+        `For long trips, range and charging speed both count. This ranks the ${ranked.length} electric cars on sale in the UK by how far they go at motorway speed ` +
+        `with one 15-minute stop at a rapid charger along the way.`,
+      method: `Ranked by EV Database's one-stop range: the total distance at motorway speed with one 15-minute stop at a rapid charger fast enough for the car. Real-world range breaks ties. Prices are starting prices in the UK.`,
+      ranked,
+    });
+  }
+
+  {
+    const ranked = [...allCars].sort((a, b) => b.fastchargeKw - a.fastchargeKw || byRange(a, b));
+    const lead = ranked[0];
+    pages.push({
+      slug: "fastest-charging-evs",
+      kind: "fastest-charging",
+      metric: "charging",
+      metaTitle: `Fastest-charging electric cars in the UK (${DATA_YEAR})`,
+      metaDescription: lead
+        ? `Electric cars on sale in the UK ranked by average rapid-charging speed from 10% to 80%, not the peak figure. Number 1 is the ${lead.make} ${lead.model}, averaging ${lead.fastchargeKw} kW.`
+        : "",
+      h1: `Fastest-charging EVs in ${DATA_YEAR}`,
+      intro:
+        `Makers quote peak charging power, which a car only holds for a few minutes. This ranks the ${ranked.length} electric cars on sale in the UK by their average speed ` +
+        `from 10% to 80% on a rapid charger, which is what decides how long you wait.`,
+      method: `Ranked by EV Database's average rapid-charging power from 10% to 80% (not the peak), on a charger fast enough for the car. Real-world range breaks ties. Prices are starting prices in the UK.`,
+      ranked,
+    });
+  }
+
+  {
+    const ranked = rankByValue(allCars.filter((c) => CITY_SEGMENTS.includes(c.segment)));
+    const lead = ranked[0];
+    pages.push({
+      slug: "best-small-and-city-evs",
+      kind: "city",
+      metric: "value",
+      metaTitle: `Best small and city electric cars (${DATA_YEAR})`,
+      metaDescription: lead
+        ? `The best small electric cars on sale in the UK, ranked by real-world range and price per mile. Number 1 is the ${topLine(lead)}, from ${formatGbp(lead.priceGbp)}.`
+        : "",
+      h1: `Best small and city EVs in ${DATA_YEAR}`,
+      intro: `${ranked.length} small electric cars are on sale in the UK, from city cars like the Dacia Spring to small SUVs like the Kia EV3. These go furthest in real-world driving, with price as the tie-break.`,
+      method: METHOD_VALUE,
+      ranked,
+    });
+  }
+
   return pages.filter((p) => p.ranked.length >= MIN_CARS_PER_PAGE);
 }
 
@@ -218,7 +300,8 @@ export const SECTIONS: { title: string; kinds: RankingKind[] }[] = [
   { title: "Real-world range by budget", kinds: ["range-under"] },
   { title: "Best value by budget", kinds: ["value-under"] },
   { title: "Most efficient by body style", kinds: ["most-efficient"] },
-  { title: "Other rankings", kinds: ["cheapest-to-run", "lfp", "seven-seat"] },
+  { title: "Best for…", kinds: ["cheapest-to-run", "one-stop", "fastest-charging", "towing", "city"] },
+  { title: "Other rankings", kinds: ["lfp", "seven-seat"] },
 ];
 
 /** Short link label for index pages and related links. */

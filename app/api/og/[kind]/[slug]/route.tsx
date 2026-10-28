@@ -46,7 +46,11 @@ export async function GET(_req: Request, { params }: Params) {
             .map((c) =>
               ranking.metric === "running"
                 ? `${c.make} ${c.model} · ${formatPounds(runningCost(c.whPerKm, RUNNING_DEFAULTS).perMonth)} a month`
-                : `${c.make} ${c.model} · ${plain(formatMi(c.rangeKm))}`,
+                : ranking.metric === "onestop"
+                  ? `${c.make} ${c.model} · ${plain(formatMi(c.oneStopKm))} with one stop`
+                  : ranking.metric === "charging"
+                    ? `${c.make} ${c.model} · ${c.fastchargeKw} kW average`
+                    : `${c.make} ${c.model} · ${plain(formatMi(c.rangeKm))}`,
             )}
         />
       );

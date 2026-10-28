@@ -57,7 +57,11 @@ export default function RankingsIndex() {
                               ? formatMiPerKwh(top.whPerKm)
                               : p.metric === "running"
                                 ? `${formatPounds(runningCost(top.whPerKm, RUNNING_DEFAULTS).perMonth)} a month`
-                                : formatMi(top.rangeKm),
+                                : p.metric === "onestop"
+                                  ? `${formatMi(top.oneStopKm)} with one stop`
+                                  : p.metric === "charging"
+                                    ? `${top.fastchargeKw} kW`
+                                    : formatMi(top.rangeKm),
                           )}
                         </span>
                       </span>

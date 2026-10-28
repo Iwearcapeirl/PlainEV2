@@ -26,7 +26,11 @@ export function DataSourceNote({ className = "" }: { className?: string }) {
       <a href={EVDB_HOME} target="_blank" rel="noopener" className="underline decoration-line underline-offset-2 hover:text-foreground">
         EV Database
       </a>
-      . Each car&rsquo;s page links to its own entry there.
+      . Each car&rsquo;s page links to its own entry there.{" "}
+      <a href="/methodology" className="underline decoration-line underline-offset-2 hover:text-foreground">
+        How we work out the figures
+      </a>
+      .
     </p>
   );
 }

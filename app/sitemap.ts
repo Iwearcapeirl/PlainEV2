@@ -15,6 +15,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/cars`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/models`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/running-costs`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/methodology`, lastModified, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE_URL}/about`, lastModified, changeFrequency: "yearly" as const, priority: 0.5 },
+    { url: `${SITE_URL}/privacy`, lastModified, changeFrequency: "yearly" as const, priority: 0.2 },
+    { url: `${SITE_URL}/terms`, lastModified, changeFrequency: "yearly" as const, priority: 0.2 },
     ...models.map((m) => ({
       url: `${SITE_URL}${modelHref(m)}`,
       lastModified,

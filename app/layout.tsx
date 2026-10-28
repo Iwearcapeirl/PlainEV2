@@ -5,7 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import UnitsSwitch from "@/components/UnitsSwitch";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
 import { UNITS_KEY } from "@/lib/units";
-import { ADSENSE_CLIENT, SITE_NAME, SITE_URL, UPDATED_ISO } from "@/lib/site";
+import { ADSENSE_CLIENT, CONTACT_EMAIL, SITE_NAME, SITE_URL, UPDATED_ISO } from "@/lib/site";
 import "./globals.css";
 
 // One variable family; the width axis gives the expanded display style used for headings and figures.
@@ -70,7 +70,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
         <footer className="border-t border-line bg-card">
           <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-            <nav aria-label="Footer" className="grid gap-8 text-sm sm:grid-cols-2 lg:grid-cols-5">
+            <nav aria-label="Footer" className="grid gap-8 text-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
               <div>
                 <p className="font-wide font-semibold">{SITE_NAME}</p>
                 <ul className="mt-3 grid gap-2">
@@ -80,6 +80,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <li><Link href="/models" className="text-muted hover:text-foreground">Models A–Z</Link></li>
                   <li><Link href="/compare" className="text-muted hover:text-foreground">Compare cars</Link></li>
                   <li><Link href="/running-costs" className="text-muted hover:text-foreground">Running costs</Link></li>
+                  <li><Link href="/about" className="text-muted hover:text-foreground">About</Link></li>
+                  <li><Link href="/methodology" className="text-muted hover:text-foreground">How we work out the figures</Link></li>
                   <li><Link href="/best" className="text-muted hover:text-foreground">All rankings</Link></li>
                 </ul>
               </div>
@@ -114,6 +116,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <p>
                 Car photos come from Wikimedia Commons contributors under free licences, credited on each photo. Photos show the
                 model, not always the exact trim or year listed.
+              </p>
+              <p className="flex flex-wrap gap-x-4 gap-y-1">
+                <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy</Link>
+                <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">Terms</Link>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="underline underline-offset-2 hover:text-foreground">{CONTACT_EMAIL}</a>
               </p>
             </div>
           </div>

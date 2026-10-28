@@ -56,7 +56,7 @@ export function usedYears(c: Car): number[] {
 /**
  * Share of the new price a typical second-hand example keeps at a given age (average mileage, dealer or private
  * asking price). Fitted in October 2026 to median AutoTrader asking prices for 51 model years, from nearly new to
- * nine years old (data/README.md). Dearer cars lose a bigger share (the price effect stops at £80k), and a few makes
+ * nine years old (data/README.md). Dearer cars lose a bigger share (the price effect stops at £60k), and a few makes
  * sit clearly above or below the curve. Ages count from the model year, so a "1-year-old" car is 1–2 years old.
  */
 export function retained(age: number, newPrice: number, make: string, family = ""): number {

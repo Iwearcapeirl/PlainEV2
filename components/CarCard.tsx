@@ -23,7 +23,7 @@ export interface CardMarket {
   budgetFit?: BudgetFit | null;
 }
 
-type Metric = "range" | "efficiency" | "value" | "acceleration" | "running";
+type Metric = "range" | "efficiency" | "value" | "acceleration" | "running" | "towing" | "onestop" | "charging";
 
 /**
  * One ranked car. `featured` (used for number 1) stacks a large photo above the details;
@@ -79,10 +79,16 @@ export default function CarCard({
       sub: `(${formatWhPerKm(car.whPerKm)})`,
       strong: metric === "efficiency",
     },
-    { label: "1-stop range", value: formatMi(car.oneStopKm), sub: `(${formatKm(car.oneStopKm)})` },
+    { label: "1-stop range", value: formatMi(car.oneStopKm), sub: `(${formatKm(car.oneStopKm)})`, strong: metric === "onestop" },
   ];
   if (metric === "acceleration") {
     stats.push({ label: "0–62 mph", value: formatAccel(car.accelS), sub: "(0–100 km/h)", strong: true });
+  }
+  if (metric === "towing") {
+    stats.push({ label: "Can tow", value: `${car.towingKg.toLocaleString("en-GB")} kg`, sub: "(braked trailer)", strong: true });
+  }
+  if (metric === "charging") {
+    stats.push({ label: "Rapid charging", value: `${car.fastchargeKw} kW`, sub: "(10–80% average)", strong: true });
   }
   if (metric === "running") {
     // At the UK-average assumptions (lib/running.ts); the car page lets people change them.

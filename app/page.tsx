@@ -255,6 +255,11 @@ export default function HomePage() {
               The official WLTP figure comes from a lab test, and most drivers get noticeably less on the road, especially on
               motorways and in winter. So everything on {SITE_NAME} uses the real-world number.
             </p>
+            <p className="mt-4 text-[15px]">
+              <Link href="/methodology" className="font-semibold underline decoration-signal decoration-2 underline-offset-4">
+                How we work out the figures →
+              </Link>
+            </p>
           </div>
           <dl className="grid grid-cols-2 gap-6 self-start border-t border-line pt-5 md:grid-cols-1 md:gap-5">
             <div>
