@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbLd } from "@/lib/jsonld";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
@@ -83,9 +85,15 @@ export default async function ModelPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-5xl">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(m)).replace(/</g, "\\u003c") }}
+      <JsonLd
+        data={[
+          jsonLd(m),
+          breadcrumbLd([
+            { name: "Home", path: "/" },
+            { name: "Models A–Z", path: "/models" },
+            { name: m.name, path: modelHref(m) },
+          ]),
+        ]}
       />
       <nav aria-label="Breadcrumb" className="text-sm text-muted">
         <ol className="flex flex-wrap items-center gap-2">

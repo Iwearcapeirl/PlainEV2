@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatPounds, runningCost, RUNNING_DEFAULTS } from "@/lib/running";
 import { u } from "@/components/UnitText";
 import Link from "next/link";
 import QuizCta from "@/components/QuizCta";
@@ -51,7 +52,13 @@ export default function RankingsIndex() {
                       <span className="mt-auto pt-3 text-sm text-muted">
                         Top: {top.make} {top.model},{" "}
                         <span className="tabular-nums text-foreground">
-                          {u(p.metric === "efficiency" ? formatMiPerKwh(top.whPerKm) : formatMi(top.rangeKm))}
+                          {u(
+                            p.metric === "efficiency"
+                              ? formatMiPerKwh(top.whPerKm)
+                              : p.metric === "running"
+                                ? `${formatPounds(runningCost(top.whPerKm, RUNNING_DEFAULTS).perMonth)} a month`
+                                : formatMi(top.rangeKm),
+                          )}
                         </span>
                       </span>
                       <span className="text-xs text-muted">{p.ranked.length} cars compared</span>

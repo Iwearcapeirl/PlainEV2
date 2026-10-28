@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbLd } from "@/lib/jsonld";
 import { familyHref } from "@/lib/models";
 import { u } from "@/components/UnitText";
 import { plainDeep } from "@/lib/units";
@@ -52,6 +54,13 @@ export default async function VsPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-4xl">
+      <JsonLd
+        data={breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Head-to-head", path: "/best" },
+          { name: vsTitle(page), path: `/vs/${page.slug}` },
+        ])}
+      />
       <nav aria-label="Breadcrumb" className="text-sm text-muted">
         <ol className="flex gap-2">
           <li><Link href="/" className="hover:text-foreground">Home</Link></li>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import JsonLd from "@/components/JsonLd";
 import Link from "next/link";
 import { allCars, carHref, cars } from "@/lib/cars";
 import AdSlot from "@/components/AdSlot";
@@ -12,7 +13,7 @@ import { matchesAnswers, rankCars } from "@/lib/match";
 import { BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS } from "@/lib/quiz";
 import { cheapest, dearest } from "@/lib/radar";
 import { getRankingPage, rankingPages, shortLabel, type RankingPage } from "@/lib/rankings";
-import { DATA_YEAR, SITE_NAME, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
+import { DATA_YEAR, SITE_NAME, SITE_URL, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: { absolute: `${SITE_NAME}: electric cars new and used, ranked by real-world range (${DATA_YEAR})` },
@@ -55,6 +56,18 @@ export default function HomePage() {
 
   return (
     <div className="-mb-16 -mt-8 sm:-mt-12">
+      <JsonLd
+        data={[
+          { "@context": "https://schema.org", "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/`, inLanguage: "en-GB" },
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: SITE_NAME,
+            url: `${SITE_URL}/`,
+            logo: `${SITE_URL}/icon-512.png`,
+          },
+        ]}
+      />
       {/* 1 · Hero */}
       <section aria-labelledby="hero-title" className="bleed on-ink relative overflow-hidden">
         <div aria-hidden className="absolute right-[-30rem] top-1/2 h-[46rem] w-[46rem] -translate-y-1/2 sm:right-[-16rem] sm:h-[56rem] sm:w-[56rem] lg:right-[-6rem] max-sm:top-[85%]">

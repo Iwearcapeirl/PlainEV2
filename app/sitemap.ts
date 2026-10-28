@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/best`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/cars`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${SITE_URL}/models`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/running-costs`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     ...models.map((m) => ({
       url: `${SITE_URL}${modelHref(m)}`,
       lastModified,

@@ -47,10 +47,11 @@ export default function CarBreadcrumb({ current, model }: { current: string; mod
 
 const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** "Back to your results", "Back to all cars", "Back to the comparison" or "Back to the ranking". */
+/** "Back to your results", "Back to all cars", "Back to the comparison", "Back to running costs" or "Back to the ranking". */
 function backLabel(href: string): string {
   if (href.startsWith("/results")) return "Back to your results";
   if (href.startsWith("/cars")) return "Back to all cars";
   if (href.startsWith("/compare")) return "Back to the comparison";
+  if (href.startsWith("/running-costs")) return "Back to running costs";
   return "Back to the ranking";
 }

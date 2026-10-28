@@ -9,6 +9,7 @@ import { carHref, type Car } from "@/lib/cars";
 import { formatAccel, formatGbp, formatGbpPerKm, formatGbpPerMile, formatKm, formatMi, formatMiles, formatMiPerKwh, formatWhPerKm } from "@/lib/format";
 import { budgetFitText, formatMoney, type BudgetFit, type Country, type Offer, formatBand, listingSearch } from "@/lib/market";
 import type { FilterKey } from "@/lib/quiz";
+import { formatPencePerMile, formatPounds, runningCost, RUNNING_DEFAULTS } from "@/lib/running";
 
 /** Results context: the buyer's country, what they could pay (new and/or used) and the merged version name. */
 export interface CardMarket {
@@ -22,7 +23,7 @@ export interface CardMarket {
   budgetFit?: BudgetFit | null;
 }
 
-type Metric = "range" | "efficiency" | "value" | "acceleration";
+type Metric = "range" | "efficiency" | "value" | "acceleration" | "running";
 
 /**
  * One ranked car. `featured` (used for number 1) stacks a large photo above the details;
@@ -82,6 +83,11 @@ export default function CarCard({
   ];
   if (metric === "acceleration") {
     stats.push({ label: "0–62 mph", value: formatAccel(car.accelS), sub: "(0–100 km/h)", strong: true });
+  }
+  if (metric === "running") {
+    // At the UK-average assumptions (lib/running.ts); the car page lets people change them.
+    const r = runningCost(car.whPerKm, RUNNING_DEFAULTS);
+    stats.push({ label: "Charging cost", value: `${formatPounds(r.perMonth)}/month`, sub: `(${formatPencePerMile(r.perMile)})`, strong: true });
   }
   if (metric === "value" && car.priceGbp !== null) {
     stats.push({

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { formatPounds, runningCost, RUNNING_DEFAULTS } from "@/lib/running";
 import { plain } from "@/lib/units";
 import { ImageResponse } from "next/og";
 import { CarCard, H, ListCard, SiteCard, VsCard, W } from "@/components/ShareCards";
@@ -40,7 +41,13 @@ export async function GET(_req: Request, { params }: Params) {
       body = (
         <ListCard
           title={ranking.h1}
-          lines={ranking.ranked.slice(0, 3).map((c) => `${c.make} ${c.model} · ${plain(formatMi(c.rangeKm))}`)}
+          lines={ranking.ranked
+            .slice(0, 3)
+            .map((c) =>
+              ranking.metric === "running"
+                ? `${c.make} ${c.model} · ${formatPounds(runningCost(c.whPerKm, RUNNING_DEFAULTS).perMonth)} a month`
+                : `${c.make} ${c.model} · ${plain(formatMi(c.rangeKm))}`,
+            )}
         />
       );
     } else if (used) {

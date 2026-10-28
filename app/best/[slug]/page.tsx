@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { u } from "@/components/UnitText";
-import { plainDeep } from "@/lib/units";
+import { plain, plainDeep } from "@/lib/units";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AdSlot from "@/components/AdSlot";
 import CarCard from "@/components/CarCard";
 import { CompareBar } from "@/components/ComparePicks";
 import QuizCta from "@/components/QuizCta";
+import JsonLd from "@/components/JsonLd";
+import { carHref } from "@/lib/cars";
+import { breadcrumbLd, itemListLd } from "@/lib/jsonld";
 import { CARS_PER_PAGE, getRankingPage, rankingPages, relatedPages, shortLabel } from "@/lib/rankings";
 import { UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 import { DataSourceNote } from "@/components/EvdbLink";
@@ -60,6 +63,16 @@ export default async function RankingPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-3xl">
+      <JsonLd
+        data={[
+          breadcrumbLd([
+            { name: "Home", path: "/" },
+            { name: "Rankings", path: "/best" },
+            { name: plain(shortLabel(page)), path: `/best/${page.slug}` },
+          ]),
+          itemListLd(plain(page.h1), shown.map((c) => ({ name: `${c.make} ${c.model}`, path: carHref(c) }))),
+        ]}
+      />
       <nav aria-label="Breadcrumb" className="text-sm text-muted">
         <ol className="flex gap-2">
           <li>
@@ -172,6 +185,16 @@ function UsedRanking({ page }: { page: UsedRankingPage }) {
   );
   return (
     <article className="mx-auto max-w-3xl">
+      <JsonLd
+        data={[
+          breadcrumbLd([
+            { name: "Home", path: "/" },
+            { name: "Rankings", path: "/best" },
+            { name: page.label, path: `/best/${page.slug}` },
+          ]),
+          itemListLd(page.h1, shown.map((e) => ({ name: `${e.car.make} ${e.car.variant}`, path: carHref(e.car) }))),
+        ]}
+      />
       <nav aria-label="Breadcrumb" className="text-sm text-muted">
         <ol className="flex gap-2">
           <li>

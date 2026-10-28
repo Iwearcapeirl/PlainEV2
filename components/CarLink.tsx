@@ -26,7 +26,7 @@ export function readReturnTo(): ReturnTo | null {
   try {
     const v = JSON.parse(sessionStorage.getItem(KEY) ?? "null");
     // Only ever link back to our own list pages.
-    if (v && typeof v.href === "string" && typeof v.label === "string" && /^\/(results|cars|compare|best\/[a-z0-9-]+|best)?(\?|$)/.test(v.href)) return v;
+    if (v && typeof v.href === "string" && typeof v.label === "string" && /^\/(results|cars|compare|running-costs|best\/[a-z0-9-]+|best)?(\?|$)/.test(v.href)) return v;
   } catch {}
   return null;
 }

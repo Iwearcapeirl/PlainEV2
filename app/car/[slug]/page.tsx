@@ -9,6 +9,10 @@ import EvdbLink from "@/components/EvdbLink";
 import { u } from "@/components/UnitText";
 import QuizCta from "@/components/QuizCta";
 import RangeBar from "@/components/RangeBar";
+import JsonLd from "@/components/JsonLd";
+import RunningCosts from "@/components/RunningCosts";
+import { breadcrumbLd } from "@/lib/jsonld";
+import { runningHref } from "@/lib/running";
 import { carExtras } from "@/lib/carExtras";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import { compareHref } from "@/lib/compare";
@@ -148,10 +152,15 @@ export default async function CarPage({ params }: Props) {
 
   return (
     <article className="mx-auto max-w-5xl">
-      <script
-        type="application/ld+json"
-        // Structured data for search engines; built from our own data, so it is safe to inline.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(car)).replace(/</g, "\\u003c") }}
+      <JsonLd
+        data={[
+          jsonLd(car),
+          breadcrumbLd([
+            { name: "Home", path: "/" },
+            model ? { name: model.name, path: modelHref(model) } : { name: "Rankings", path: "/best" },
+            { name, path: carHref(car) },
+          ]),
+        ]}
       />
 
       <CarBreadcrumb current={name} model={model ? { href: modelHref(model), label: model.name } : undefined} />
@@ -349,6 +358,16 @@ export default async function CarPage({ params }: Props) {
           )}
         </section>
       )}
+
+      {/* ---------- Running costs ---------- */}
+      <section aria-labelledby="running-title" className="mt-12">
+        <SectionTitle id="running-title">Running costs</SectionTitle>
+        <p className="mt-2 max-w-[66ch] text-muted text-pretty">
+          What it costs to charge, from its real-world efficiency, compared with a petrol car. UK prices, which you can change to match your
+          mileage and tariff.
+        </p>
+        <RunningCosts whPerKm={car.whPerKm} name={car.model} calculatorHref={runningHref([car.slug])} />
+      </section>
 
       {/* ---------- Warranty ---------- */}
       <WarrantySection car={car} usedYears={usedTable.map((e) => e.year)} country={country} />
@@ -737,6 +756,8 @@ const formatDate = (iso: string) =>
 
 /** schema.org Car, so search engines can show price and specs. */
 function jsonLd(car: Car) {
+  const q = (value: number, unitCode: string, unitText?: string) => ({ "@type": "QuantitativeValue", value, unitCode, ...(unitText ? { unitText } : {}) });
+  const prop = (name: string, value: number, unitCode: string, unitText: string) => ({ "@type": "PropertyValue", name, value, unitCode, unitText });
   return {
     "@context": "https://schema.org",
     "@type": "Car",
@@ -749,10 +770,21 @@ function jsonLd(car: Car) {
     driveWheelConfiguration: driveLabel(car.drive),
     seatingCapacity: car.seats,
     fuelType: "Electricity",
+    vehicleModelDate: String(car.yearFrom),
+    accelerationTime: q(car.accelS, "SEC", "0–100 km/h"),
+    ...(car.cargoL > 0 ? { cargoVolume: q(car.cargoL, "LTR") } : {}),
+    ...(car.weightKg > 0 ? { weight: q(car.weightKg, "KGM") } : {}),
+    // Real-world energy use, in the units of the "Efficiency" figure on the page.
+    fuelConsumption: { "@type": "QuantitativeValue", value: Math.round(car.whPerKm) / 10, unitText: "kWh/100 km" },
+    additionalProperty: [
+      prop("Real-world range", Math.round(car.rangeKm), "KMT", "km"),
+      prop("Usable battery capacity", car.batteryKwh, "KWH", "kWh"),
+      prop("Average rapid-charging power (10–80%)", car.fastchargeKw, "KWT", "kW"),
+    ],
     // Only cars on sale new in the UK have a price to offer.
     offers:
       car.status === "Available" && car.priceGbp !== null
-        ? { "@type": "Offer", price: car.priceGbp, priceCurrency: "GBP", availability: "https://schema.org/InStock" }
+        ? { "@type": "Offer", price: car.priceGbp, priceCurrency: "GBP", availability: "https://schema.org/InStock", url: `${SITE_URL}${carHref(car)}` }
         : undefined,
   };
 }

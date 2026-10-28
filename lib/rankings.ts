@@ -1,6 +1,7 @@
 // Rankings are of cars on sale new in the UK, so every car here has a UK price.
 import { cars as allCars, type UkCar as Car } from "./cars";
 import { formatDistance, formatEfficiency, formatGbp, kmToMiles } from "./format";
+import { assumptionsText, formatPencePerMile, formatPounds, runningCost, RUNNING_DEFAULTS } from "./running";
 import { DATA_YEAR } from "./site";
 
 /** A page is only generated when at least this many cars match. */
@@ -19,9 +20,9 @@ export const BODY_PAGES = [
 ] as const;
 
 /** Which metric a page is ranked by and highlights. */
-export type RankingMetric = "range" | "efficiency" | "value";
+export type RankingMetric = "range" | "efficiency" | "value" | "running";
 
-export type RankingKind = "range-under" | "most-efficient" | "value-under" | "lfp" | "seven-seat";
+export type RankingKind = "range-under" | "most-efficient" | "value-under" | "lfp" | "seven-seat" | "cheapest-to-run";
 
 export interface RankingPage {
   slug: string;
@@ -174,6 +175,30 @@ function build(): RankingPage[] {
     });
   }
 
+  {
+    // Charging cost per mile follows energy use, so this is every car on sale by efficiency, shown in pounds.
+    const ranked = [...allCars].sort(byEfficiency);
+    const lead = ranked[0];
+    const cost = lead ? runningCost(lead.whPerKm, RUNNING_DEFAULTS) : null;
+    const petrol = runningCost(0, RUNNING_DEFAULTS);
+    pages.push({
+      slug: "cheapest-evs-to-run",
+      kind: "cheapest-to-run",
+      metric: "running",
+      metaTitle: `Cheapest electric cars to run in the UK (${DATA_YEAR})`,
+      metaDescription:
+        lead && cost
+          ? `Every electric car on sale in the UK, ranked by what it costs to charge per mile in real-world driving. Number 1 is the ${lead.make} ${lead.model}, at about ${formatPounds(cost.perMonth)} a month (${formatPencePerMile(cost.perMile)}).`
+          : "",
+      h1: `Cheapest electric cars to run in ${DATA_YEAR}`,
+      intro:
+        `What each of the ${ranked.length} electric cars on sale in the UK costs to charge, from its real-world efficiency. ` +
+        `A ${RUNNING_DEFAULTS.mpg} mpg petrol car costs about ${formatPounds(petrol.petrolPerYear / 12)} a month in fuel over the same distance.`,
+      method: `Ranked by charging cost per mile in real-world driving, based on ${assumptionsText()}. Change the figures on any car page or in the running costs calculator.`,
+      ranked,
+    });
+  }
+
   return pages.filter((p) => p.ranked.length >= MIN_CARS_PER_PAGE);
 }
 
@@ -193,7 +218,7 @@ export const SECTIONS: { title: string; kinds: RankingKind[] }[] = [
   { title: "Real-world range by budget", kinds: ["range-under"] },
   { title: "Best value by budget", kinds: ["value-under"] },
   { title: "Most efficient by body style", kinds: ["most-efficient"] },
-  { title: "Other rankings", kinds: ["lfp", "seven-seat"] },
+  { title: "Other rankings", kinds: ["cheapest-to-run", "lfp", "seven-seat"] },
 ];
 
 /** Short link label for index pages and related links. */
