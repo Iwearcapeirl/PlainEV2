@@ -123,6 +123,11 @@ export default async function CarPage({ params }: Props) {
 
   const name = `${car.make} ${car.model}`;
   const { interiors } = carExtras(car.id);
+  // Every photo of the car, for stepping through in the full-screen viewer.
+  const gallery = [
+    ...(car.image ? [{ src: car.image, credit: car.imageCredit, alt: car.imageCredit ? `${photoSubject(car.imageCredit)}, exterior` : `${car.make} ${car.model}` }] : []),
+    ...interiors.map((p, i) => ({ src: p.image, credit: p as ImageCredit, alt: `Interior of the ${p.subject}${i ? ", second view" : ""}` })),
+  ];
   const country = homeCountry(car);
   const price = country ? newPrice(car, country) : null;
   const usedTable = country ? usedEstimates(car, country) : [];
@@ -160,6 +165,7 @@ export default async function CarPage({ params }: Props) {
           model={car.model}
           priority
           alt={car.imageCredit ? `${photoSubject(car.imageCredit)}, exterior` : undefined}
+          gallery={gallery}
           frameClass="aspect-[16/10] rounded-2xl shadow-[0_0_0_1px_var(--line)]"
           sizes="(min-width: 1024px) 620px, 100vw"
         />
@@ -282,6 +288,7 @@ export default async function CarPage({ params }: Props) {
                   make={car.make}
                   model={car.model}
                   alt={`Interior of the ${p.subject}${i ? ", second view" : ""}`}
+                  gallery={gallery}
                   frameClass={`rounded-2xl shadow-[0_0_0_1px_var(--line)] ${interiors.length > 1 ? "aspect-[4/3]" : "aspect-[16/9]"}`}
                   sizes={interiors.length > 1 ? "(min-width: 640px) 500px, 100vw" : "(min-width: 1024px) 960px, 100vw"}
                 />

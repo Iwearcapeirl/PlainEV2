@@ -27,6 +27,7 @@ RULES = [
     ("BYD", r"^DOLPHIN SURF", "BYD Dolphin Surf", "BYD Seagull"),
     ("BYD", r"^DOLPHIN", "BYD Dolphin", "BYD Dolphin"),
     ("BYD", r"^SEALION 7", "BYD Sealion 7", "BYD Sealion 7"),
+    ("BYD", r"^SEAL U\b", "BYD Seal U", "BYD Seal U"),
     ("BYD", r"^SEAL", "BYD Seal", "BYD Seal"),
     ("Bentley", r"^Torcal", "Bentley Torcal", "Bentley Torcal"),
     ("CUPRA", r"^Born", "Cupra Born", "Cupra Born"),

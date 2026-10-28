@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useUnits } from "@/components/UnitsSwitch";
-import { plain } from "@/lib/units";
+import { both, plain } from "@/lib/units";
 import { u } from "@/components/UnitText";
 import { useEffect, useId, useMemo, useState } from "react";
 import AdSlot from "@/components/AdSlot";
@@ -14,14 +14,15 @@ import CountrySwitch from "@/components/CountrySwitch";
 import RefinePanel from "@/components/RefinePanel";
 import { allCars, carHref } from "@/lib/cars";
 import { fieldByKey, isSet, refine, refinementFromParams, writeRefinement, type ChoiceField, type Refinement } from "@/lib/fields";
-import { formatAccel, formatMi } from "@/lib/format";
+import { formatAccel, formatMi, kmToMiles } from "@/lib/format";
+import { familyHref } from "@/lib/models";
 import { CONDITIONS, COUNTRIES, budgetFitText, formatMoney, groupOffer, groupResults, usedBudgetFit, yearsLabel, type Condition, type ResultGroup, formatBand } from "@/lib/market";
 import { matchesAnswers, rankCars, relaxSearch, type SearchRelaxation } from "@/lib/match";
 import { BODIES, BUDGET_ORDER, BUDGETS, DEFAULT_ANSWERS, RANGES, answersFromParams, answersToQuery, budgetMax, inCurrency, type Answers } from "@/lib/quiz";
 import { photoSubject } from "@/lib/photo";
 import { DataSourceNote } from "@/components/EvdbLink";
 
-/** Rows shown at first, and added by each "Show more". */
+/** Rows (models) shown at first, and added by each "Show more". */
 const PAGE = 30;
 /** Filters the page sets with its own controls (kept in the refinement, so they travel in the URL as f=…). */
 const QUICK = ["name", "make"];
@@ -38,8 +39,9 @@ function browseQuery(a: Answers, r: Refinement): string {
 }
 
 /**
- * "All cars": every car you can buy in the chosen country (new, used or both), one row per version across its
- * model years, with quick filters, the full "Filter and sort" panel and a "Show more" list.
+ * "All cars": every car you can buy in the chosen country (new, used or both), one row per model (its matching
+ * versions open underneath, so the same photo isn't repeated), with quick filters, the full "Filter and sort" panel
+ * and a "Show more" list.
  */
 export default function Browse() {
   const router = useRouter();
@@ -76,7 +78,16 @@ export default function Browse() {
   // In the market the buyer chose, then the page's filters; longest range first unless they sort otherwise.
   const inScope = useMemo(() => groupResults(allCars.filter((c) => matchesAnswers(c, { ...DEFAULT_ANSWERS, country: answers.country, condition: answers.condition }))).length, [answers.country, answers.condition]);
   const ranked = useMemo(() => rankCars(allCars.filter((c) => matchesAnswers(c, answers)), answers.priority), [answers]);
-  const list = useMemo(() => groupResults(refine(ranked, refinement, answers.country)), [ranked, refinement]);
+  const versionList = useMemo(() => groupResults(refine(ranked, refinement, answers.country)), [ranked, refinement]);
+  // One row per model family, in the order of its best-matching version.
+  const list = useMemo(() => byModel(versionList), [versionList]);
+  // How many versions each model has in this market at all, for "3 of 8 versions match".
+  const familyTotals = useMemo(() => {
+    const scope = groupResults(allCars.filter((c) => matchesAnswers(c, { ...DEFAULT_ANSWERS, country: answers.country, condition: answers.condition })));
+    const t = new Map<string, number>();
+    for (const g of scope) t.set(g.car.family, (t.get(g.car.family) ?? 0) + 1);
+    return t;
+  }, [answers.country, answers.condition]);
   const relaxations = useMemo(() => (list.length === 0 ? relaxSearch(allCars, answers, refinement) : []), [list.length, answers, refinement]);
 
   const quickSet = answers.budget !== "no-limit" || answers.range !== "any" || answers.body !== "any" || QUICK.some((k) => quickValue(k));
@@ -198,15 +209,15 @@ export default function Browse() {
         <h2 id={`${id}-count`} className="font-wide text-xl font-semibold" aria-live="polite">
           {list.length === 0
             ? "No cars match these filters"
-            : `Showing ${Math.min(shown, list.length)} of ${list.length} ${list.length === 1 ? "car" : "cars"}`}
+            : `Showing ${Math.min(shown, list.length)} of ${list.length} ${list.length === 1 ? "model" : "models"}${versionList.length > list.length ? ` (${versionList.length} versions)` : ""}`}
         </h2>
 
         {list.length > 0 ? (
           <>
             <ol className="mt-4 grid gap-3">
               {list.slice(0, shown).flatMap((g, i) => [
-                <li key={g.key}>
-                  <Row group={g} answers={answers} />
+                <li key={g.family}>
+                  {g.groups.length === 1 ? <Row group={g.groups[0]} answers={answers} /> : <ModelRow model={g} total={familyTotals.get(g.family) ?? g.groups.length} answers={answers} />}
                 </li>,
                 // An ad after the 10th car, then every 20 cars, never after the last row shown.
                 (i + 1 - 10) % 20 === 0 && i + 1 >= 10 && i + 1 < Math.min(shown, list.length) ? (
@@ -232,6 +243,143 @@ export default function Browse() {
       </section>
       <CompareBar country={answers.country} />
     </div>
+  );
+}
+
+interface ModelGroup {
+  family: string;
+  /** The model's matching versions (each across its model years), best match first. */
+  groups: ResultGroup[];
+}
+
+/** Version groups gathered by model family, keeping the order of each family's best-matching version. */
+function byModel(groups: ResultGroup[]): ModelGroup[] {
+  const out = new Map<string, ModelGroup>();
+  for (const g of groups) {
+    const m = out.get(g.car.family);
+    if (m) m.groups.push(g);
+    else out.set(g.car.family, { family: g.car.family, groups: [g] });
+  }
+  return [...out.values()];
+}
+
+/**
+ * A model with several matching versions: one photo, the spread of range and prices, and a "Show versions" list
+ * of compact rows (no repeated photos) linking to each version's page. The row itself opens the model page.
+ */
+function ModelRow({ model, total, answers }: { model: ModelGroup; total: number; answers: Answers }) {
+  const [open, setOpen] = useState(false);
+  const lead = model.groups[0].car;
+  const href = familyHref(model.family) ?? carHref(lead);
+  const offers = model.groups.map((g) => groupOffer(g, answers.country, answers.condition));
+  const news = offers.map((o) => o.newPrice).filter((p): p is number => p !== null);
+  const useds = offers.map((o) => o.used).filter((x): x is NonNullable<typeof x> => x !== null);
+  const used = useds.length ? useds.reduce((a, b) => (b.high < a.high ? b : a)) : null;
+  const ranges = model.groups.flatMap((g) => g.versions.map((c) => c.rangeKm));
+  const [lo, hi] = [Math.min(...ranges), Math.max(...ranges)];
+  const accel = Math.min(...model.groups.map((g) => g.car.accelS));
+  const fit = model.groups.map((g) => usedBudgetFit(g, answers.country, answers.condition, budgetMax(answers.budget))).find(Boolean) ?? null;
+  const yearFrom = Math.min(...model.groups.map((g) => g.yearFrom));
+  const stillNew = model.groups.some((g) => g.yearTo === null);
+  const yearTo = stillNew ? null : Math.max(...model.groups.map((g) => g.yearTo ?? g.yearFrom));
+  const credit = lead.imageCredit;
+  const n = model.groups.length;
+  const listId = `versions-${model.family.replace(/[^a-z0-9]+/gi, "-")}`;
+  const name = model.family.startsWith(lead.make + " ") ? model.family.slice(lead.make.length + 1) : model.family;
+
+  return (
+    <article className="rounded-2xl bg-card shadow-[0_0_0_1px_var(--line)] transition-shadow hover:shadow-[0_0_0_1.5px_var(--foreground)] has-[a:focus-visible]:shadow-[0_0_0_2px_var(--foreground)]">
+      <div className="relative grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 p-3 sm:grid-cols-[9.5rem_minmax(0,1fr)_auto] sm:items-center">
+        <CarImage
+          src={lead.image}
+          credit={credit}
+          make={lead.make}
+          model={name}
+          caption={false}
+          frameClass="aspect-[4/3] rounded-xl"
+          sizes="(min-width: 640px) 152px, 104px"
+        />
+
+        <div className="min-w-0 self-center">
+          <p className="text-sm text-muted">{lead.make}</p>
+          <h3 className="font-wide text-[1.05rem] font-semibold leading-snug text-balance">
+            {/* Stretched over the top of the row, so the row opens the model page; the photo and buttons sit above it. */}
+            <Link href={href} className="after:absolute after:inset-0 after:rounded-t-2xl after:content-[''] focus-visible:outline-none">
+              {name}
+            </Link>
+          </h3>
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted">
+            {news.length > 0 && <span className="rounded bg-ink px-1.5 py-0.5 text-xs font-semibold text-on-ink">New</span>}
+            {used && <span className="rounded bg-signal px-1.5 py-0.5 text-xs font-semibold text-signal-ink">Used</span>}
+            <span>{yearTo === null ? `${yearFrom} on` : yearFrom === yearTo ? yearFrom : `${yearFrom}–${yearTo}`}</span>
+            <span aria-hidden>·</span>
+            <span>{n < total ? `${n} of ${total} versions match` : `${n} versions`}</span>
+          </p>
+          {fit && <p className="mt-1 text-xs font-semibold text-route">{budgetFitText(fit, answers.country)}</p>}
+        </div>
+
+        <dl className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm min-[420px]:grid-cols-4 sm:col-span-1 sm:grid-cols-2 sm:pr-2 md:grid-cols-4">
+          {answers.condition !== "used" && <Stat label={fit ? "New (over budget)" : "New from"} value={news.length ? formatMoney(Math.min(...news), answers.country) : "–"} />}
+          {answers.condition !== "new" && <Stat label="Used (est.)" value={used ? formatBand(used.low, used.high, answers.country) : "–"} />}
+          <Stat label="Real range" value={lo === hi ? formatMi(lo) : both(`${kmToMiles(lo)}–${kmToMiles(hi)} mi`, `${Math.round(lo)}–${Math.round(hi)} km`)} />
+          <Stat label="0–62 mph" value={n > 1 ? `from ${formatAccel(accel)}` : formatAccel(accel)} />
+        </dl>
+      </div>
+
+      <div className="relative z-10 border-t border-line px-3 py-2">
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={listId}
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-center justify-between gap-3 rounded-lg px-1 py-1.5 text-left text-sm font-semibold hover:text-foreground"
+        >
+          <span>{open ? "Hide versions" : `Show ${n} ${n === 1 ? "version" : "versions"}`}</span>
+          <span aria-hidden className={`transition-transform ${open ? "rotate-180" : ""}`}>⌄</span>
+        </button>
+        {open && (
+          <ul id={listId} className="mt-1 grid">
+            {model.groups.map((g) => {
+              const o = groupOffer(g, answers.country, answers.condition);
+              return (
+                <li key={g.key} className="flex items-center gap-3 border-t border-line py-2 first:border-t-0">
+                  <div className="min-w-0 flex-1">
+                    <CarLink href={carHref(g.car)} returnLabel="all cars" className="block font-medium leading-snug underline decoration-line underline-offset-4 hover:decoration-foreground">
+                      {g.car.variant}
+                    </CarLink>
+                    <span className="block text-xs text-muted">
+                      {yearsLabel(g)}
+                      {o.newPrice !== null ? ` · ${formatMoney(o.newPrice, answers.country)} new` : ""}
+                      {o.used ? ` · used ${formatBand(o.used.low, o.used.high, answers.country)}` : ""}
+                    </span>
+                    <CompareTick car={g.car} className="-ml-1.5 mt-0.5" />
+                  </div>
+                  <span className="shrink-0 text-right text-sm font-semibold tabular-nums">{u(formatMi(g.car.rangeKm))}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {familyHref(model.family) && (
+          <Link href={familyHref(model.family)!} className="mt-1 block px-1 pb-1 text-sm font-semibold text-route underline decoration-signal decoration-2 underline-offset-4">
+            See the {model.family} model page →
+          </Link>
+        )}
+      </div>
+
+      {credit && (
+        <p className="px-3 pb-2.5 text-[11px] leading-tight text-muted">
+          {credit.note && <span className="mr-1">{credit.note}</span>}
+          <a href={credit.source} target="_blank" rel="noopener noreferrer" className="hover:underline" title={photoSubject(credit)}>
+            Photo: {credit.author}
+          </a>
+          {", "}
+          <a href={credit.licenseUrl} target="_blank" rel="noopener noreferrer license" className="hover:underline">
+            {credit.license}
+          </a>
+        </p>
+      )}
+    </article>
   );
 }
 
