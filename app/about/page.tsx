@@ -40,10 +40,10 @@ export default function AboutPage() {
       <InfoSection id="what" title="What you can do here">
         <ul>
           <li>
-            <Link href="/quiz">Find your match</Link>: describe what you need in your own words, or answer a few questions.
+            <Link prefetch={false} href="/quiz">Find your match</Link>: describe what you need in your own words, or answer a few questions.
           </li>
           <li>
-            <Link href="/cars">All cars</Link>: all {allCars.length.toLocaleString("en-GB")} electric cars, with filters for budget, range, towing,
+            <Link prefetch={false} href="/cars">All cars</Link>: all {allCars.length.toLocaleString("en-GB")} electric cars, with filters for budget, range, towing,
             boot space, charging and more. {cars.length} are on sale new in the UK today.
           </li>
           <li>
@@ -54,7 +54,7 @@ export default function AboutPage() {
             <Link href="/models">Models A–Z</Link>: {models.length} model pages with every version side by side.
           </li>
           <li>
-            <Link href="/compare">Compare</Link> up to three cars, and work out <Link href="/running-costs">running costs</Link> against petrol.
+            <Link prefetch={false} href="/compare">Compare</Link> up to three cars, and work out <Link prefetch={false} href="/running-costs">running costs</Link> against petrol.
           </li>
         </ul>
       </InfoSection>

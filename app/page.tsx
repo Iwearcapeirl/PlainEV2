@@ -89,13 +89,13 @@ export default function HomePage() {
             find your match.
           </p>
           <div className="mt-8 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-            <Link
+            <Link prefetch={false}
               href="/quiz"
               className="rounded-xl bg-signal px-6 py-3.5 text-center text-[15px] font-semibold text-signal-ink transition-[filter,transform] duration-150 hover:brightness-95 active:scale-[0.97]"
             >
               Find your match
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/cars"
               className="rounded-xl px-6 py-3.5 text-center text-[15px] font-semibold text-on-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--on-ink)_35%,transparent)] transition-shadow duration-150 hover:shadow-[inset_0_0_0_1.5px_var(--on-ink)]"
             >
@@ -107,7 +107,7 @@ export default function HomePage() {
             >
               Rankings
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/compare"
               className="rounded-xl px-6 py-3.5 text-center text-[15px] font-semibold text-on-ink shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--on-ink)_35%,transparent)] transition-shadow duration-150 hover:shadow-[inset_0_0_0_1.5px_var(--on-ink)]"
             >
@@ -133,6 +133,8 @@ export default function HomePage() {
             <li key={w.href}>
               <Link
                 href={w.href}
+                // These pages load the full car list; fetching them ahead of time would add it to the homepage.
+                prefetch={/^\/(quiz|cars|compare|running-costs)/.test(w.href) ? false : undefined}
                 className="group flex h-full flex-col rounded-2xl bg-card p-6 shadow-[0_0_0_1px_var(--line),var(--sc-e1)] transition-[box-shadow,transform] duration-150 hover:shadow-[0_0_0_2px_var(--ink),var(--sc-e2)] active:scale-[0.98]"
               >
                 <span className="font-wide text-lg font-semibold">{w.title}</span>
@@ -309,7 +311,7 @@ export default function HomePage() {
                 </dd>
               </div>
             </dl>
-            <Link
+            <Link prefetch={false}
               href="/quiz"
               className="mt-8 inline-block rounded-xl bg-signal px-6 py-3.5 text-[15px] font-semibold text-signal-ink transition-[filter,transform] duration-150 hover:brightness-95 active:scale-[0.97]"
             >

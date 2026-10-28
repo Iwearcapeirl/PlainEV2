@@ -133,7 +133,7 @@ export default function MethodologyPage() {
         <p>
           On those figures, a typical EV costs about {formatPounds(typical.perMonth)} a month to charge ({u(formatPencePerMile(typical.perMile))}) against{" "}
           {formatPounds(typical.petrolPerYear / 12)} for the petrol car. We update the home electricity price each time the Ofgem price cap changes, every
-          three months. You can put in your own mileage and tariff on any car page or in the <Link href="/running-costs">running costs calculator</Link>.
+          three months. You can put in your own mileage and tariff on any car page or in the <Link prefetch={false} href="/running-costs">running costs calculator</Link>.
         </p>
       </InfoSection>
 

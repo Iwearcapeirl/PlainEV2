@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import Link from "next/link";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import UnitsSwitch from "@/components/UnitsSwitch";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
@@ -19,6 +20,8 @@ export const metadata: Metadata = {
   // Default share image for pages that don't set their own (car, vs and ranking pages do).
   openGraph: { siteName: SITE_NAME, type: "website", images: [{ url: "/api/og/site/home", width: 1200, height: 630 }] },
   twitter: { card: "summary_large_image" },
+  // AdSense site ownership, alongside public/ads.txt (the ad script itself loads late, see below).
+  other: { "google-adsense-account": ADSENSE_CLIENT },
 };
 
 export const viewport: Viewport = {
@@ -33,8 +36,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         {/* Miles or km, picked with the switch in the top bar: set before the page paints so the right unit shows at once. */}
         <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem(${JSON.stringify(UNITS_KEY)})==="km")document.documentElement.dataset.units="km"}catch(e){}` }} />
-        {/* Google AdSense: verifies the site and loads ads into the AdSlot spaces. Plain async tag so it sits in <head>, as AdSense asks. */}
-        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
       </head>
       <body className="min-h-dvh font-sans antialiased">
         {/* First thing a keyboard user reaches: jump past the top bar. Hidden until focused. */}
@@ -55,13 +56,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link href="/best" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 Rankings
               </Link>
-              <Link href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
+              <Link prefetch={false} href="/cars" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 All cars
               </Link>
-              <Link href="/compare" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
+              <Link prefetch={false} href="/compare" className="whitespace-nowrap rounded-lg px-1.5 py-2 font-medium max-[399px]:px-1 text-on-ink/80 hover:text-on-ink sm:px-3">
                 Compare
               </Link>
-              <Link
+              <Link prefetch={false}
                 href="/quiz"
                 className="whitespace-nowrap rounded-lg bg-signal px-3 py-2 font-semibold max-[359px]:px-1.5 text-signal-ink hover:brightness-95 sm:px-3.5"
               >
@@ -82,11 +83,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 <p className="font-wide font-semibold">{SITE_NAME}</p>
                 <ul className="mt-3 grid gap-2">
                   <li><Link href="/" className="text-muted hover:text-foreground">Home</Link></li>
-                  <li><Link href="/quiz" className="text-muted hover:text-foreground">Find your match</Link></li>
-                  <li><Link href="/cars" className="text-muted hover:text-foreground">All cars</Link></li>
+                  <li><Link prefetch={false} href="/quiz" className="text-muted hover:text-foreground">Find your match</Link></li>
+                  <li><Link prefetch={false} href="/cars" className="text-muted hover:text-foreground">All cars</Link></li>
                   <li><Link href="/models" className="text-muted hover:text-foreground">Models A–Z</Link></li>
-                  <li><Link href="/compare" className="text-muted hover:text-foreground">Compare cars</Link></li>
-                  <li><Link href="/running-costs" className="text-muted hover:text-foreground">Running costs</Link></li>
+                  <li><Link prefetch={false} href="/compare" className="text-muted hover:text-foreground">Compare cars</Link></li>
+                  <li><Link prefetch={false} href="/running-costs" className="text-muted hover:text-foreground">Running costs</Link></li>
                   <li><Link href="/about" className="text-muted hover:text-foreground">About</Link></li>
                   <li><Link href="/methodology" className="text-muted hover:text-foreground">How we work out the figures</Link></li>
                   <li><Link href="/best" className="text-muted hover:text-foreground">All rankings</Link></li>
@@ -132,6 +133,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </div>
         </footer>
+        {/* Google AdSense (site review now, ads later). Loaded once the page has finished loading, so Google's ~280 KB of
+            script doesn't slow the first view; the account meta tag (metadata.other) and public/ads.txt also identify the site. */}
+        <Script
+          id="adsense"
+          strategy="lazyOnload"
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+        />
         {/* Vercel Analytics: cookieless page-view counts, shown in the Vercel dashboard. */}
         <Analytics />
       </body>

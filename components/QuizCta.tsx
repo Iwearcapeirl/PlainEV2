@@ -12,7 +12,7 @@ export default function QuizCta({ compact = false }: { compact?: boolean }) {
         <p className={`font-wide font-semibold ${compact ? "text-base" : "text-xl"}`}>Not sure which one is right for you?</p>
         <p className="mt-1 text-sm text-on-ink/85">Answer five quick questions to get your personal top 5, new or used.</p>
       </div>
-      <Link
+      <Link prefetch={false}
         href="/quiz"
         className="shrink-0 rounded-xl bg-signal px-5 py-3 text-center text-sm font-semibold text-signal-ink hover:brightness-95"
       >
