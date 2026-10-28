@@ -210,37 +210,41 @@ for c in cars:
     c["image"], c["imageCredit"] = image, credit
     stats["stand-in photo" if note else "photo (other generation list)"] += 1
 
-# One photo covers a whole family, so versions with a different body from the one pictured say so under the photo
-# (until a free photo of that body turns up). (family, regex on model, what the photo shows instead). Checked by
-# hand against each family's photo (October 2026).
-BODY_NOTES = [
-    ("Porsche Taycan", r"Sport Turismo", "the Taycan saloon, not the Sport Turismo estate"),
-    ("Porsche Taycan", r"Cross Turismo", "the Taycan saloon, not the raised Cross Turismo estate"),
-    ("Škoda Enyaq", r"Coupe", "the Enyaq SUV, not the sloping-roof Enyaq Coupé"),
-    ("Audi Q4 e-tron", r"Sportback", "the Q4 e-tron SUV, not the sloping-roof Sportback"),
-    ("Audi Q6 e-tron", r"Sportback", "the Q6 e-tron SUV, not the sloping-roof Sportback"),
-    ("Audi Q8", r"Sportback", "the Q8 e-tron SUV, not the sloping-roof Sportback"),
-    ("Audi SQ8", r"Sportback", "the SQ8 e-tron SUV, not the sloping-roof Sportback"),
-    ("Audi e-tron", r"Sportback", "the e-tron SUV, not the sloping-roof Sportback"),
-    ("Audi e-tron S", r"Sportback", "the e-tron 55 quattro SUV, not the e-tron S Sportback"),
-    ("Audi A6 e-tron", r"Sportback", "the A6 Avant estate, not the Sportback"),
-    ("BMW i5", r"Touring", "the i5 saloon, not the i5 Touring estate"),
-    ("Volkswagen ID.7", r"Tourer", "the ID.7 hatchback, not the ID.7 Tourer estate"),
-    ("Peugeot e-308", r"\bSW\b", "the e-308 hatchback, not the e-308 SW estate"),
-    ("Kia EV4", r"Fastback", "the EV4 hatchback, not the EV4 Fastback saloon"),
-    ("Porsche Cayenne Electric", r"Coupé", "the Cayenne Electric SUV, not the Cayenne Coupé"),
-    ("Toyota bZ4X", r"Touring", "the bZ4X, not the longer, taller bZ4X Touring"),
-    ("Fiat 500e", r"Cabrio", "the 500e hatchback, not the 500e Cabrio"),
-    ("Abarth 500e", r"Convertible", "the Abarth 500e hatchback, not the convertible"),
-    ("Vauxhall Astra Sports Tourer Electric", r".", "the Astra hatchback, not the Sports Tourer estate"),
-    ("Maserati GranTurismo Folgore", r"GranCabrio", "the GranTurismo coupé, not the GranCabrio convertible"),
+# One photo covers a whole family, so versions with a different body style get their own photo of that body
+# (family, regex on model, Commons file, author, licence, licence URL, what it shows). Found on Wikimedia Commons
+# and checked by eye, October 2026. Applied after the family photos above, so they win for these versions.
+SA4 = ("CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0")
+BODY_PHOTOS = [
+    ("Porsche Taycan", r"Sport Turismo", "Porsche_Taycan_Sport_Turismo_–_f_15022026.jpg", "M 93", "CC BY-SA 3.0 de", "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en", "Porsche Taycan Sport Turismo"),
+    ("Porsche Taycan", r"Cross Turismo", "2024_Porsche_Taycan_Cross_Turismo_DSC_7028.jpg", "Alexander Migl", *SA4, "Porsche Taycan Cross Turismo"),
+    ("Škoda Enyaq", r"Coupe", "2025_Skoda_Enyaq_RS_Limited_Edition_sportback_front.jpg", "LuvsMG481", *SA4, "Škoda Enyaq Coupé"),
+    ("Audi Q4 e-tron", r"Sportback", "Audi_Q4_Sportback_e-tron_1X7A0300.jpg", "Alexander Migl", *SA4, "Audi Q4 Sportback e-tron"),
+    ("Audi Q6 e-tron", r"Sportback", "Audi_Q6_e-tron_Sportback_DSC_9278.jpg", "Alexander Migl", *SA4, "Audi Q6 Sportback e-tron"),
+    ("Audi Q8", r"Sportback", "Audi_Q8_e-tron_Sportback_1X7A7094.jpg", "Alexander-93", *SA4, "Audi Q8 Sportback e-tron"),
+    ("Audi SQ8", r"Sportback", "Audi_SQ8_e-tron_Sportback_Auto_Zuerich_2023_1X7A1351.jpg", "Alexander-93", *SA4, "Audi SQ8 Sportback e-tron"),
+    ("Audi e-tron", r"Sportback", "Audi_e-tron_Sportback_1X7A6780.jpg", "Alexander-93", *SA4, "Audi e-tron Sportback"),
+    ("Audi e-tron S", r"Sportback", "Audi_e-tron_S_Sportback_1X7A0338.jpg", "Alexander Migl", *SA4, "Audi e-tron S Sportback"),
+    ("Audi A6 e-tron", r"Sportback", "Audi_A6_e-tron_DSC_2835_(cropped).jpg", "Alexander Migl", *SA4, "Audi A6 Sportback e-tron"),
+    ("BMW i5", r"Touring", "BMW_i5_Touring_IMG_9691.jpg", "Alexander-93", *SA4, "BMW i5 Touring"),
+    ("Volkswagen ID.7", r"Tourer", "Volkswagen_ID.7_Tourer_IMG_4193.jpg", "Alexander Migl", *SA4, "Volkswagen ID.7 Tourer"),
+    ("Peugeot e-308", r"\bSW\b", "Peugeot_308_C_SW_Leonberg_2022_1X7A0460.jpg", "Alexander Migl", *SA4, "Peugeot 308 SW"),
+    ("Kia EV4", r"Fastback", "Kia_EV4_Sedan_CT1_2025-04-11_(04).jpg", "Treeinkr", *SA4, "Kia EV4 Fastback"),
+    ("Porsche Cayenne Electric", r"Coupé", "Porsche_Cayenne_Coupé_Electric_Turbo_IMG_7074.jpg", "Alexander Migl", *SA4, "Porsche Cayenne Coupé Electric"),
+    ("Toyota bZ4X", r"Touring", "Toyota_bZ4X_Touring_IMG_8910.jpg", "Alexander Migl", *SA4, "Toyota bZ4X Touring"),
+    ("Fiat 500e", r"Cabrio", "Fiat_500e_Cabrio_(2020)_Leonberg_2022_1X7A0512.jpg", "Alexander Migl", *SA4, "Fiat 500e Cabrio"),
+    ("Abarth 500e", r"Convertible", "Abarth_500e_Cabrio_Auto_Zuerich_2023_1X7A1166.jpg", "Alexander-93", *SA4, "Abarth 500e Convertible"),
+    ("Maserati GranTurismo Folgore", r"GranCabrio", "2025_Maserati_GranCabrio_Folgore.jpg", "Oleg Yunakov", *SA4, "Maserati GranCabrio Folgore"),
+    ("Vauxhall Astra Sports Tourer Electric", r".", "Opel_Astra_L_Sports_Tourer_Leonberg_2022_1X7A0421.jpg", "Alexander Migl", *SA4, "Opel Astra Sports Tourer"),
+    ("BYD Seal U", r".", "BYD_Seal_U_IAA_2023_1X7A0045.jpg", "Alexander-93", *SA4, "BYD Seal U"),
 ]
 for c in cars:
-    rule = next((r for r in BODY_NOTES if r[0] == c["family"] and re.search(r[1], c["Model"])), None)
-    if rule and c["imageCredit"]:
-        # Replaces a looser stand-in note (the e-tron S Sportback's) with the more specific one.
-        c["imageCredit"] = {**c["imageCredit"], "note": f"Photo shows {rule[2]}."}
-        stats["body-style photo note"] += 1
+    rule = next((r for r in BODY_PHOTOS if r[0] == c["family"] and re.search(r[1], c["Model"])), None)
+    if not rule:
+        continue
+    _, _, f, author, lic, licurl, subject = rule
+    c["image"] = thumb(f)
+    c["imageCredit"] = {"author": author, "license": lic, "licenseUrl": licurl, "source": page(f), "subject": subject}
+    stats["body-style photo"] += 1
 
 # UK names and body styles where EV Database's differ from how the car is sold or described here. Checked by hand
 # (October 2026). Applied last, so photos and families above still match on EV Database's names.
