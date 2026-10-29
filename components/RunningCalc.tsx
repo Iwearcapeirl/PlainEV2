@@ -10,14 +10,14 @@ import { Assumptions, useRunningInputs } from "@/components/RunningCosts";
 import { u } from "@/components/UnitText";
 import { carHref, type Car } from "@/lib/cars";
 import { slotsFromParam, statusText, yearsText } from "@/lib/compare";
-import { formatPencePerMile, formatPounds, runningCost, runningHref } from "@/lib/running";
+import { EVED, formatPencePerMile, formatPounds, runningCost, runningHref } from "@/lib/running";
 
 /** Up to three cars' charging costs side by side, against the petrol car, with the shared assumptions above. */
 export default function RunningCalc() {
   const router = useRouter();
   const params = useSearchParams();
   const [slots, setSlots] = useState<(Car | null)[]>(() => slotsFromParam(params.get("cars")));
-  const [inputs] = useRunningInputs();
+  const [inputs, setInputs] = useRunningInputs();
 
   useEffect(() => {
     const href = runningHref(slots.map((c) => c?.slug ?? null));
@@ -29,12 +29,35 @@ export default function RunningCalc() {
   const setSlot = (i: number, car: Car | null) => setSlots((s) => s.map((c, j) => (j === i ? car : c)));
   const petrol = runningCost(0, inputs);
   const costs = slots.map((c) => (c ? runningCost(c.whPerKm, inputs) : null));
+  // Each car with the planned per-mile charge, for the small "from April 2028" line when it isn't in the main figures.
+  const in2028 = slots.map((c) => (c ? runningCost(c.whPerKm, { ...inputs, eved: 1 }) : null));
   const cheapest = Math.min(...costs.filter((c) => c !== null).map((c) => c!.perMile));
   const several = costs.filter(Boolean).length > 1;
 
   return (
     <div>
       <Assumptions startOpen />
+
+      <div className="mt-4 rounded-2xl bg-accent-soft p-4 sm:p-5">
+        <label className="flex items-start gap-3 text-sm font-semibold">
+          <input
+            type="checkbox"
+            checked={Boolean(inputs.eved)}
+            onChange={(e) => setInputs({ eved: e.target.checked ? 1 : 0 })}
+            className="mt-0.5 size-5 shrink-0 accent-[var(--ink)]"
+          />
+          <span>
+            Include the {EVED.pencePerMile}p-a-mile charge for electric cars from {EVED.from}
+            <span className="mt-1 block text-xs font-normal text-muted text-pretty">
+              The government plans to charge electric cars {EVED.pencePerMile}p a mile on top of road tax from {EVED.from}, rising with inflation from
+              2029. It isn&rsquo;t law yet.{" "}
+              <a href={EVED.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+                Details on GOV.UK
+              </a>
+            </span>
+          </span>
+        </label>
+      </div>
 
       <ul className="mt-6 grid gap-4 sm:grid-cols-3" aria-label="Cars">
         {slots.map((car, i) => {
@@ -61,13 +84,18 @@ export default function RunningCalc() {
                   </p>
                   <dl className="mt-3 grid gap-2 border-t border-line pt-3 text-sm">
                     <div>
-                      <dt className="text-xs text-muted">Charging cost</dt>
+                      <dt className="text-xs text-muted">{inputs.eved ? `Running cost from ${EVED.from}` : "Charging cost"}</dt>
                       <dd className="font-wide text-xl font-semibold tabular-nums">
                         {formatPounds(c.perMonth)} <span className="text-sm font-normal text-muted">a month</span>
                       </dd>
                       <dd className="text-xs tabular-nums text-muted">
                         {u(formatPencePerMile(c.perMile))} · {formatPounds(c.perYear)} a year
                       </dd>
+                      {!inputs.eved && in2028[i] && (
+                        <dd className="text-xs tabular-nums text-muted">
+                          From {EVED.from}: {formatPounds(in2028[i]!.perMonth)} a month with the {EVED.pencePerMile}p-a-mile charge
+                        </dd>
+                      )}
                       {several && c.perMile === cheapest && (
                         <dd className="mt-1 inline-block rounded-full bg-win px-2 py-0.5 text-xs font-semibold">Cheapest to run</dd>
                       )}

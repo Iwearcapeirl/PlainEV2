@@ -9,6 +9,7 @@ import {
   formatPounds,
   RUNNING_CHECKED,
   RUNNING_DEFAULTS,
+  EVED,
   RUNNING_SOURCES,
   runningCost,
   type RunningInputs,
@@ -28,6 +29,7 @@ const LIMITS: Record<keyof RunningInputs, [number, number]> = {
   rapidP: [0, 300],
   mpg: [1, 200],
   petrolP: [0, 500],
+  eved: [0, 1],
 };
 
 let cachedRaw: string | null | undefined;
@@ -44,6 +46,7 @@ function parse(raw: string | null): RunningInputs {
       const v = o[k];
       if (typeof v === "number" && Number.isFinite(v) && v >= LIMITS[k][0] && v <= LIMITS[k][1]) out[k] = v;
     }
+    out.eved = out.eved ? 1 : 0;
     return out;
   } catch {
     return RUNNING_DEFAULTS;
@@ -103,11 +106,13 @@ export default function RunningCosts({ whPerKm, name, calculatorHref }: { whPerK
   const [inputs] = useRunningInputs();
   const c = runningCost(whPerKm, inputs);
   const more = c.savingPerYear < 0;
+  // The other view of the planned per-mile charge: with it when the headline leaves it out, without it when it's in.
+  const alt = runningCost(whPerKm, { ...inputs, eved: inputs.eved ? 0 : 1 });
 
   return (
     <div>
       <dl className="mt-4 grid gap-px overflow-hidden rounded-2xl bg-line shadow-[0_0_0_1px_var(--line)] sm:grid-cols-3">
-        <Figure label={`Charging the ${name}`} value={`${formatPounds(c.perMonth)} a month`} sub={`${formatPencePerMile(c.perMile)} · ${formatPounds(c.perYear)} a year`} strong />
+        <Figure label={inputs.eved ? `Running the ${name} from ${EVED.from}` : `Charging the ${name}`} value={`${formatPounds(c.perMonth)} a month`} sub={`${formatPencePerMile(c.perMile)} · ${formatPounds(c.perYear)} a year`} strong />
         <Figure label={`A ${inputs.mpg} mpg petrol car`} value={`${formatPounds(c.petrolPerYear / 12)} a month`} sub={`${formatPencePerMile(c.petrolPerMile)} · ${formatPounds(c.petrolPerYear)} a year`} />
         <Figure
           label={more ? "Costs more than petrol" : "Saving against petrol"}
@@ -119,6 +124,7 @@ export default function RunningCosts({ whPerKm, name, calculatorHref }: { whPerK
         Charging only at home: <span className="font-semibold tabular-nums">{u(formatPencePerMile(c.homeOnly))}</span>. Only on public rapid chargers:{" "}
         <span className="font-semibold tabular-nums">{u(formatPencePerMile(c.rapidOnly))}</span>.
       </p>
+      <EvedLine c={c} alt={alt} on={Boolean(inputs.eved)} />
       <Assumptions className="mt-4" />
       <p className="mt-4 text-sm">
         <a href={calculatorHref} className="inline-block py-1 font-semibold underline decoration-signal decoration-2 underline-offset-4">
@@ -126,6 +132,38 @@ export default function RunningCosts({ whPerKm, name, calculatorHref }: { whPerK
         </a>
       </p>
     </div>
+  );
+}
+
+/**
+ * The planned 3p-a-mile charge (eVED) as a separate line: what the car will cost from April 2028 with it, or, when the
+ * visitor has chosen to include it in the figures above, what it costs without it.
+ */
+function EvedLine({ c, alt, on }: { c: ReturnType<typeof runningCost>; alt: ReturnType<typeof runningCost>; on: boolean }) {
+  const withIt = on ? c : alt;
+  const without = on ? alt : c;
+  const saving = withIt.savingPerYear;
+  return (
+    <p className="mt-3 max-w-[66ch] rounded-xl bg-accent-soft px-4 py-3 text-sm text-pretty">
+      {on ? (
+        <>
+          These figures include the government&rsquo;s planned {EVED.pencePerMile}p-a-mile charge for electric cars, due from {EVED.from}. Without it:{" "}
+          <span className="font-semibold tabular-nums">{formatPounds(without.perMonth)} a month</span> ({u(formatPencePerMile(without.perMile))}).
+        </>
+      ) : (
+        <>
+          <span className="font-semibold">From {EVED.from},</span> with the government&rsquo;s planned {EVED.pencePerMile}p-a-mile charge for electric cars:{" "}
+          <span className="font-semibold tabular-nums">{formatPounds(withIt.perMonth)} a month</span> ({u(formatPencePerMile(withIt.perMile))}),{" "}
+          {saving >= 0 ? `saving ${formatPounds(saving)} a year against petrol` : `${formatPounds(-saving)} a year more than petrol`}.
+        </>
+      )}{" "}
+      <span className="text-muted">
+        Planned but not yet law, and set to rise with inflation from 2029.{" "}
+        <a href={EVED.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
+          Details on GOV.UK
+        </a>
+      </span>
+    </p>
   );
 }
 
