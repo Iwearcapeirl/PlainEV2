@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { allCars as cars, carHref } from "@/lib/cars";
+import { isIndexable } from "@/lib/indexing";
 import { modelHref, models } from "@/lib/models";
 import { rankingPages } from "@/lib/rankings";
 import { vsPages } from "@/lib/rivals";
@@ -37,7 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
-    ...cars.map((c) => ({
+    ...cars.filter(isIndexable).map((c) => ({
       url: `${SITE_URL}${carHref(c)}`,
       lastModified,
       changeFrequency: "monthly" as const,

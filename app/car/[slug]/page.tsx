@@ -14,6 +14,7 @@ import RunningCosts from "@/components/RunningCosts";
 import { breadcrumbLd } from "@/lib/jsonld";
 import { runningHref } from "@/lib/running";
 import { carExtras } from "@/lib/carExtras";
+import { isIndexable } from "@/lib/indexing";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import { compareHref } from "@/lib/compare";
 import { modelHref, modelOf, rangeSpan } from "@/lib/models";
@@ -116,6 +117,8 @@ async function metadataFor({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: carHref(car) },
+    // Older model years of the same version, and cars not sold in the UK, stay reachable but out of search (lib/indexing.ts).
+    ...(isIndexable(car) ? {} : { robots: { index: false, follow: true } }),
     openGraph: { title, description, type: "article", images: [{ url: `/api/og/car/${car.slug}`, width: 1200, height: 630 }] },
     twitter: { card: "summary_large_image" },
   };

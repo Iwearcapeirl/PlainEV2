@@ -64,9 +64,6 @@ export default function PrivacyPage() {
             information about which page you were on).{" "}
             <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy" target="_blank" rel="noopener noreferrer">Wikimedia&rsquo;s privacy policy</a>.
           </li>
-          <li>
-            <strong>Google</strong>: the Google AdSense script loads on each page (see <a href="#ads">adverts</a> below).
-          </li>
         </ul>
         <p>
           Some of these companies are in the US. Where your data leaves the UK, it&rsquo;s protected by the UK–US Data Bridge or other safeguards approved
@@ -90,11 +87,11 @@ export default function PrivacyPage() {
 
       <InfoSection id="ads" title="Adverts and cookies">
         <p>
-          We plan to show adverts from Google AdSense to cover the cost of running the site. Google&rsquo;s script already loads on each page so Google can
-          review the site for its ad programme, but no adverts are shown yet.
+          There are no adverts on the site, and no advertising code or cookies. We may apply to show adverts from Google AdSense in future to cover
+          the cost of running the site.
         </p>
         <p>
-          Before any adverts appear, a consent message will ask whether Google and its partners may use cookies to personalise ads. You can say no and
+          If we do, before any adverts appear a consent message will ask whether Google and its partners may use cookies to personalise ads. You can say no and
           still use everything on the site, and change your choice later. Google explains{" "}
           <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">
             how it uses information from sites that show its ads

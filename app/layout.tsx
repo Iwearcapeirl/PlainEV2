@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import Link from "next/link";
-import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import UnitsSwitch from "@/components/UnitsSwitch";
 import { rankingPages, SECTIONS, shortLabel } from "@/lib/rankings";
@@ -20,7 +19,8 @@ export const metadata: Metadata = {
   // Default share image for pages that don't set their own (car, vs and ranking pages do).
   openGraph: { siteName: SITE_NAME, type: "website", images: [{ url: "/api/og/site/home", width: 1200, height: 630 }] },
   twitter: { card: "summary_large_image" },
-  // AdSense site ownership, alongside public/ads.txt (the ad script itself loads late, see below).
+  // AdSense site ownership, alongside public/ads.txt. The ad script itself is off until the site is approved (October
+  // 2026: "low-value content", reapply later); add it back with Google's consent message when ads go live.
   other: { "google-adsense-account": ADSENSE_CLIENT },
 };
 
@@ -133,14 +133,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </div>
         </footer>
-        {/* Google AdSense (site review now, ads later). Loaded once the page has finished loading, so Google's ~280 KB of
-            script doesn't slow the first view; the account meta tag (metadata.other) and public/ads.txt also identify the site. */}
-        <Script
-          id="adsense"
-          strategy="lazyOnload"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-        />
         {/* Vercel Analytics: cookieless page-view counts, shown in the Vercel dashboard. */}
         <Analytics />
       </body>
