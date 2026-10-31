@@ -10,7 +10,7 @@ import { carHref, type Car } from "@/lib/cars";
 import { formatMiles } from "@/lib/format";
 import { breadcrumbLd } from "@/lib/jsonld";
 import { SITE_NAME, SITE_URL, UPDATED_ISO, UPDATED_LABEL, WLTP_HREF } from "@/lib/site";
-import { plainDeep } from "@/lib/units";
+import { both, plainDeep } from "@/lib/units";
 import { BRAND_MIN_MODELS, bodyRows, brandRows, pct, shareQuantile, typicalShare, wltpCars, wltpOutliers, wltpShare } from "@/lib/wltp";
 
 const TITLE = "Real-world range vs WLTP: every UK electric car compared";
@@ -126,6 +126,33 @@ export default function RealRangeVsWltpPage() {
         </ul>
       </section>
 
+      {/* ---------- What "real-world" means ---------- */}
+      <section id="real-world" aria-labelledby="real-world-title" className="mt-10 max-w-[66ch] rounded-2xl bg-card p-5 shadow-[0_0_0_1px_var(--line)] sm:p-6">
+        <h2 id="real-world-title" className="font-wide text-xl font-semibold">Whose real world?</h2>
+        <p className="mt-2 leading-relaxed text-pretty">
+          The real-world figure is EV Database&rsquo;s estimate for a mix of town and motorway driving in average weather, with a moderate driving
+          style. It&rsquo;s a sensible middle figure, not everyone&rsquo;s real world:
+        </p>
+        <ul className="mt-3 grid list-disc gap-2 pl-5 leading-relaxed text-pretty">
+          <li>
+            <strong>Mostly town driving in mild weather:</strong> you&rsquo;ll often get close to the official figure, or beat it. The WLTP test is
+            mostly lower-speed driving, which suits electric cars.
+          </li>
+          <li>
+            <strong>Mostly motorway:</strong> expect less than the real-world figure. EV Database works out motorway range at a steady{" "}
+            {u(both("68 mph", "110 km/h"))}.
+          </li>
+          <li>
+            <strong>Cold weather:</strong> expect less again, because heating uses energy. EV Database&rsquo;s cold-weather figures assume &minus;10°C
+            with the heating on, and its mild ones 23°C with no air conditioning.
+          </li>
+        </ul>
+        <p className="mt-3 leading-relaxed text-pretty">
+          The share of WLTP is most useful for comparing cars, because every car is measured the same way. A big gap usually means a car loses more
+          range at speed. Each car&rsquo;s page links to its EV Database entry, which breaks range down by town and motorway, in cold and mild weather.
+        </p>
+      </section>
+
       {/* ---------- By brand ---------- */}
       <section aria-labelledby="brands-title" className="mt-12">
         <h2 id="brands-title" className="font-wide text-xl font-semibold sm:text-2xl">Brand league table</h2>
@@ -209,8 +236,8 @@ export default function RealRangeVsWltpPage() {
         <div className="mt-3 grid gap-3 leading-relaxed text-pretty">
           <p>
             Both figures come from EV Database. The official range is the WLTP figure. The real-world range is EV Database&rsquo;s estimate for
-            everyday mixed driving in mild conditions, the same figure used across {SITE_NAME}. Expect less on a cold motorway and more around town in
-            summer.
+            mixed town and motorway driving in average weather, the same figure used across {SITE_NAME} (see{" "}
+            <a href="#real-world">whose real world?</a> above).
           </p>
           <p>
             The table covers electric cars on sale new in the UK with both figures. Where a car comes in several versions, each version is listed.

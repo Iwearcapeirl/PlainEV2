@@ -251,10 +251,10 @@ export default async function CarPage({ params }: Props) {
             <p className="mt-2 text-xs text-muted">
               {car.wltpKm ? (
                 <>
-                  Real-world estimate. The official WLTP figure is {u(formatMiles(car.wltpKm))}, so expect
-                  about {pct(wltpShare(car)!)} of the advertised range.{" "}
-                  <Link href={WLTP_HREF} className="underline decoration-line underline-offset-2 hover:text-foreground">
-                    How every EV compares
+                  Real-world estimate for mixed driving in average weather. The official WLTP figure is {u(formatMiles(car.wltpKm))}, so
+                  expect about {pct(wltpShare(car)!)} of the advertised range: more around town, less on the motorway or in winter.{" "}
+                  <Link href={`${WLTP_HREF}#real-world`} className="underline decoration-line underline-offset-2 hover:text-foreground">
+                    What real-world means
                   </Link>
                 </>
               ) : (

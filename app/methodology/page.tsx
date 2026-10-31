@@ -8,7 +8,7 @@ import { rankingPages, SECTIONS } from "@/lib/rankings";
 import { assumptionsText, formatPencePerMile, formatPounds, HOME_LOSS, RAPID_LOSS, RUNNING_DEFAULTS, RUNNING_SOURCES, runningCost } from "@/lib/running";
 import { CONTACT_EMAIL, SITE_NAME, UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 import { usedRankingPages } from "@/lib/usedRankings";
-import { plainDeep } from "@/lib/units";
+import { both, plainDeep } from "@/lib/units";
 
 export const metadata: Metadata = plainDeep({
   title: "How we work out the figures",
@@ -60,10 +60,15 @@ export default function MethodologyPage() {
           {dateLabel(UPDATED_ISO)}, and each car&rsquo;s page links to its entry there.
         </p>
         <p>
-          <strong>Real-world range</strong> is EV Database&rsquo;s estimate of how far a car goes on a full charge in everyday driving, across a mix of
-          conditions. It isn&rsquo;t the official WLTP figure, which comes from a lab test and is usually 20–30% higher (see{" "}
-          <Link href="/real-range-vs-wltp">real-world range vs WLTP for every UK EV</Link>). Expect less than the real-world
-          figure on a cold motorway and more in mild weather around town.
+          <strong>Real-world range</strong> is EV Database&rsquo;s estimate of how far a car goes on a full charge in a mix of town and motorway
+          driving, in average weather, with a moderate driving style. It isn&rsquo;t the official WLTP figure, which comes from a lab test and is
+          usually 20–30% higher (see <Link href="/real-range-vs-wltp">real-world range vs WLTP for every UK EV</Link>).
+        </p>
+        <p>
+          It&rsquo;s a middle figure, so your own range depends on how you drive. Mostly around town in mild weather, many cars get close to their
+          WLTP figure. On the motorway or in winter, expect less. EV Database&rsquo;s own page for each car (linked from ours) breaks range down by
+          town and motorway driving, in cold weather (&minus;10°C, heating on) and mild weather (23°C, no air conditioning). Its motorway figures
+          assume a steady {u(both("68 mph", "110 km/h"))}.
         </p>
         <p>
           <strong>Efficiency</strong> is the energy taken from the battery per mile in the same conditions (range × efficiency = the usable battery). It
