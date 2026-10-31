@@ -33,6 +33,17 @@ export default function RankingsIndex() {
         <QuizCta compact />
       </div>
 
+      <Link
+        href="/real-range-vs-wltp"
+        className="mt-8 flex items-center justify-between gap-4 rounded-2xl bg-card px-5 py-4 shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1.5px_var(--foreground)]"
+      >
+        <span className="min-w-0">
+          <span className="block font-semibold">Real-world range vs WLTP: every UK EV compared</span>
+          <span className="block text-sm text-muted">How much of its official range each car and brand manages, with free data to download</span>
+        </span>
+        <span aria-hidden className="text-lg">→</span>
+      </Link>
+
       {SECTIONS.map((s) => {
         const pages = rankingPages.filter((p) => s.kinds.includes(p.kind));
         if (!pages.length) return null;

@@ -15,6 +15,8 @@ import { breadcrumbLd } from "@/lib/jsonld";
 import { runningHref } from "@/lib/running";
 import { carExtras } from "@/lib/carExtras";
 import { isIndexable } from "@/lib/indexing";
+import { pct, wltpShare } from "@/lib/wltp";
+import { WLTP_HREF } from "@/lib/site";
 import { allCars, carHref, type Car, type ImageCredit } from "@/lib/cars";
 import { compareHref } from "@/lib/compare";
 import { modelHref, modelOf, rangeSpan } from "@/lib/models";
@@ -247,7 +249,17 @@ export default async function CarPage({ params }: Props) {
           <div className="mt-6 border-t border-line pt-5">
             <RangeBar rangeKm={car.rangeKm} oneStopKm={car.oneStopKm} size="lg" />
             <p className="mt-2 text-xs text-muted">
-              Real-world estimate. Makers&rsquo; advertised (WLTP) ranges are usually 20–30% higher.
+              {car.wltpKm ? (
+                <>
+                  Real-world estimate. The official WLTP figure is {u(formatMiles(car.wltpKm))}, so expect
+                  about {pct(wltpShare(car)!)} of the advertised range.{" "}
+                  <Link href={WLTP_HREF} className="underline decoration-line underline-offset-2 hover:text-foreground">
+                    How every EV compares
+                  </Link>
+                </>
+              ) : (
+                <>Real-world estimate. Makers&rsquo; advertised (WLTP) ranges are usually 20–30% higher.</>
+              )}
             </p>
           </div>
 
@@ -423,6 +435,7 @@ export default async function CarPage({ params }: Props) {
               ["Real-world range", est(formatDistance(car.rangeKm), car.rangeEstimated)],
               ["Efficiency", est(formatEfficiency(car.whPerKm), car.efficiencyEstimated)],
               ["Range with one 15-min stop", formatDistance(car.oneStopKm)],
+              ["Official WLTP range", car.wltpKm ? `${formatDistance(car.wltpKm)} (real-world is ${pct(wltpShare(car)!)} of it)` : "Not listed"],
             ]}
           />
           <SpecGroup

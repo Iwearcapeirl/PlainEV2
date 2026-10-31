@@ -105,6 +105,7 @@ RULES = [
     ("Mazda", r"^6e", "Mazda 6e", "Mazda 6e"),
     ("Mazda", r"^CX-6e", "Mazda CX-6e", "Mazda CX-6e"),
     ("Mercedes-Benz", r"^AMG GT 4-Door", "Mercedes-AMG GT 4-Door Coupé", "Mercedes-AMG GT 4-Door Coupé"),
+    ("Mercedes-Benz", r"^AMG GT SUV", "Mercedes-AMG GT SUV", "Mercedes-AMG GT SUV"),
     ("Mercedes-Benz", r"^C 400", "Mercedes-Benz C-Class EV", "Mercedes-Benz C-Class (W206)"),
     ("Mercedes-Benz", r"^CLA Shooting Brake", "Mercedes-Benz CLA Shooting Brake", "Mercedes-Benz CLA (C178)"),
     ("Mercedes-Benz", r"^CLA", "Mercedes-Benz CLA", "Mercedes-Benz CLA (C178)"),

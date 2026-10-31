@@ -244,6 +244,8 @@ RULES = [
     ("Hongqi EH7", None, "hongqi-eh7", None),
     ("Hyundai IONIQ Electric", None, "hy-ioniq", None),
     ("Hyundai Ioniq 5", None, SAME, None),
+    # Before the 2025 facelift: the same car, so the model's own photo.
+    ("Hyundai Ioniq 6", None, SAME, None),
     ("Hyundai Kona Electric", None, "hy-kona1", None),
     ("Hyundai STARIA Electric", None, "hy-staria", "the Staria with a combustion engine"),
     ("JAC E30X", None, "jac-e30x", "the Yiwei 3, as it's called in China"),

@@ -52,6 +52,8 @@ COLUMNS = [
     # Size and payload (newer exports only; null when missing).
     ("Length mm", num), ("Width mm", num), ("Width with mirrors mm", num), ("Height mm", num), ("Wheelbase mm", num),
     ("Max payload kg", num),
+    # Official WLTP range (newer exports only; null when not listed), for the real-world vs WLTP comparison.
+    ("WLTP range km", num),
 ]
 
 # Model-year and generation tags that don't make a different car: "(MY24-27)", "(MY22)".

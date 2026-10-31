@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { pct, typicalShare, wltpCars, wltpShare } from "@/lib/wltp";
 import { formatPounds, runningCost, RUNNING_DEFAULTS } from "@/lib/running";
 import { plain } from "@/lib/units";
 import { ImageResponse } from "next/og";
@@ -62,6 +63,18 @@ export async function GET(_req: Request, { params }: Params) {
         />
       );
     }
+  } else if (kind === "page" && slug === "real-range-vs-wltp") {
+    const [best, worst] = [wltpCars[0], wltpCars[wltpCars.length - 1]];
+    body = (
+      <ListCard
+        title="Real-world range vs WLTP: every UK EV compared"
+        lines={[
+          `Typical EV: ${pct(typicalShare)} of its official range`,
+          `Closest: ${best.make} ${best.model} · ${pct(wltpShare(best)!)}`,
+          `Furthest short: ${worst.make} ${worst.model} · ${pct(wltpShare(worst)!)}`,
+        ]}
+      />
+    );
   } else if (kind === "site") {
     body = <SiteCard />;
   }

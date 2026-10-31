@@ -73,6 +73,7 @@ interface RawCar {
   "Height mm": number | null;
   "Wheelbase mm": number | null;
   "Max payload kg": number | null;
+  "WLTP range km"?: number | null;
   /** This car's page on EV Database: ev-database.org/car/{ID}/{slug} */
   "EVDB slug": string;
   image: string | null;
@@ -143,6 +144,8 @@ export interface Car {
   wheelbaseMm: number | null;
   /** Most it can carry (people and luggage), in kg. */
   payloadKg: number | null;
+  /** Official WLTP range in km (null when EV Database doesn't list it). The site leads with real-world range. */
+  wltpKm: number | null;
   /** 960px-wide Wikimedia thumbnail, or null when no suitable free photo exists. */
   image: string | null;
   imageCredit: ImageCredit | null;
@@ -204,6 +207,7 @@ function toCar(r: RawCar): Car {
     heightMm: r["Height mm"] ?? null,
     wheelbaseMm: r["Wheelbase mm"] ?? null,
     payloadKg: r["Max payload kg"] ?? null,
+    wltpKm: r["WLTP range km"] ?? null,
     image: r.image,
     imageCredit: r.imageCredit,
     family: r.family,

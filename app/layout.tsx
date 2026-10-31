@@ -88,6 +88,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                   <li><Link href="/models" className="text-muted hover:text-foreground">Models A–Z</Link></li>
                   <li><Link prefetch={false} href="/compare" className="text-muted hover:text-foreground">Compare cars</Link></li>
                   <li><Link prefetch={false} href="/running-costs" className="text-muted hover:text-foreground">Running costs</Link></li>
+                  <li><Link href="/real-range-vs-wltp" className="text-muted hover:text-foreground">Real range vs WLTP</Link></li>
                   <li><Link href="/about" className="text-muted hover:text-foreground">About</Link></li>
                   <li><Link href="/methodology" className="text-muted hover:text-foreground">How we work out the figures</Link></li>
                   <li><Link href="/best" className="text-muted hover:text-foreground">All rankings</Link></li>

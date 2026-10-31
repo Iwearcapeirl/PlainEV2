@@ -61,7 +61,8 @@ export default function MethodologyPage() {
         </p>
         <p>
           <strong>Real-world range</strong> is EV Database&rsquo;s estimate of how far a car goes on a full charge in everyday driving, across a mix of
-          conditions. It isn&rsquo;t the official WLTP figure, which comes from a lab test and is usually 20–30% higher. Expect less than the real-world
+          conditions. It isn&rsquo;t the official WLTP figure, which comes from a lab test and is usually 20–30% higher (see{" "}
+          <Link href="/real-range-vs-wltp">real-world range vs WLTP for every UK EV</Link>). Expect less than the real-world
           figure on a cold motorway and more in mild weather around town.
         </p>
         <p>

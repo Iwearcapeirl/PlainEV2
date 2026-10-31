@@ -2,12 +2,12 @@
 
 ## cars.json
 
-This file lists every electric car in the spreadsheet: 1,533 cars (687 on sale, 838 no longer sold new, 8 coming soon), sorted by real-world range from longest to shortest. It is built by `scripts/build.py`, which also writes:
+This file lists every electric car in the spreadsheet: 1,549 cars (691 on sale, 849 no longer sold new, 9 coming soon), sorted by real-world range from longest to shortest. It is built by `scripts/build.py`, which also writes:
 
 - `cars.min.json`: the same cars for the browser, as `columns` + `rows` arrays with photo credits listed once, and without `interiors` and `Full name`.
 - `car-extras.json`: `{ID: {interiors}}`, read only by car pages on the server.
 
-**Source:** `ev-database-cars.csv` (October 2026 export, with dimensions; earlier exports were `ev-database-cars.xlsx`, "All cars" sheet). The data was taken from [EV Database](https://ev-database.org/) on 18 October 2026, using the site's overview listing rather than each car's full spec page.
+**Source:** `ev-database-cars.csv` (October 2026 export, with dimensions and WLTP range; earlier exports were `ev-database-cars.xlsx`, "All cars" sheet). The data was taken from [EV Database](https://ev-database.org/) on 31 October 2026, using the site's overview listing rather than each car's full spec page.
 
 **Range is EV Database's real-world range, not WLTP.** `Real range km` is EV Database's estimate of range in mixed real-world driving. It is usually well below the official WLTP figure. `Efficiency Wh/km` uses the same standardised conditions.
 
@@ -22,6 +22,7 @@ This file lists every electric car in the spreadsheet: 1,533 cars (687 on sale, 
 - `Full name` is built from `Make` + " " + `Model`. In the source sheet, the Full name column holds battery chemistry codes (NCM, LFP and so on) instead of car names, so it was not used.
 - `Battery chemistry` is null for 20 cars because the source sheet has it blank.
 - `1-stop range km` is the total range at highway speed with one 15-minute charging stop.
+- `WLTP range km` is the official WLTP range (null for 65 cars, mostly older or not yet confirmed). The site leads with real-world range and shows WLTP alongside it; the real-vs-WLTP comparison leaves out cars whose real range is an estimate.
 - `Fastcharge kW` is the average power from 10% to 80% charge, not the peak.
 - Every other column from the sheet's "All cars" tab is also included, under its original name: `Status`, `Availability`, `Available from` / `Available to` (ISO dates; `Available to` is null unless an end of sales is announced), `Year from` / `Year to`, `Segment` (A city car to F luxury, N van-based people carrier, S sports car), `Towbar possible`, `Euro NCAP stars` (null when not tested), `V2H`, `V2G`, `AC charge kW`, `Charge plug`, `Weight kg`, `Towing kg` (0 = not approved for towing), `Cargo L` (boot space), `Price Germany EUR` and `Price Netherlands EUR` (null when not listed), and the four "estimated" flags (`Range estimated`, `Efficiency estimated`, `Battery estimated`, `Price/km estimated`). Yes/No columns are true/false.
 - `0-100 km/h s` is the 0–100 km/h time in seconds, added later from the same sheet's `0-100 km/h s` column. Every car has one. The site shows it as 0–62 mph, which is the same measure.

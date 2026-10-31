@@ -2,7 +2,7 @@
 export const SITE_NAME = "PlainEV";
 export const DATA_YEAR = 2026;
 export const UPDATED_LABEL = "October 2026";
-export const UPDATED_ISO = "2026-10-18";
+export const UPDATED_ISO = "2026-10-31";
 
 /**
  * Public site URL, used for canonical links, the sitemap and robots.txt.
@@ -20,3 +20,6 @@ export const POLICIES_UPDATED = "2026-10-30";
 
 /** Google AdSense publisher ID (public). Used by the AdSense script in app/layout.tsx; must match public/ads.txt. */
 export const ADSENSE_CLIENT = "ca-pub-5208891643538099";
+
+/** The real-world vs WLTP league table. */
+export const WLTP_HREF = "/real-range-vs-wltp";
