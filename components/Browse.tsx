@@ -298,6 +298,7 @@ function ModelRow({ model, total, answers }: { model: ModelGroup; total: number;
           caption={false}
           frameClass="aspect-[4/3] rounded-xl"
           sizes="(min-width: 640px) 152px, 104px"
+          link={{ href }}
         />
 
         <div className="min-w-0 self-center">
@@ -399,6 +400,7 @@ function Row({ group, answers }: { group: ResultGroup; answers: Answers }) {
         caption={false}
         frameClass="aspect-[4/3] rounded-xl"
         sizes="(min-width: 640px) 152px, 104px"
+        link={{ href: carHref(car), returnLabel: "all cars" }}
       />
 
       <div className="min-w-0 self-center">

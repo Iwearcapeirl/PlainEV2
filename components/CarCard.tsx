@@ -118,6 +118,7 @@ export default function CarCard({
         priority={priority}
         frameClass={featured ? "aspect-[16/9]" : "aspect-[16/9] sm:m-3 sm:mr-0 sm:aspect-[4/3] sm:rounded-xl"}
         sizes={featured ? "(min-width: 768px) 720px, 100vw" : "(min-width: 640px) 284px, 100vw"}
+        link={{ href: carHref(car), returnLabel }}
       />
 
       <div className={featured ? "p-5 sm:p-7" : "p-4 sm:p-5 sm:pl-6"}>

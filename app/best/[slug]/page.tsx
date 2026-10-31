@@ -7,10 +7,11 @@ import AdSlot from "@/components/AdSlot";
 import CarCard from "@/components/CarCard";
 import { CompareBar } from "@/components/ComparePicks";
 import QuizCta from "@/components/QuizCta";
+import ShowMore from "@/components/ShowMore";
 import JsonLd from "@/components/JsonLd";
 import { carHref } from "@/lib/cars";
 import { breadcrumbLd, itemListLd } from "@/lib/jsonld";
-import { CARS_PER_PAGE, getRankingPage, rankingPages, relatedPages, shortLabel } from "@/lib/rankings";
+import { CARS_PER_PAGE, getRankingPage, RANKING_MAX, rankingPages, relatedPages, shortLabel } from "@/lib/rankings";
 import { UPDATED_ISO, UPDATED_LABEL } from "@/lib/site";
 import { DataSourceNote } from "@/components/EvdbLink";
 import { getUsedRankingPage, USED_PER_PAGE, usedRankingPages, type UsedRankingPage } from "@/lib/usedRankings";
@@ -130,11 +131,13 @@ export default async function RankingPage({ params }: Props) {
           </ol>
         </>
       )}
-      {page.ranked.length > shown.length && (
-        <p className="mt-4 text-sm text-muted">
-          Showing the top {shown.length} of {page.ranked.length} cars.
-        </p>
-      )}
+      <ShowMore
+        start={shown.length + 1}
+        total={page.ranked.length}
+        items={page.ranked.slice(shown.length, RANKING_MAX).map((car, i) => (
+          <CarCard key={car.id} car={car} rank={shown.length + i + 1} metric={page.metric} headingLevel={3} returnLabel={shortLabel(page)} />
+        ))}
+      />
 
       <div className="mt-12">
         <QuizCta />
@@ -226,10 +229,15 @@ function UsedRanking({ page }: { page: UsedRankingPage }) {
           <li key={e.car.id}>{card(e, i + 1)}</li>
         ))}
       </ol>
-      {page.entries.length > shown.length && (
-        <p className="mt-4 text-sm text-muted">
-          Showing the top {shown.length} of {page.entries.length} models.{" "}
-          <Link href="/cars?condition=used" className="font-semibold text-foreground underline underline-offset-4">
+      <ShowMore
+        start={shown.length + 1}
+        total={page.entries.length}
+        noun="models"
+        items={page.entries.slice(shown.length, RANKING_MAX).map((e, i) => card(e, shown.length + i + 1))}
+      />
+      {page.entries.length > RANKING_MAX && (
+        <p className="mt-2 text-sm">
+          <Link href="/cars?condition=used" className="font-semibold underline underline-offset-4">
             See every used EV
           </Link>
         </p>

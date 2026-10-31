@@ -17,6 +17,8 @@ export interface WltpRow {
   /** Real-world range as a share of WLTP, 0–1. */
   share: number;
   priceGbp: number;
+  /** The car's own page on EV Database, where both figures come from. */
+  evdbUrl: string;
 }
 
 type SortKey = "share" | "range" | "wltp" | "price" | "name";
@@ -127,7 +129,11 @@ export default function WltpTable({ rows, typical }: { rows: WltpRow[]; typical:
                     {r.model}
                   </Link>
                   <span className="block text-xs text-muted">
-                    {r.bodyLabel} · {gbp(r.priceGbp)}
+                    {r.bodyLabel} · {gbp(r.priceGbp)} ·{" "}
+                    <a href={r.evdbUrl} target="_blank" rel="noopener" className="underline decoration-line underline-offset-2 hover:text-foreground">
+                      EV Database
+                      <span className="sr-only"> page for the {r.make} {r.model} (opens in a new tab)</span>
+                    </a>
                     {/* On phones the two ranges sit under the name. */}
                     <span className="sm:hidden">
                       {" "}

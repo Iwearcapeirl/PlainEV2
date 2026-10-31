@@ -8,6 +8,8 @@ import { DATA_YEAR } from "./site";
 export const MIN_CARS_PER_PAGE = 5;
 /** How many cars each ranking page lists. */
 export const CARS_PER_PAGE = 10;
+/** "Show more" on a ranking page goes up to this many cars in all (each card adds about 7 KB, so not the hundreds some rankings have). */
+export const RANKING_MAX = 50;
 
 export const PRICE_POINTS = [30_000, 40_000, 50_000, 70_000] as const;
 

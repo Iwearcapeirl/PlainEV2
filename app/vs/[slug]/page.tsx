@@ -181,6 +181,7 @@ function Side({ r, priority, wins, of }: { r: Rival; priority: boolean; wins: nu
         alt={c.imageCredit ? photoSubject(c.imageCredit) : undefined}
         frameClass="aspect-[16/10] rounded-xl shadow-[0_0_0_1px_var(--line)]"
         sizes="(min-width: 768px) 440px, 50vw"
+        link={{ href: carHref(c) }}
       />
       <p className="mt-1 text-xs text-muted sm:text-sm">
         {familyHref(r.name) ? (

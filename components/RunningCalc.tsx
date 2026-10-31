@@ -74,6 +74,7 @@ export default function RunningCalc() {
                     caption={false}
                     frameClass="aspect-[16/10] rounded-xl"
                     sizes="(min-width: 640px) 300px, 100vw"
+                    link={{ href: carHref(car), returnLabel: "the running costs" }}
                   />
                   <p className="mt-2 text-xs font-medium text-muted">{car.make}</p>
                   <Link href={carHref(car)} onClick={() => saveReturnTo("the running costs")} className="font-semibold leading-tight hover:underline">

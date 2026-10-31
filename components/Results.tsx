@@ -318,6 +318,7 @@ function TopMatch({ group, market, total, answers }: { group: ResultGroup; marke
         model={car.model}
         priority
         sizes="(min-width: 48rem) 48rem, 100vw"
+        link={{ href: carHref(car), returnLabel: "your results" }}
       />
 
       <div className="p-5 sm:p-8">

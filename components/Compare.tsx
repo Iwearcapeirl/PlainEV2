@@ -169,6 +169,7 @@ function Slot({
           caption={false}
           frameClass="aspect-[16/10] rounded-xl shadow-[0_0_0_1px_var(--line)]"
           sizes="(min-width: 640px) 260px, 33vw"
+          link={{ href: carHref(car), returnLabel: "the comparison" }}
         />
         <p className="mt-2 text-[11px] font-medium text-muted sm:text-xs">{car.make}</p>
         <Link

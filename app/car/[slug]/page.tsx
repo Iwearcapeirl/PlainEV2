@@ -597,7 +597,7 @@ export default async function CarPage({ params }: Props) {
                 key={s.id}
                 className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-[0_0_0_1px_var(--line)] transition-shadow hover:shadow-[0_0_0_1.5px_var(--foreground)] has-[a:focus-visible]:shadow-[0_0_0_2px_var(--foreground)]"
               >
-                <CarImage src={s.image} credit={s.imageCredit} make={s.make} model={s.model} frameClass="aspect-[16/10]" sizes="(min-width: 640px) 300px, 100vw" />
+                <CarImage src={s.image} credit={s.imageCredit} make={s.make} model={s.model} frameClass="aspect-[16/10]" sizes="(min-width: 640px) 300px, 100vw" link={{ href: carHref(s) }} />
                 <div className="flex flex-1 flex-col p-4">
                   <p className="text-xs text-muted">{s.make}</p>
                   <h3 className="font-semibold leading-snug">

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { saveReturnTo } from "@/components/CarLink";
 import type { ImageCredit } from "@/lib/cars";
 import { photoSubject } from "@/lib/photo";
 
@@ -11,7 +13,8 @@ import { photoSubject } from "@/lib/photo";
  * If there is no photo, or it fails to load, a placeholder with the make is shown instead.
  *
  * Tapping the photo opens it full-screen (PhotoViewer below) at 1280px, with its credit. Pass `gallery` to step
- * through several photos there (a car page's exterior and interior shots).
+ * through several photos there (a car page's exterior and interior shots). In lists, pass `link` instead: the photo
+ * then opens the car's page, like the name next to it (people expect a photo in a list to open the car).
  */
 export default function CarImage({
   src,
@@ -24,6 +27,7 @@ export default function CarImage({
   alt,
   caption = true,
   gallery,
+  link,
 }: {
   src: string | null;
   credit: ImageCredit | null;
@@ -41,6 +45,9 @@ export default function CarImage({
   caption?: boolean;
   /** Photos to step through in the full-screen viewer (this one must be among them); defaults to just this photo. */
   gallery?: ViewerPhoto[];
+  /** Make the photo a link to this page instead of enlarging it. The name link next to it is the one for keyboards
+   *  and screen readers, so this one is skipped by both. `returnLabel` is passed on as CarLink does. */
+  link?: { href: string; returnLabel?: string };
 }) {
   const [failed, setFailed] = useState(false);
   const [open, setOpen] = useState(false);
@@ -92,8 +99,22 @@ export default function CarImage({
         <Placeholder make={make} model={model} />
       )}
 
+      {/* In lists: the photo opens the car's page (a duplicate of the name link, so hidden from keyboards and screen readers). */}
+      {link && (
+        <Link
+          href={link.href}
+          prefetch={false}
+          tabIndex={-1}
+          aria-hidden
+          onClick={() => {
+            if (link.returnLabel) saveReturnTo(link.returnLabel);
+          }}
+          className="absolute inset-0 z-10"
+        />
+      )}
+
       {/* Above any link stretched over a card or row, so tapping the photo enlarges it instead of opening the car. */}
-      {show && (
+      {show && !link && (
         <button
           ref={zoom}
           type="button"

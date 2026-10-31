@@ -11,7 +11,7 @@ const cell = (v: string | number) => (typeof v === "string" && /[",\n]/.test(v) 
 
 /** The real-world vs WLTP table as CSV, for anyone citing it (credit and link requested on the page). */
 export function GET() {
-  const head = ["Brand", "Make", "Model", "Body style", "UK price (GBP)", "Real-world range (miles)", "WLTP range (miles)", "Real-world range (km)", "WLTP range (km)", "Share of WLTP (%)", "PlainEV page"];
+  const head = ["Brand", "Make", "Model", "Body style", "UK price (GBP)", "Real-world range (miles)", "WLTP range (miles)", "Real-world range (km)", "WLTP range (km)", "Share of WLTP (%)", "EV Database page", "PlainEV page"];
   const rows = wltpCars.map((c) => [
     brandOf(c),
     c.make,
@@ -23,9 +23,10 @@ export function GET() {
     c.rangeKm,
     c.wltpKm!,
     Math.round(wltpShare(c)! * 1000) / 10,
+    c.evdbUrl,
     `${SITE_URL}${carHref(c)}`,
   ]);
-  const note = `# Source: ${SITE_NAME} (${SITE_URL}/real-range-vs-wltp), figures from EV Database, updated ${UPDATED_ISO}. Please credit with a link.`;
+  const note = `# Range figures: EV Database (ev-database.org), please credit them as the source. Compared by ${SITE_NAME} (${SITE_URL}/real-range-vs-wltp), updated ${UPDATED_ISO}.`;
   const body = [note, head, ...rows].map((r) => (Array.isArray(r) ? r.map(cell).join(",") : r)).join("\n") + "\n";
   return new Response(body, {
     headers: {

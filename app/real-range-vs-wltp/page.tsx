@@ -4,7 +4,7 @@ import JsonLd from "@/components/JsonLd";
 import QuizCta from "@/components/QuizCta";
 import { u } from "@/components/UnitText";
 import WltpTable, { type WltpRow } from "@/components/WltpTable";
-import { DataSourceNote } from "@/components/EvdbLink";
+import { DataSourceNote, EVDB_HOME } from "@/components/EvdbLink";
 import { bodyLabel, bodyPlural } from "@/lib/carProfile";
 import { carHref, type Car } from "@/lib/cars";
 import { formatMiles } from "@/lib/format";
@@ -25,7 +25,7 @@ export const metadata: Metadata = plainDeep({
   title: `${TITLE} (${new Date(UPDATED_ISO).getUTCFullYear()})`,
   description:
     `How much of its official WLTP range each of ${wltpCars.length} electric cars on sale in the UK manages in real-world driving. ` +
-    `The typical EV gets ${pct(typicalShare)}; the closest is the ${best.make} ${best.model} at ${pct(wltpShare(best)!)}. Brand league table and free data.`,
+    `The typical EV gets ${pct(typicalShare)}; the closest is the ${best.make} ${best.model} at ${pct(wltpShare(best)!)}. Brand league table included.`,
   alternates: { canonical: WLTP_HREF },
   openGraph: {
     title: TITLE,
@@ -46,6 +46,7 @@ const row = (c: Car & { priceGbp: number; wltpKm: number | null }): WltpRow => (
   wltpKm: c.wltpKm!,
   share: wltpShare(c)!,
   priceGbp: c.priceGbp,
+  evdbUrl: c.evdbUrl,
 });
 
 const name = (c: Car) => `${c.make} ${c.model}`;
@@ -96,8 +97,12 @@ export default function RealRangeVsWltpPage() {
           <span>{wltpCars.length} cars compared</span>
         </p>
         <p className="mt-5 max-w-[64ch] text-lg leading-relaxed text-pretty">
-          Every new electric car&rsquo;s advertised range comes from the WLTP lab test. We put it next to the real-world range for the{" "}
-          {wltpCars.length} electric cars on sale in the UK, to show how much of the official figure each one manages in everyday driving.
+          Every new electric car&rsquo;s advertised range comes from the WLTP lab test. We put it next to{" "}
+          <a href={EVDB_HOME} target="_blank" rel="noopener" className="underline decoration-line underline-offset-4 hover:decoration-foreground">
+            EV Database
+          </a>
+          &rsquo;s real-world range estimate for the {wltpCars.length} electric cars on sale in the UK, to show how much of the official figure each
+          one manages in everyday driving.
         </p>
       </header>
 
@@ -213,12 +218,15 @@ export default function RealRangeVsWltpPage() {
       <section aria-labelledby="use-title" className="mt-12 rounded-2xl bg-card p-5 shadow-[0_0_0_1px_var(--line)] sm:p-6">
         <h2 id="use-title" className="font-wide text-xl font-semibold">Use this data</h2>
         <p className="mt-2 max-w-[66ch] leading-relaxed text-pretty">
-          You&rsquo;re welcome to quote these figures or use the table in an article, video or post. Please credit {SITE_NAME} with a link to this
-          page:
+          The range figures are{" "}
+          <a href={EVDB_HOME} target="_blank" rel="noopener">
+            EV Database
+          </a>
+          &rsquo;s, so please credit them as the source. If this comparison helped, a link to this page is appreciated too:
         </p>
         <p className="mt-3 rounded-lg bg-background px-3 py-2 font-mono text-sm break-all select-all">
-          Source: {SITE_NAME}, {SITE_URL.replace(/^https?:\/\//, "")}
-          {WLTP_HREF}
+          Source: EV Database (ev-database.org), compared by {SITE_NAME} ({SITE_URL.replace(/^https?:\/\//, "")}
+          {WLTP_HREF})
         </p>
         <p className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
           <a href={CSV_HREF} download className="underline decoration-signal decoration-2 underline-offset-4">
